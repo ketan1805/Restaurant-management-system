@@ -1,0 +1,400 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Orders — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --red:#E5484D;
+  --red-soft:#FDECEC;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.order-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:1.8rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+  transition:.25s ease;margin-bottom:1.5rem;
+}
+.order-card:hover{
+  border-color:var(--orange);box-shadow:0 15px 35px rgba(21,19,16,.08);
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.35rem .9rem;border-radius:50px;font-weight:700;
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;
+}
+.status-pending{background:#FFF4E0;color:#D97706;}
+.status-accepted, .status-preparing, .status-ready{background:#E0F2FE;color:#0284C7;}
+.status-served, .status-completed, .status-delivered{background:var(--green-soft);color:var(--green);}
+.status-cancelled{background:var(--red-soft);color:var(--red);}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.6rem 1.4rem;border-radius:50px;
+  font-weight:700;box-shadow:0 6px 16px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+.item-bullet{
+  padding:.4rem 0;border-bottom:1px dashed var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.item-bullet:last-child{border-bottom:none;}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'food_order_view' %}" class="btn btn-primary btn-sm px-3 rounded-pill fw-bold">
+        <i class="fa-solid fa-utensils me-1"></i> Order Food
+      </a>
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-house me-1"></i> Home
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:950px;">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <h2><i class="fa-solid fa-bag-shopping me-2" style="color:var(--orange)"></i>My Food Orders</h2>
+      <p class="text-muted mb-0">Track your order status &amp; view item details.</p>
+    </div>
+    <a href="{% url 'food_order_view' %}" class="btn btn-primary fw-bold">
+      <i class="fa-solid fa-plus me-1"></i> Start Ordering
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- ================= RATE YOUR EXPERIENCE SECTION ================= -->
+  <div class="rate-experience-card p-3 p-md-4 rounded-4 mb-4" style="background:linear-gradient(135deg, #FFF7ED, #FFFBF6);border:1.5px solid #FFD8A8;box-shadow:0 8px 24px rgba(255,122,0,.06);">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div class="d-flex align-items-center gap-3">
+        <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--orange),#FF9A2E);color:#fff;display:grid;place-items:center;font-size:1.4rem;box-shadow:0 6px 16px rgba(255,122,0,.25);flex-shrink:0;">
+          <i class="fa-solid fa-star"></i>
+        </div>
+        <div>
+          <h5 class="mb-1 fw-bold" style="font-family:'Fredoka';color:var(--ink);">Rate Your Experience</h5>
+          <p class="text-muted small mb-0">Help us deliver top-notch taste! Rate your completed dining and delivery orders.</p>
+        </div>
+      </div>
+      <div>
+        <span class="badge rounded-pill px-3 py-2 fw-bold" style="background:#FFF0DC;color:#D97706;border:1px solid #FFD8A8;">
+          <i class="fa-solid fa-utensils me-1"></i> Verified Food Reviews
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {% if orders %}
+    {% for order in orders %}
+      <div class="order-card">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pb-3 border-bottom mb-3">
+          <div>
+            <span class="fw-bold fs-5 me-2" style="font-family:'Fredoka';color:var(--ink);">Order #ORD{{ order.id }}</span>
+            <span class="text-muted small"><i class="fa-solid fa-clock me-1"></i> {{ order.created_at|date:"d M Y, h:i A" }}</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge bg-light text-dark border">
+              <i class="fa-solid fa-credit-card me-1" style="color:var(--orange);"></i>{{ order.payment_method }}
+            </span>
+            <span class="badge {% if order.payment_status == 'paid' or order.payment_status == 'success' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+              Payment: {{ order.payment_status|title }}
+            </span>
+            {% if order.assigned_waiter and order.status != 'cancelled' %}
+              <span class="badge" style="background:#DCFCE7;color:#15803D;font-weight:700;">
+                <i class="fa-solid fa-user-check me-1"></i> Waiter: {{ order.assigned_waiter.get_full_name|default:order.assigned_waiter.username }}
+              </span>
+            {% endif %}
+            <span class="status-pill status-{{ order.status }}">
+              <i class="fa-solid fa-circle me-1" style="font-size:.5rem;"></i>
+              {% if order.status == 'pending' %}
+                Order Placed
+              {% elif order.status == 'accepted' %}
+                Order Accepted
+              {% elif order.status == 'preparing' %}
+                Preparing Your Order
+              {% elif order.status == 'ready' %}
+                Food Ready
+              {% elif order.status == 'delivered' or order.status == 'served' %}
+                Served
+              {% elif order.status == 'completed' %}
+                Completed
+              {% elif order.status == 'cancelled' %}
+                Cancelled
+              {% else %}
+                {{ order.get_status_display|default:order.status|title }}
+              {% endif %}
+            </span>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <h6 class="text-muted text-uppercase small fw-bold mb-2">Order Items</h6>
+          {% for item in order.items.all %}
+            <div class="item-bullet">
+              <div>
+                <span class="fw-bold">• {{ item.quantity }}x {{ item.menu_item.name }}</span>
+                {% if item.customization_details %}
+                  <small class="text-muted d-block ms-3" style="font-size:.8rem;">
+                    <i class="fa-solid fa-sliders text-warning me-1"></i> {{ item.customization_details }}
+                  </small>
+                {% endif %}
+              </div>
+              <span class="fw-bold">₹{{ item.line_total }}</span>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if order.reviews.first %}
+          <div class="mt-3 p-3 rounded-4" style="background:#FFFBF6;border:1.5px solid #FFE4C4;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge rounded-pill px-3 py-2 fw-bold" style="background:#FFF0DC;color:#D97706;border:1px solid #FFD8A8;font-size:.85rem;">
+                  <i class="fa-solid fa-star text-warning me-1"></i>Your Rating: {{ order.reviews.first.rating }} / 5★
+                </span>
+                <span class="text-muted small">
+                  <i class="fa-solid fa-clock me-1"></i>{{ order.reviews.first.updated_at|date:"d M Y, h:i A" }}
+                </span>
+              </div>
+              <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#reviewModal{{ order.id }}">
+                <i class="fa-solid fa-pen-to-square me-1"></i>Edit Rating
+              </button>
+            </div>
+            {% if order.reviews.first.title %}
+              <div class="fw-bold text-dark mt-2" style="font-size:.92rem;">{{ order.reviews.first.title }}</div>
+            {% endif %}
+            {% if order.reviews.first.comment %}
+              <p class="text-muted mb-0 mt-1" style="font-size:.88rem;line-height:1.4;">"{{ order.reviews.first.comment }}"</p>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="pt-3 border-top d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+          <div>
+            <span class="text-muted small">Total Amount:</span>
+            <span class="fs-4 fw-bold ms-1" style="font-family:'Fredoka';color:var(--orange);">₹{{ order.total }}</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{% url 'order_confirmation_view' order_id=order.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+              <i class="fa-solid fa-receipt me-1"></i> View Order Details
+            </a>
+
+            {% if order.status == 'completed' %}
+              {% if order.reviews.first %}
+                <button type="button" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-bold text-dark" data-bs-toggle="modal" data-bs-target="#reviewModal{{ order.id }}">
+                  <i class="fa-solid fa-star text-warning me-1"></i>Your Rating ({{ order.reviews.first.rating }}★)
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-white shadow-sm" style="background:linear-gradient(135deg,var(--orange),#FF9A2E);border:none;" data-bs-toggle="modal" data-bs-target="#reviewModal{{ order.id }}">
+                  <i class="fa-solid fa-star me-1"></i>Rate Now
+                </button>
+              {% endif %}
+            {% endif %}
+
+            {% if order.status == 'pending' %}
+              <form method="POST" action="{% url 'my_orders' %}" onsubmit="return confirm('Are you sure you want to cancel this pending order?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="cancel_order">
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
+                  Cancel Order
+                </button>
+              </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Rating Modal for Order #{{ order.id }} (Only for Completed orders) -->
+      {% if order.status == 'completed' %}
+        <div class="modal fade" id="reviewModal{{ order.id }}" tabindex="-1" aria-labelledby="reviewModalLabel{{ order.id }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow">
+              <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold" id="reviewModalLabel{{ order.id }}" style="font-family:'Fredoka';color:var(--ink);">
+                  <i class="fa-solid fa-star text-warning me-2"></i>{% if order.reviews.first %}Edit Your Rating{% else %}Rate Your Experience{% endif %} — Order #ORD{{ order.id }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <form method="POST" action="{% url 'submit_customer_review' %}">
+                {% csrf_token %}
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <div class="modal-body py-3">
+                  <div class="mb-3 text-center">
+                    <label class="form-label fw-bold d-block text-muted small text-uppercase mb-2">Food Rating (1 to 5 Stars)</label>
+                    <div class="star-picker d-flex justify-content-center align-items-center gap-2 my-2" data-order="{{ order.id }}">
+                      <input type="hidden" name="rating" id="ratingInput{{ order.id }}" value="{{ order.reviews.first.rating|default:'5' }}" required>
+                      {% for star in "12345"|make_list %}
+                        <button type="button" class="star-click-btn p-1 bg-transparent border-0" data-value="{{ star }}" style="cursor:pointer;font-size:2.2rem;line-height:1;transition:transform .15s ease;" title="{{ star }} Star">
+                          <i class="fa-solid fa-star star-icon" style="color:#FF9500;"></i>
+                        </button>
+                      {% endfor %}
+                    </div>
+                    <div class="fw-bold small text-muted" id="ratingDesc{{ order.id }}">
+                      {% if order.reviews.first %}
+                        {{ order.reviews.first.rating }}★ - Selected
+                      {% else %}
+                        5★ - Excellent!
+                      {% endif %}
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label fw-bold text-muted small text-uppercase">Title (Optional)</label>
+                    <input type="text" name="title" class="form-control rounded-3" value="{{ order.reviews.first.title|default:'' }}" placeholder="e.g. Delicious food and speedy service!">
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label fw-bold text-muted small text-uppercase">Review / Feedback (Optional)</label>
+                    <textarea name="comment" rows="3" class="form-control rounded-3" placeholder="Share your experience with our dishes and service...">{{ order.reviews.first.comment|default:'' }}</textarea>
+                  </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold">Submit Rating</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+    <div class="order-card text-center py-5">
+      <i class="fa-solid fa-utensils text-muted mb-3" style="font-size:3.5rem;"></i>
+      <h3>No Orders Yet</h3>
+      <p class="text-muted mb-4">You haven't placed any food orders yet.</p>
+      <a href="{% url 'food_order_view' %}" class="btn btn-primary px-4 py-2">
+        <i class="fa-solid fa-utensils me-2"></i>Start Ordering
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Star rating interactive selector
+  document.addEventListener('DOMContentLoaded', function() {
+    const pickers = document.querySelectorAll('.star-picker');
+    const descriptions = {
+      1: '1★ - Poor',
+      2: '2★ - Fair',
+      3: '3★ - Good',
+      4: '4★ - Very Good',
+      5: '5★ - Excellent!'
+    };
+
+    pickers.forEach(function(picker) {
+      const orderId = picker.dataset.order;
+      const input = document.getElementById('ratingInput' + orderId);
+      const desc = document.getElementById('ratingDesc' + orderId);
+      const buttons = picker.querySelectorAll('.star-click-btn');
+
+      function setVisual(val) {
+        buttons.forEach(function(btn) {
+          const btnVal = parseInt(btn.dataset.value);
+          const icon = btn.querySelector('.star-icon');
+          if (btnVal <= val) {
+            icon.style.color = '#FF9500';
+            icon.classList.remove('fa-regular');
+            icon.classList.add('fa-solid');
+          } else {
+            icon.style.color = '#CBD5E1';
+            icon.classList.remove('fa-solid');
+            icon.classList.add('fa-regular');
+          }
+        });
+        if (desc && descriptions[val]) {
+          desc.textContent = descriptions[val];
+        }
+      }
+
+      setVisual(parseInt(input.value) || 5);
+
+      buttons.forEach(function(btn) {
+        btn.addEventListener('mouseenter', function() {
+          const val = parseInt(this.dataset.value);
+          setVisual(val);
+        });
+
+        btn.addEventListener('click', function() {
+          const val = parseInt(this.dataset.value);
+          input.value = val;
+          setVisual(val);
+        });
+      });
+
+      picker.addEventListener('mouseleave', function() {
+        const current = parseInt(input.value) || 5;
+        setVisual(current);
+      });
+    });
+  });
+
+  // Auto-refresh active order tracking every 15 seconds
+  {% if orders %}
+    var hasActive = false;
+    {% for o in orders %}
+      {% if o.status in 'pending,accepted,preparing,ready' %}
+        hasActive = true;
+      {% endif %}
+    {% endfor %}
+    if (hasActive) {
+      setTimeout(function() {
+        location.reload();
+      }, 15000);
+    }
+  {% endif %}
+</script>
+</body>
+</html>

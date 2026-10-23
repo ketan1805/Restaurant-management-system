@@ -1,0 +1,1831 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Menu Items — Enterprise{% endblock %}
+{% block content %}
+
+<style>
+/* ============================================================
+   MENU ITEMS — ENTERPRISE EDITION
+   ============================================================ */
+
+/* ---------- HERO ---------- */
+.mi2-hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#151310 0%,#2C2721 55%,#3D3228 100%);
+  border-radius:var(--radius-xl);
+  padding:1.9rem 2.1rem;margin-bottom:1.5rem;color:#fff;
+}
+.mi2-hero::before{
+  content:"";position:absolute;width:420px;height:420px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,0,.42),transparent 65%);
+  right:-140px;top:-180px;
+}
+.mi2-hero::after{
+  content:"";position:absolute;width:280px;height:280px;border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,.1);
+  left:-80px;bottom:-130px;
+}
+.mi2-hero-inner{
+  position:relative;z-index:2;
+  display:flex;flex-wrap:wrap;gap:1.5rem;
+  align-items:center;justify-content:space-between;
+}
+.mi2-hero-left{display:flex;align-items:center;gap:1.2rem;min-width:0;}
+.mi2-hero-icon{
+  width:64px;height:64px;border-radius:20px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-2));
+  display:grid;place-items:center;font-size:1.6rem;color:#fff;
+  box-shadow:0 14px 34px rgba(255,122,0,.5);flex-shrink:0;
+  position:relative;
+}
+.mi2-hero-icon::after{
+  content:"";position:absolute;inset:-4px;border-radius:24px;
+  border:2px solid rgba(255,122,0,.35);
+  animation:mi2Spin 8s linear infinite;
+}
+@keyframes mi2Spin{to{transform:rotate(360deg);}}
+.mi2-hero-text h1{
+  font-size:clamp(1.3rem,2.2vw,1.65rem);
+  margin:0 0 .3rem;color:#fff;font-weight:700;
+}
+.mi2-hero-text p{margin:0;font-size:.9rem;color:rgba(255,255,255,.65);}
+.mi2-hero-stats{
+  display:flex;flex-wrap:wrap;gap:1.4rem;margin-top:.85rem;
+}
+.mi2-hero-stat{display:flex;flex-direction:column;gap:.15rem;}
+.mi2-hero-stat .n{
+  font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:700;
+  color:#fff;line-height:1;
+}
+.mi2-hero-stat .l{
+  font-size:.68rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:rgba(255,255,255,.5);
+}
+.mi2-hero-stat.hl .n{color:var(--orange-2);}
+.mi2-hero-actions{display:flex;gap:.55rem;flex-wrap:wrap;}
+
+.mi2-hero-btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.72rem 1.35rem;border-radius:50px;
+  font-size:.85rem;font-weight:700;cursor:pointer;border:none;
+  transition:.28s var(--ease);text-decoration:none;white-space:nowrap;
+}
+.mi2-hero-btn.primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);color:#fff;
+  box-shadow:0 12px 28px rgba(255,122,0,.45);
+}
+.mi2-hero-btn.primary:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(255,122,0,.55);color:#fff;}
+.mi2-hero-btn.ghost{
+  background:rgba(255,255,255,.1);color:#fff;
+  border:1.5px solid rgba(255,255,255,.22);
+}
+.mi2-hero-btn.ghost:hover{background:rgba(255,255,255,.2);}
+
+/* ---------- SMART SUGGESTIONS ---------- */
+.mi2-smart{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:.85rem;margin-bottom:1.5rem;
+}
+.mi2-tip{
+  display:flex;align-items:flex-start;gap:.85rem;
+  background:#fff;border-radius:var(--radius);padding:1rem 1.1rem;
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  transition:.3s var(--ease);position:relative;overflow:hidden;
+  text-decoration:none;color:inherit;
+}
+.mi2-tip::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+}
+.mi2-tip.hot::before{background:linear-gradient(180deg,var(--orange),#FFB347);}
+.mi2-tip.warn::before{background:linear-gradient(180deg,var(--yellow),#FBBF24);}
+.mi2-tip.info::before{background:linear-gradient(180deg,var(--blue),#60A5FA);}
+.mi2-tip:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm);}
+.mi2-tip .ic{
+  width:40px;height:40px;border-radius:12px;flex-shrink:0;
+  display:grid;place-items:center;font-size:1rem;
+}
+.mi2-tip.hot .ic{background:var(--orange-soft);color:var(--orange);}
+.mi2-tip.warn .ic{background:var(--yellow-soft);color:#B45309;}
+.mi2-tip.info .ic{background:var(--blue-soft);color:var(--blue);}
+.mi2-tip-body{flex:1;min-width:0;}
+.mi2-tip-body b{
+  display:block;font-size:.88rem;font-weight:700;
+  color:var(--ink);font-family:'Fredoka',sans-serif;margin-bottom:.2rem;
+}
+.mi2-tip-body small{font-size:.78rem;color:var(--muted);line-height:1.4;}
+
+/* ---------- COMMAND BAR ---------- */
+.mi2-cmd{
+  background:#fff;border-radius:var(--radius-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  padding:.9rem 1.1rem;margin-bottom:1.25rem;
+  display:flex;flex-wrap:wrap;gap:.85rem;align-items:center;
+}
+.mi2-cmd-search{
+  flex:1;min-width:260px;
+  display:flex;align-items:center;gap:.7rem;
+  background:var(--cream);border:1.5px solid var(--line);
+  border-radius:50px;padding:.68rem 1.1rem;
+  transition:.25s var(--ease);
+}
+.mi2-cmd-search:focus-within{
+  border-color:var(--orange);background:#fff;
+  box-shadow:0 0 0 4px var(--orange-soft);
+}
+.mi2-cmd-search i{color:var(--muted);font-size:.9rem;}
+.mi2-cmd-search input{
+  border:none;outline:none;background:transparent;
+  font-family:inherit;font-size:.9rem;width:100%;color:var(--ink);
+  font-weight:500;
+}
+.mi2-cmd-search input::placeholder{color:#B5AEA3;}
+.mi2-kbd{
+  display:inline-flex;gap:.15rem;padding:.15rem .45rem;
+  border-radius:6px;background:#fff;border:1px solid var(--line);
+  font-size:.68rem;font-weight:800;color:var(--muted);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+.mi2-cmd-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-left:auto;}
+
+.mi2-pill-btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.55rem 1rem;border-radius:50px;
+  border:1.5px solid var(--line);background:#fff;color:var(--ink-soft);
+  font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;
+  transition:.25s var(--ease);text-decoration:none;
+}
+.mi2-pill-btn:hover{border-color:var(--orange);color:var(--orange);}
+.mi2-pill-btn.active{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 20px rgba(255,122,0,.28);
+}
+.mi2-pill-btn.icon-only{padding:.55rem .7rem;}
+
+/* ---------- VIEW TOGGLE ---------- */
+.mi2-vt{
+  display:inline-flex;background:var(--cream);border:1.5px solid var(--line);
+  border-radius:50px;padding:.2rem;
+}
+.mi2-vt button{
+  border:none;background:transparent;cursor:pointer;
+  width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;font-size:.82rem;color:var(--muted);
+  transition:.25s var(--ease);
+}
+.mi2-vt button.active{
+  background:#fff;color:var(--orange);
+  box-shadow:0 3px 8px rgba(0,0,0,.08);
+}
+
+/* ---------- CATEGORY CHIPS ---------- */
+.mi2-chips{
+  display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1.25rem;
+  overflow-x:auto;padding-bottom:.3rem;
+}
+.mi2-chip{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.55rem 1.1rem;border-radius:50px;
+  font-size:.82rem;font-weight:700;
+  background:#fff;border:1.5px solid var(--line);
+  color:var(--ink-soft);text-decoration:none;
+  transition:.25s var(--ease);cursor:pointer;white-space:nowrap;
+}
+.mi2-chip:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-1px);}
+.mi2-chip.active{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 20px rgba(255,122,0,.28);
+}
+.mi2-chip .count{
+  background:rgba(0,0,0,.06);
+  padding:.05rem .5rem;border-radius:50px;
+  font-size:.7rem;font-weight:800;
+}
+.mi2-chip.active .count{background:rgba(255,255,255,.25);}
+
+/* ---------- ACCORDION CATEGORIES ---------- */
+.mi2-accordion{
+  display:flex;flex-direction:column;gap:.85rem;margin-bottom:1.5rem;
+}
+.mi2-acc{
+  background:#fff;border-radius:var(--radius-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  overflow:hidden;transition:.3s var(--ease);
+}
+.mi2-acc:hover{border-color:rgba(255,122,0,.2);}
+.mi2-acc-head{
+  display:flex;align-items:center;gap:.85rem;
+  padding:1rem 1.35rem;cursor:pointer;
+  user-select:none;transition:.25s var(--ease);
+  position:relative;
+}
+.mi2-acc-head::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,var(--orange),#FFB347);
+  transform:scaleY(0);transform-origin:top;
+  transition:.35s var(--ease);
+}
+.mi2-acc.open .mi2-acc-head::before,
+.mi2-acc:hover .mi2-acc-head::before{transform:scaleY(1);}
+.mi2-acc-head:hover{background:rgba(255,122,0,.03);}
+.mi2-acc-icon{
+  width:42px;height:42px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange-soft),#FFEAD0);
+  color:var(--orange);
+  display:grid;place-items:center;font-size:1rem;
+  font-family:'Fredoka',sans-serif;font-weight:700;
+  flex-shrink:0;transition:.35s var(--ease);
+}
+.mi2-acc.open .mi2-acc-icon{transform:rotate(-8deg);}
+.mi2-acc-info{flex:1;min-width:0;}
+.mi2-acc-info h3{
+  font-size:1.02rem;margin:0 0 .2rem;
+  font-weight:700;color:var(--ink);
+  font-family:'Fredoka',sans-serif;
+  display:flex;align-items:center;gap:.55rem;
+}
+.mi2-acc-info small{
+  font-size:.78rem;color:var(--muted);font-weight:600;
+  display:flex;gap:.85rem;flex-wrap:wrap;
+}
+.mi2-acc-info small b{color:var(--orange);}
+.mi2-acc-count{
+  display:inline-flex;align-items:center;
+  background:var(--orange-soft);color:var(--orange);
+  padding:.2rem .65rem;border-radius:50px;
+  font-size:.68rem;font-weight:800;
+}
+.mi2-acc-chevron{
+  color:var(--muted);font-size:.9rem;
+  transition:.35s var(--ease);
+}
+.mi2-acc.open .mi2-acc-chevron{transform:rotate(180deg);color:var(--orange);}
+.mi2-acc-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .45s var(--ease);
+}
+.mi2-acc.open .mi2-acc-body{max-height:5000px;}
+.mi2-acc-inner{
+  padding:0 1.35rem 1.35rem;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:1rem;
+}
+
+/* ---------- RICH ITEM CARD ---------- */
+.mi2-card{
+  background:#fff;border-radius:var(--radius);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:.35s var(--ease);position:relative;
+}
+.mi2-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 20px 42px rgba(21,19,16,.1);
+  border-color:rgba(255,122,0,.25);
+}
+.mi2-card.selected{
+  border-color:var(--orange);
+  box-shadow:0 0 0 3px var(--orange-soft),0 12px 28px rgba(255,122,0,.2);
+}
+.mi2-card.unavailable{opacity:.7;}
+.mi2-card.unavailable .mi2-media img{filter:grayscale(.4) brightness(.92);}
+
+/* Selection checkbox */
+.mi2-select{
+  position:absolute;top:12px;left:12px;z-index:5;
+  width:24px;height:24px;border-radius:8px;
+  background:rgba(255,255,255,.95);
+  border:2px solid rgba(0,0,0,.1);
+  display:grid;place-items:center;
+  cursor:pointer;transition:.25s var(--ease);
+  backdrop-filter:blur(6px);
+}
+.mi2-select:hover{border-color:var(--orange);}
+.mi2-select.checked{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  border-color:transparent;color:#fff;
+  transform:scale(1.05);
+  box-shadow:0 6px 14px rgba(255,122,0,.4);
+}
+.mi2-select i{font-size:.7rem;opacity:0;}
+.mi2-select.checked i{opacity:1;}
+
+/* Media */
+.mi2-media{
+  position:relative;aspect-ratio:16/11;overflow:hidden;
+  background:linear-gradient(135deg,var(--cream),#FFF6EC);
+}
+.mi2-media img{
+  width:100%;height:100%;object-fit:cover;
+  transition:transform .8s var(--ease);
+}
+.mi2-card:hover .mi2-media img{transform:scale(1.08);}
+.mi2-media .placeholder{
+  width:100%;height:100%;display:grid;place-items:center;
+  font-size:2.6rem;color:var(--orange);opacity:.35;
+}
+
+/* Badges on media */
+.mi2-badge-tl{
+  position:absolute;top:12px;left:46px;z-index:3;
+  display:flex;gap:.35rem;flex-wrap:wrap;max-width:60%;
+}
+.mi2-badge-tr{
+  position:absolute;top:12px;right:12px;z-index:3;
+  display:flex;flex-direction:column;gap:.35rem;align-items:flex-end;
+}
+.mi2-badge-bl{
+  position:absolute;bottom:12px;left:12px;z-index:3;
+  display:flex;gap:.35rem;flex-wrap:wrap;
+}
+.mi2-badge{
+  display:inline-flex;align-items:center;gap:.3rem;
+  padding:.28rem .65rem;border-radius:50px;
+  font-size:.66rem;font-weight:800;
+  text-transform:uppercase;letter-spacing:.04em;
+  background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);
+  box-shadow:0 4px 12px rgba(0,0,0,.1);
+}
+.mi2-badge.veg{color:var(--green);}
+.mi2-badge.nonveg{color:var(--red);}
+.mi2-badge.vegan{color:#16A34A;}
+.mi2-badge.egg{color:#B45309;}
+.mi2-badge.popular{
+  background:linear-gradient(135deg,#FFB800,#FF9500);color:#fff;
+}
+.mi2-badge.discount{
+  background:linear-gradient(135deg,var(--red),#C81E24);color:#fff;
+}
+.mi2-badge.new{
+  background:linear-gradient(135deg,var(--blue),#2563EB);color:#fff;
+}
+.mi2-badge.trending{
+  background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:#fff;
+}
+.mi2-badge.rank{
+  background:linear-gradient(135deg,#151310,#2C2721);color:#fff;
+  font-family:'Fredoka',sans-serif;
+}
+
+/* Body */
+.mi2-body{
+  padding:1.05rem 1.15rem 1.15rem;
+  display:flex;flex-direction:column;gap:.5rem;flex:1;
+}
+.mi2-cat{
+  font-size:.66rem;font-weight:800;color:var(--orange);
+  text-transform:uppercase;letter-spacing:.08em;
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.mi2-name{
+  font-family:'Fredoka',sans-serif;font-size:1.02rem;font-weight:600;
+  color:var(--ink);margin:0;line-height:1.25;
+}
+.mi2-desc{
+  font-size:.78rem;color:var(--muted);margin:0;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+/* Price row */
+.mi2-price-row{
+  display:flex;align-items:baseline;gap:.6rem;margin-top:.15rem;
+}
+.mi2-price-orig{
+  font-size:.78rem;color:var(--muted);
+  text-decoration:line-through;font-weight:600;
+}
+.mi2-price-final{
+  font-family:'Fredoka',sans-serif;font-size:1.28rem;font-weight:700;
+  color:var(--ink);letter-spacing:-.01em;
+}
+.mi2-price-final.discounted{color:var(--green);}
+
+/* Mini inline edit */
+.mi2-inline-edit{
+  display:inline-flex;align-items:center;gap:.3rem;
+  font-size:.72rem;color:var(--muted);
+  padding:.2rem .55rem;border-radius:8px;
+  background:var(--cream);border:none;cursor:pointer;
+  font-family:inherit;font-weight:700;
+  transition:.2s var(--ease);
+}
+.mi2-inline-edit:hover{background:var(--orange-soft);color:var(--orange);}
+
+/* Meta row */
+.mi2-meta{
+  display:flex;align-items:center;gap:.85rem;flex-wrap:wrap;
+  padding-top:.65rem;border-top:1px dashed var(--line);margin-top:.15rem;
+  font-size:.72rem;color:var(--muted);font-weight:600;
+}
+.mi2-meta .stat{
+  display:inline-flex;align-items:center;gap:.35rem;
+}
+.mi2-meta .stat i{color:var(--orange);}
+.mi2-meta .stat b{color:var(--ink-soft);font-weight:800;}
+
+/* Performance bar */
+.mi2-perf{
+  display:flex;align-items:center;gap:.6rem;
+  padding:.65rem .75rem;
+  background:var(--cream);border-radius:12px;
+  font-size:.72rem;font-weight:700;
+}
+.mi2-perf .bar{
+  flex:1;height:5px;border-radius:10px;
+  background:#E8DED0;overflow:hidden;
+}
+.mi2-perf .bar>div{
+  height:100%;border-radius:10px;
+  background:linear-gradient(90deg,var(--orange),#FFA53B);
+  transition:width .8s var(--ease);
+}
+.mi2-perf .lbl{color:var(--muted);}
+.mi2-perf .val{color:var(--orange);font-weight:800;font-family:'Fredoka',sans-serif;}
+
+/* Status indicator */
+.mi2-status{
+  position:absolute;top:12px;left:46px;z-index:4;
+  display:flex;align-items:center;gap:.3rem;
+  padding:.24rem .6rem;border-radius:50px;
+  font-size:.62rem;font-weight:800;letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.mi2-card.unavailable .mi2-status{
+  background:rgba(229,72,77,.95);color:#fff;
+}
+
+/* Actions */
+.mi2-actions{
+  display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;
+  margin-top:.35rem;
+}
+.mi2-act{
+  display:inline-flex;align-items:center;justify-content:center;gap:.35rem;
+  padding:.55rem .5rem;border-radius:11px;border:none;
+  font-family:inherit;font-size:.72rem;font-weight:700;
+  cursor:pointer;transition:.25s var(--ease);
+  text-decoration:none;white-space:nowrap;
+}
+.mi2-act:hover{transform:translateY(-2px);}
+.mi2-act.p{background:linear-gradient(135deg,var(--orange),#FF9A2E);color:#fff;box-shadow:0 6px 14px rgba(255,122,0,.25);}
+.mi2-act.g{background:var(--cream);color:var(--ink-soft);border:1.5px solid var(--line);}
+.mi2-act.g:hover{border-color:var(--orange);color:var(--orange);}
+
+.mi2-quick{
+  display:flex;gap:.3rem;margin-top:.4rem;
+  justify-content:flex-end;
+}
+.mi2-quick button{
+  width:32px;height:32px;border-radius:9px;border:none;
+  background:var(--cream);color:var(--muted);
+  display:grid;place-items:center;cursor:pointer;
+  transition:.2s var(--ease);font-size:.75rem;
+}
+.mi2-quick button:hover{background:var(--orange-soft);color:var(--orange);}
+.mi2-quick button.danger:hover{background:var(--red-soft);color:var(--red);}
+.mi2-quick button.success:hover{background:var(--green-soft);color:var(--green);}
+.mi2-quick button.warn:hover{background:var(--yellow-soft);color:#B45309;}
+
+/* ---------- BULK ACTION BAR ---------- */
+.mi2-bulk{
+  position:fixed;bottom:24px;left:50%;
+  transform:translate(-50%,140%);
+  z-index:1200;
+  background:linear-gradient(135deg,#151310,#2C2721);
+  border-radius:50px;padding:.7rem 1rem .7rem 1.4rem;
+  display:flex;align-items:center;gap:1rem;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+  transition:transform .45s var(--ease);
+  color:#fff;max-width:calc(100vw - 2rem);
+}
+.mi2-bulk.show{transform:translate(-50%,0);}
+.mi2-bulk-info{
+  display:flex;align-items:center;gap:.6rem;
+  font-size:.85rem;font-weight:700;
+  padding-right:1rem;border-right:1px solid rgba(255,255,255,.15);
+}
+.mi2-bulk-info .num{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:26px;height:26px;padding:0 .5rem;
+  border-radius:50px;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  font-family:'Fredoka',sans-serif;font-size:.85rem;
+}
+.mi2-bulk-actions{display:flex;gap:.35rem;flex-wrap:wrap;}
+.mi2-bulk-btn{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.55rem .95rem;border-radius:50px;border:none;
+  background:rgba(255,255,255,.1);color:#fff;
+  font-family:inherit;font-size:.78rem;font-weight:700;
+  cursor:pointer;transition:.25s var(--ease);
+}
+.mi2-bulk-btn:hover{background:rgba(255,255,255,.2);}
+.mi2-bulk-btn.danger:hover{background:var(--red);}
+.mi2-bulk-btn.success:hover{background:var(--green);}
+.mi2-bulk-close{
+  width:34px;height:34px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.1);color:#fff;
+  display:grid;place-items:center;cursor:pointer;
+  transition:.25s var(--ease);
+}
+.mi2-bulk-close:hover{background:rgba(255,255,255,.25);}
+
+/* ---------- ADVANCED FILTER DRAWER ---------- */
+.mi2-drawer-bg{
+  position:fixed;inset:0;background:rgba(21,19,16,.55);
+  backdrop-filter:blur(4px);z-index:1400;
+  opacity:0;pointer-events:none;
+  transition:.35s var(--ease);
+}
+.mi2-drawer-bg.show{opacity:1;pointer-events:auto;}
+.mi2-drawer{
+  position:fixed;top:0;right:0;bottom:0;
+  width:min(420px,100vw);background:#fff;
+  z-index:1401;transform:translateX(100%);
+  transition:transform .45s var(--ease);
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:-20px 0 60px rgba(0,0,0,.25);
+}
+.mi2-drawer.show{transform:translateX(0);}
+.mi2-drawer-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1.35rem 1.5rem;border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.mi2-drawer-head h5{
+  margin:0;font-size:1.1rem;font-family:'Fredoka',sans-serif;
+  display:flex;align-items:center;gap:.5rem;
+}
+.mi2-drawer-head h5 i{color:var(--orange);}
+.mi2-drawer-close{
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:var(--cream);color:var(--muted);
+  display:grid;place-items:center;cursor:pointer;
+  transition:.25s var(--ease);
+}
+.mi2-drawer-close:hover{background:var(--red-soft);color:var(--red);}
+.mi2-drawer-body{
+  flex:1;overflow-y:auto;padding:1.5rem;
+  display:flex;flex-direction:column;gap:1.25rem;
+}
+.mi2-drawer-group h6{
+  font-size:.72rem;font-weight:800;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.08em;
+  margin:0 0 .65rem;
+}
+.mi2-drawer-chips{
+  display:flex;flex-wrap:wrap;gap:.4rem;
+}
+.mi2-dchip{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:.5rem .9rem;border-radius:50px;
+  background:#fff;border:1.5px solid var(--line);
+  color:var(--muted);font-size:.8rem;font-weight:700;
+  cursor:pointer;transition:.22s var(--ease);
+}
+.mi2-dchip:hover{border-color:var(--orange);color:var(--orange);}
+.mi2-dchip.active{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border-color:transparent;
+  box-shadow:0 6px 14px rgba(255,122,0,.28);
+}
+.mi2-drawer-foot{
+  padding:1.1rem 1.5rem;border-top:1px solid var(--line);
+  display:flex;gap:.6rem;flex-shrink:0;
+  background:var(--cream);
+}
+.mi2-drawer-foot>*{flex:1;}
+
+/* Range slider */
+.mi2-range-wrap{padding:.6rem .2rem;}
+.mi2-range{
+  -webkit-appearance:none;width:100%;height:4px;
+  background:var(--line);border-radius:10px;outline:none;
+}
+.mi2-range::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:20px;height:20px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  cursor:pointer;border:3px solid #fff;
+  box-shadow:0 3px 10px rgba(255,122,0,.4);
+}
+.mi2-range-labels{
+  display:flex;justify-content:space-between;
+  font-size:.72rem;font-weight:700;color:var(--muted);
+  margin-top:.4rem;
+}
+
+/* ---------- PREVIEW MODAL (Customer view) ---------- */
+.mi2-preview-card{
+  background:linear-gradient(180deg,#FFFBF6,#fff);
+  border-radius:22px;overflow:hidden;
+  box-shadow:0 30px 70px rgba(21,19,16,.28);
+}
+.mi2-preview-media{
+  position:relative;aspect-ratio:16/10;overflow:hidden;
+  background:var(--cream);
+}
+.mi2-preview-media img{
+  width:100%;height:100%;object-fit:cover;
+}
+.mi2-preview-media .placeholder{
+  width:100%;height:100%;display:grid;place-items:center;
+  font-size:4rem;color:var(--orange);opacity:.35;
+}
+.mi2-preview-body{padding:1.5rem;display:flex;flex-direction:column;gap:.85rem;}
+.mi2-preview-cat{
+  font-size:.68rem;font-weight:800;color:var(--orange);
+  text-transform:uppercase;letter-spacing:.08em;
+}
+.mi2-preview-name{
+  font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;
+  color:var(--ink);margin:0;line-height:1.2;
+}
+.mi2-preview-desc{font-size:.9rem;color:var(--muted);line-height:1.6;margin:0;}
+.mi2-preview-price-row{
+  display:flex;align-items:baseline;gap:.85rem;
+  padding-top:.85rem;border-top:1px dashed var(--line);
+}
+.mi2-preview-price-orig{
+  font-size:1rem;color:var(--muted);
+  text-decoration:line-through;font-weight:700;
+}
+.mi2-preview-price-final{
+  font-family:'Fredoka',sans-serif;font-size:1.75rem;font-weight:700;
+  color:var(--orange);letter-spacing:-.02em;
+}
+.mi2-preview-pill{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.75rem 1.25rem;border-radius:50px;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;font-weight:700;font-size:.9rem;
+  cursor:pointer;border:none;font-family:inherit;
+  box-shadow:0 12px 28px rgba(255,122,0,.35);
+  transition:.25s var(--ease);
+}
+.mi2-preview-pill:hover{transform:translateY(-2px);box-shadow:0 18px 34px rgba(255,122,0,.45);}
+
+/* ---------- EMPTY ---------- */
+.mi2-empty{
+  grid-column:1/-1;background:#fff;border-radius:var(--radius-lg);
+  border:2px dashed var(--line);padding:4rem 2rem;text-align:center;
+}
+.mi2-empty i{font-size:3rem;color:#E6DCCF;display:block;margin-bottom:1rem;}
+.mi2-empty b{
+  font-family:'Fredoka',sans-serif;font-size:1.15rem;
+  color:var(--ink-soft);display:block;margin-bottom:.35rem;
+}
+.mi2-empty small{color:var(--muted);font-size:.88rem;}
+
+/* ---------- FORM HELPERS ---------- */
+.mi2-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.85rem;}
+.mi2-checks{
+  display:flex;gap:.85rem;flex-wrap:wrap;
+  background:var(--cream);padding:.85rem 1rem;border-radius:14px;
+  border:1px solid var(--line);
+}
+.mi2-check{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.85rem;font-weight:600;color:var(--ink-soft);cursor:pointer;
+}
+.mi2-check input{width:16px;height:16px;accent-color:var(--orange);cursor:pointer;}
+.mi2-img-preview{
+  margin-top:.75rem;width:100%;max-height:160px;object-fit:cover;
+  border-radius:14px;display:none;border:1px solid var(--line);
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:900px){
+  .mi2-hero{padding:1.5rem 1.5rem;}
+  .mi2-hero-icon{width:54px;height:54px;font-size:1.3rem;}
+  .mi2-hero-stats{gap:1rem;}
+  .mi2-hero-stat .n{font-size:1.2rem;}
+  .mi2-form-grid{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .mi2-acc-inner{grid-template-columns:1fr;}
+  .mi2-cmd-search{min-width:100%;}
+  .mi2-cmd-actions{width:100%;justify-content:flex-end;}
+  .mi2-hero-actions{width:100%;}
+  .mi2-bulk{padding:.65rem .85rem .65rem 1.1rem;gap:.6rem;}
+  .mi2-bulk-info{padding-right:.6rem;}
+}
+</style>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<div class="mi2-hero">
+  <div class="mi2-hero-inner">
+    <div class="mi2-hero-left">
+      <div class="mi2-hero-icon"><i class="fa-solid fa-utensils"></i></div>
+      <div class="mi2-hero-text">
+        <h1>Menu Items</h1>
+        <p>Curate, price, and publish your restaurant's complete menu.</p>
+        <div class="mi2-hero-stats">
+          <div class="mi2-hero-stat">
+            <span class="n">{{ total_items }}</span>
+            <span class="l">Total</span>
+          </div>
+          <div class="mi2-hero-stat hl">
+            <span class="n">{{ available_count }}</span>
+            <span class="l">Live</span>
+          </div>
+          <div class="mi2-hero-stat">
+            <span class="n">{{ popular_count }}</span>
+            <span class="l">Popular</span>
+          </div>
+          <div class="mi2-hero-stat">
+            <span class="n">{{ discounted_count }}</span>
+            <span class="l">On Offer</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if is_manager %}
+    <div class="mi2-hero-actions">
+      <button type="button" class="mi2-hero-btn primary" onclick="openModal('addItemModal')">
+        <i class="fa-solid fa-plus"></i> Add Item
+      </button>
+      <button type="button" class="mi2-hero-btn ghost" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Print Menu
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ============================================================
+     SMART SUGGESTIONS
+     ============================================================ -->
+<div class="mi2-smart">
+  {% if out_of_stock_count %}
+  <a href="?availability=out_of_stock" class="mi2-tip warn">
+    <div class="ic"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="mi2-tip-body">
+      <b>{{ out_of_stock_count }} item{{ out_of_stock_count|pluralize }} out of stock</b>
+      <small>Hide them or restock to keep the menu accurate.</small>
+    </div>
+  </a>
+  {% endif %}
+
+  {% if popular_count %}
+  <a href="?popular=popular_only" class="mi2-tip hot">
+    <div class="ic"><i class="fa-solid fa-fire"></i></div>
+    <div class="mi2-tip-body">
+      <b>{{ popular_count }} popular item{{ popular_count|pluralize }}</b>
+      <small>Feature them on the customer menu for higher conversions.</small>
+    </div>
+  </a>
+  {% endif %}
+
+  {% if discounted_count %}
+  <a href="?discount=discounted" class="mi2-tip info">
+    <div class="ic"><i class="fa-solid fa-tag"></i></div>
+    <div class="mi2-tip-body">
+      <b>{{ discounted_count }} active offer{{ discounted_count|pluralize }}</b>
+      <small>Consider promoting to boost slow-moving categories.</small>
+    </div>
+  </a>
+  {% else %}
+  <a href="{% url 'staff:menu_items' %}" class="mi2-tip info">
+    <div class="ic"><i class="fa-solid fa-lightbulb"></i></div>
+    <div class="mi2-tip-body">
+      <b>No active discounts</b>
+      <small>Try setting a % off on slow-moving items to increase orders.</small>
+    </div>
+  </a>
+  {% endif %}
+</div>
+
+<!-- ============================================================
+     COMMAND BAR
+     ============================================================ -->
+<div class="mi2-cmd">
+  <form method="GET" action="{% url 'staff:menu_items' %}" style="flex:1;display:flex;gap:.85rem;flex-wrap:wrap;align-items:center;min-width:0;">
+    <label class="mi2-cmd-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" name="search" id="mi2Search"
+             value="{{ search_query }}"
+             placeholder="Search menu items, categories, descriptions…"
+             onchange="this.form.submit()">
+      <span class="mi2-kbd">⌘K</span>
+    </label>
+
+    <!-- Preserve current filters when searching -->
+    {% if category_filter and category_filter != 'all' %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+    {% if food_type_filter and food_type_filter != 'all' %}<input type="hidden" name="food_type" value="{{ food_type_filter }}">{% endif %}
+    {% if availability_filter and availability_filter != 'all' %}<input type="hidden" name="availability" value="{{ availability_filter }}">{% endif %}
+    {% if price_range_filter and price_range_filter != 'all' %}<input type="hidden" name="price_range" value="{{ price_range_filter }}">{% endif %}
+    {% if discount_filter and discount_filter != 'all' %}<input type="hidden" name="discount" value="{{ discount_filter }}">{% endif %}
+    {% if popular_filter and popular_filter != 'all' %}<input type="hidden" name="popular" value="{{ popular_filter }}">{% endif %}
+  </form>
+
+  <div class="mi2-cmd-actions">
+    <button type="button" class="mi2-pill-btn" onclick="openDrawer()">
+      <i class="fa-solid fa-sliders"></i> Filters
+      {% if category_filter and category_filter != 'all' or availability_filter and availability_filter != 'all' or food_type_filter and food_type_filter != 'all' %}
+        <span style="background:var(--orange);color:#fff;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;font-size:.6rem;">!</span>
+      {% endif %}
+    </button>
+
+    <div class="mi2-vt" role="tablist">
+      <button type="button" class="mi2-vt-btn active" data-view="accordion" onclick="setMenuView('accordion')" title="Accordion">
+        <i class="fa-solid fa-list"></i>
+      </button>
+      <button type="button" class="mi2-vt-btn" data-view="grid" onclick="setMenuView('grid')" title="Grid">
+        <i class="fa-solid fa-grip"></i>
+      </button>
+      <button type="button" class="mi2-vt-btn" data-view="table" onclick="setMenuView('table')" title="Table">
+        <i class="fa-solid fa-table-list"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CATEGORY CHIPS
+     ============================================================ -->
+{% if categories %}
+<div class="mi2-chips">
+  <a href="{% url 'staff:menu_items' %}" class="mi2-chip {% if not category_filter or category_filter == 'all' %}active{% endif %}">
+    <i class="fa-solid fa-layer-group"></i> All Items
+    <span class="count">{{ total_items }}</span>
+  </a>
+  {% for cat in categories %}
+    <a href="?category={{ cat.id }}" class="mi2-chip {% if category_filter == cat.id|stringformat:"s" %}active{% endif %}">
+      {{ cat.name }}
+    </a>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ============================================================
+     ACCORDION VIEW (default)
+     ============================================================ -->
+<div class="mi2-accordion" id="menuAccordion">
+  {% regroup items by category as cat_groups %}
+  {% for group in cat_groups %}
+  <div class="mi2-acc {% if forloop.first %}open{% endif %}" data-cat="{{ group.grouper.id }}">
+    <div class="mi2-acc-head" onclick="toggleAcc(this)">
+      <div class="mi2-acc-icon">{{ group.grouper.name|first|upper }}</div>
+      <div class="mi2-acc-info">
+        <h3>
+          {{ group.grouper.name }}
+          <span class="mi2-acc-count">{{ group.list|length }} item{{ group.list|length|pluralize }}</span>
+        </h3>
+        <small>
+          <span><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> {{ group.list|length }} shown</span>
+        </small>
+      </div>
+      <i class="fa-solid fa-chevron-down mi2-acc-chevron"></i>
+    </div>
+    <div class="mi2-acc-body">
+      <div class="mi2-acc-inner">
+        {% for item in group.list %}
+        <div class="mi2-card {% if not item.is_available %}unavailable{% endif %}"
+             data-id="{{ item.id }}"
+             data-name="{{ item.name|escapejs }}"
+             data-price="{{ item.price }}"
+             data-discount="{{ item.discount_percentage }}"
+             data-available="{{ item.is_available }}"
+             data-popular="{{ item.is_popular }}">
+
+          <!-- Selection checkbox -->
+          <button type="button" class="mi2-select" onclick="toggleSelect(this, {{ item.id }})">
+            <i class="fa-solid fa-check"></i>
+          </button>
+
+          <!-- Media -->
+          <div class="mi2-media">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy">
+            {% else %}
+              <div class="placeholder"><i class="fa-solid fa-utensils"></i></div>
+            {% endif %}
+
+            <div class="mi2-badge-tl">
+              {% if item.is_available %}
+                <span class="mi2-badge veg" style="background:rgba(47,174,96,.95);color:#fff">
+                  <i class="fa-solid fa-circle-check"></i> Live
+                </span>
+              {% else %}
+                <span class="mi2-badge" style="background:rgba(229,72,77,.95);color:#fff">
+                  <i class="fa-solid fa-eye-slash"></i> Hidden
+                </span>
+              {% endif %}
+            </div>
+
+            <div class="mi2-badge-tr">
+              {% if item.is_popular %}
+                <span class="mi2-badge popular"><i class="fa-solid fa-star"></i> Popular</span>
+              {% endif %}
+              {% if item.discount_percentage > 0 %}
+                <span class="mi2-badge discount">{{ item.discount_percentage }}% OFF</span>
+              {% endif %}
+            </div>
+
+            <div class="mi2-badge-bl">
+              {% if item.food_type == 'veg' %}
+                <span class="mi2-badge veg"><i class="fa-solid fa-leaf"></i> Veg</span>
+              {% elif item.food_type == 'non_veg' %}
+                <span class="mi2-badge nonveg"><i class="fa-solid fa-drumstick-bite"></i> Non-Veg</span>
+              {% elif item.food_type == 'vegan' %}
+                <span class="mi2-badge vegan"><i class="fa-solid fa-seedling"></i> Vegan</span>
+              {% elif item.food_type == 'egg' %}
+                <span class="mi2-badge egg"><i class="fa-solid fa-egg"></i> Egg</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="mi2-body">
+            <div class="mi2-cat">
+              <i class="fa-solid fa-tag"></i> {{ item.category.name }}
+            </div>
+            <h4 class="mi2-name">{{ item.name }}</h4>
+            {% if item.description %}
+              <p class="mi2-desc">{{ item.description }}</p>
+            {% endif %}
+
+            <div class="mi2-price-row">
+              {% if item.discount_percentage > 0 %}
+                <span class="mi2-price-orig">₹{{ item.price|floatformat:0 }}</span>
+                <span class="mi2-price-final discounted">₹{{ item.get_final_price|floatformat:0 }}</span>
+              {% else %}
+                <span class="mi2-price-final">₹{{ item.price|floatformat:0 }}</span>
+              {% endif %}
+              <button type="button" class="mi2-inline-edit" title="Quick edit price"
+                      onclick="quickEditPrice({{ item.id }}, '{{ item.price }}')">
+                <i class="fa-solid fa-pen"></i> ₹
+              </button>
+            </div>
+
+            <!-- Meta -->
+            <div class="mi2-meta">
+              <span class="stat"><i class="fa-solid fa-shopping-bag"></i> <b>{{ item.ordered_count|default:0 }}</b> orders</span>
+              <span class="stat"><i class="fa-solid fa-clock"></i> {{ item.updated_at|timesince|default:"just now" }}</span>
+            </div>
+
+            <!-- Actions -->
+            <div class="mi2-actions">
+              <button type="button" class="mi2-act p"
+                      onclick="openEditModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.category.id }}','{{ item.food_type }}','{{ item.price }}','{{ item.discount_percentage }}','{{ item.description|escapejs }}','{{ item.is_available }}','{{ item.is_popular }}', [{% for cg in item.customization_groups.all %}{{ cg.id }}{% if not forloop.last %},{% endif %}{% endfor %}])">
+                <i class="fa-solid fa-pen-to-square"></i> Edit
+              </button>
+              <button type="button" class="mi2-act g"
+                      onclick="openPreview('{{ item.name|escapejs }}','{{ item.category.name|escapejs }}','{{ item.food_type }}','{{ item.price }}','{{ item.discount_percentage }}','{{ item.get_final_price }}','{{ item.description|escapejs }}','{% if item.image %}{{ item.image.url }}{% endif %}')">
+                <i class="fa-solid fa-eye"></i> Preview
+              </button>
+              <button type="button" class="mi2-act g"
+                      onclick="openDiscountModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.price }}','{{ item.discount_percentage }}')">
+                <i class="fa-solid fa-tag"></i> %
+              </button>
+            </div>
+
+            <div class="mi2-quick">
+              <form method="POST" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_availability">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="{% if item.is_available %}danger{% else %}success{% endif %}"
+                        title="{% if item.is_available %}Hide{% else %}Show{% endif %}">
+                  <i class="fa-solid {% if item.is_available %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                </button>
+              </form>
+
+              <form method="POST" style="display:inline">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_popular">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="{% if item.is_popular %}warn{% endif %}" title="Toggle Popular">
+                  <i class="fa-{% if item.is_popular %}solid{% else %}regular{% endif %} fa-star"></i>
+                </button>
+              </form>
+
+              <button type="button" onclick="duplicateItem({{ item.id }})" title="Duplicate">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+
+              <form method="POST" style="display:inline" onsubmit="return confirm('Delete {{ item.name }}?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="danger" title="Delete">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="mi2-empty">
+    <i class="fa-solid fa-utensils"></i>
+    <b>No menu items yet</b>
+    <small>Add your first item to get started.</small>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ============================================================
+     GRID VIEW (flat)
+     ============================================================ -->
+<div id="menuGrid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem;margin-bottom:1.5rem;">
+  {% for item in items %}
+  <div class="mi2-card {% if not item.is_available %}unavailable{% endif %}"
+       data-id="{{ item.id }}"
+       data-name="{{ item.name|escapejs }}">
+    <button type="button" class="mi2-select" onclick="toggleSelect(this, {{ item.id }})">
+      <i class="fa-solid fa-check"></i>
+    </button>
+
+    <div class="mi2-media">
+      {% if item.image %}
+        <img src="{{ item.image.url }}" alt="{{ item.name }}" loading="lazy">
+      {% else %}
+        <div class="placeholder"><i class="fa-solid fa-utensils"></i></div>
+      {% endif %}
+
+      <div class="mi2-badge-tl">
+        {% if item.is_available %}
+          <span class="mi2-badge" style="background:rgba(47,174,96,.95);color:#fff"><i class="fa-solid fa-circle-check"></i> Live</span>
+        {% else %}
+          <span class="mi2-badge" style="background:rgba(229,72,77,.95);color:#fff"><i class="fa-solid fa-eye-slash"></i> Hidden</span>
+        {% endif %}
+      </div>
+
+      <div class="mi2-badge-tr">
+        {% if item.is_popular %}<span class="mi2-badge popular"><i class="fa-solid fa-star"></i> Popular</span>{% endif %}
+        {% if item.discount_percentage > 0 %}<span class="mi2-badge discount">{{ item.discount_percentage }}% OFF</span>{% endif %}
+      </div>
+
+      <div class="mi2-badge-bl">
+        {% if item.food_type == 'veg' %}<span class="mi2-badge veg"><i class="fa-solid fa-leaf"></i> Veg</span>
+        {% elif item.food_type == 'non_veg' %}<span class="mi2-badge nonveg"><i class="fa-solid fa-drumstick-bite"></i> Non-Veg</span>
+        {% elif item.food_type == 'vegan' %}<span class="mi2-badge vegan"><i class="fa-solid fa-seedling"></i> Vegan</span>
+        {% elif item.food_type == 'egg' %}<span class="mi2-badge egg"><i class="fa-solid fa-egg"></i> Egg</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="mi2-body">
+      <div class="mi2-cat"><i class="fa-solid fa-tag"></i> {{ item.category.name }}</div>
+      <h4 class="mi2-name">{{ item.name }}</h4>
+      {% if item.description %}<p class="mi2-desc">{{ item.description }}</p>{% endif %}
+
+      <div class="mi2-price-row">
+        {% if item.discount_percentage > 0 %}
+          <span class="mi2-price-orig">₹{{ item.price|floatformat:0 }}</span>
+          <span class="mi2-price-final discounted">₹{{ item.get_final_price|floatformat:0 }}</span>
+        {% else %}
+          <span class="mi2-price-final">₹{{ item.price|floatformat:0 }}</span>
+        {% endif %}
+      </div>
+
+      <div class="mi2-actions">
+        <button type="button" class="mi2-act p"
+                onclick="openEditModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.category.id }}','{{ item.food_type }}','{{ item.price }}','{{ item.discount_percentage }}','{{ item.description|escapejs }}','{{ item.is_available }}','{{ item.is_popular }}', [{% for cg in item.customization_groups.all %}{{ cg.id }}{% if not forloop.last %},{% endif %}{% endfor %}])">
+          <i class="fa-solid fa-pen-to-square"></i> Edit
+        </button>
+        <button type="button" class="mi2-act g"
+                onclick="openPreview('{{ item.name|escapejs }}','{{ item.category.name|escapejs }}','{{ item.food_type }}','{{ item.price }}','{{ item.discount_percentage }}','{{ item.get_final_price }}','{{ item.description|escapejs }}','{% if item.image %}{{ item.image.url }}{% endif %}')">
+          <i class="fa-solid fa-eye"></i> Preview
+        </button>
+        <button type="button" class="mi2-act g"
+                onclick="openDiscountModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.price }}','{{ item.discount_percentage }}')">
+          <i class="fa-solid fa-tag"></i> %
+        </button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- ============================================================
+     TABLE VIEW
+     ============================================================ -->
+<div id="menuTable" style="display:none;">
+  <div class="card" style="margin:0">
+    <div class="card-head">
+      <h5><i class="fa-solid fa-table-list me-2" style="color:var(--orange)"></i> Menu Items</h5>
+      <span class="sub">{{ items|length }} item{{ items|length|pluralize }}</span>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead>
+          <tr>
+            <th style="width:36px"><input type="checkbox" id="mi2SelectAll" onclick="toggleSelectAll(this)"></th>
+            <th>Item</th><th>Category</th><th>Type</th>
+            <th>Price</th><th>Disc.</th><th>Final</th><th>Status</th>
+            <th style="text-align:right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr data-id="{{ item.id }}">
+            <td>
+              <input type="checkbox" class="mi2-row-check" data-id="{{ item.id }}" onclick="toggleRowSelect(this)">
+            </td>
+            <td>
+              <div class="td-name">
+                {% if item.image %}
+                  <img src="{{ item.image.url }}" alt="" style="width:38px;height:38px;border-radius:12px;object-fit:cover;flex-shrink:0">
+                {% else %}
+                  <div class="td-avatar">{{ item.name|first|upper }}</div>
+                {% endif %}
+                <div>
+                  <div style="font-weight:700;color:var(--ink)">{{ item.name }}</div>
+                  {% if item.is_popular %}<small style="color:var(--orange);font-weight:700;font-size:.7rem"><i class="fa-solid fa-star"></i> Popular</small>{% endif %}
+                </div>
+              </div>
+            </td>
+            <td>{{ item.category.name }}</td>
+            <td>
+              {% if item.food_type == 'veg' %}<span class="badge-status bs-green">Veg</span>
+              {% elif item.food_type == 'non_veg' %}<span class="badge-status bs-red">Non-Veg</span>
+              {% elif item.food_type == 'vegan' %}<span class="badge-status bs-green">Vegan</span>
+              {% elif item.food_type == 'egg' %}<span class="badge-status bs-yellow">Egg</span>{% endif %}
+            </td>
+            <td>₹{{ item.price|floatformat:0 }}</td>
+            <td>{% if item.discount_percentage > 0 %}<span class="badge-status bs-red">{{ item.discount_percentage }}%</span>{% else %}<span style="color:var(--muted)">—</span>{% endif %}</td>
+            <td><b style="color:var(--green)">₹{{ item.get_final_price|floatformat:0 }}</b></td>
+            <td>
+              {% if item.is_available %}<span class="badge-status bs-green">Live</span>
+              {% else %}<span class="badge-status bs-red">Hidden</span>{% endif %}
+            </td>
+            <td>
+              <div class="act" style="justify-content:flex-end;">
+                <button type="button" class="act-btn" title="Edit"
+                        onclick="openEditModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.category.id }}','{{ item.food_type }}','{{ item.price }}','{{ item.discount_percentage }}','{{ item.description|escapejs }}','{{ item.is_available }}','{{ item.is_popular }}', [{% for cg in item.customization_groups.all %}{{ cg.id }}{% if not forloop.last %},{% endif %}{% endfor %}])">
+                  <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button type="button" class="act-btn" title="Discount"
+                        onclick="openDiscountModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.price }}','{{ item.discount_percentage }}')">
+                  <i class="fa-solid fa-tag"></i>
+                </button>
+                <form method="POST" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle_availability">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="act-btn {% if item.is_available %}danger{% else %}success{% endif %}">
+                    <i class="fa-solid {% if item.is_available %}fa-eye-slash{% else %}fa-eye{% endif %}"></i>
+                  </button>
+                </form>
+                <form method="POST" style="display:inline" onsubmit="return confirm('Delete {{ item.name }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     BULK ACTION BAR
+     ============================================================ -->
+<div class="mi2-bulk" id="mi2Bulk">
+  <div class="mi2-bulk-info">
+    <span class="num" id="mi2BulkCount">0</span>
+    <span>selected</span>
+  </div>
+  <div class="mi2-bulk-actions">
+    <button type="button" class="mi2-bulk-btn success" onclick="bulkAction('show')">
+      <i class="fa-solid fa-eye"></i> Show
+    </button>
+    <button type="button" class="mi2-bulk-btn" onclick="bulkAction('hide')">
+      <i class="fa-solid fa-eye-slash"></i> Hide
+    </button>
+    <button type="button" class="mi2-bulk-btn" onclick="bulkAction('popular')">
+      <i class="fa-solid fa-star"></i> Popular
+    </button>
+    <button type="button" class="mi2-bulk-btn danger" onclick="bulkAction('delete')">
+      <i class="fa-solid fa-trash-can"></i> Delete
+    </button>
+  </div>
+  <button type="button" class="mi2-bulk-close" onclick="clearSelection()">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</div>
+
+<!-- ============================================================
+     ADVANCED FILTER DRAWER
+     ============================================================ -->
+<div class="mi2-drawer-bg" id="mi2DrawerBg" onclick="closeDrawer()"></div>
+<aside class="mi2-drawer" id="mi2Drawer">
+  <div class="mi2-drawer-head">
+    <h5><i class="fa-solid fa-sliders"></i> Advanced Filters</h5>
+    <button type="button" class="mi2-drawer-close" onclick="closeDrawer()">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+  <form method="GET" action="{% url 'staff:menu_items' %}" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <div class="mi2-drawer-body">
+
+      {% if search_query %}<input type="hidden" name="search" value="{{ search_query }}">{% endif %}
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-layer-group"></i> Category</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if category_filter == 'all' or not category_filter %}active{% endif %}">
+            <input type="radio" name="category" value="all" {% if category_filter == 'all' or not category_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            All
+          </label>
+          {% for cat in categories %}
+            <label class="mi2-dchip {% if category_filter == cat.id|stringformat:"s" %}active{% endif %}">
+              <input type="radio" name="category" value="{{ cat.id }}" {% if category_filter == cat.id|stringformat:"s" %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+              {{ cat.name }}
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-utensils"></i> Food Type</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if food_type_filter == 'all' or not food_type_filter %}active{% endif %}">
+            <input type="radio" name="food_type" value="all" {% if food_type_filter == 'all' or not food_type_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            All
+          </label>
+          <label class="mi2-dchip {% if food_type_filter == 'veg' %}active{% endif %}">
+            <input type="radio" name="food_type" value="veg" {% if food_type_filter == 'veg' %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            <i class="fa-solid fa-leaf" style="color:var(--green)"></i> Veg
+          </label>
+          <label class="mi2-dchip {% if food_type_filter == 'non_veg' %}active{% endif %}">
+            <input type="radio" name="food_type" value="non_veg" {% if food_type_filter == 'non_veg' %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            <i class="fa-solid fa-drumstick-bite" style="color:var(--red)"></i> Non-Veg
+          </label>
+          <label class="mi2-dchip {% if food_type_filter == 'vegan' %}active{% endif %}">
+            <input type="radio" name="food_type" value="vegan" {% if food_type_filter == 'vegan' %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            <i class="fa-solid fa-seedling" style="color:#16A34A"></i> Vegan
+          </label>
+          <label class="mi2-dchip {% if food_type_filter == 'egg' %}active{% endif %}">
+            <input type="radio" name="food_type" value="egg" {% if food_type_filter == 'egg' %}checked{% endif %} style="display:none" onchange="this.form.submit()">
+            <i class="fa-solid fa-egg" style="color:#B45309"></i> Egg
+          </label>
+        </div>
+      </div>
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-signal"></i> Availability</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if availability_filter == 'all' or not availability_filter %}active{% endif %}">
+            <input type="radio" name="availability" value="all" {% if availability_filter == 'all' or not availability_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()"> All
+          </label>
+          <label class="mi2-dchip {% if availability_filter == 'available' %}active{% endif %}">
+            <input type="radio" name="availability" value="available" {% if availability_filter == 'available' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Live only
+          </label>
+          <label class="mi2-dchip {% if availability_filter == 'unavailable' %}active{% endif %}">
+            <input type="radio" name="availability" value="unavailable" {% if availability_filter == 'unavailable' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Hidden
+          </label>
+          <label class="mi2-dchip {% if availability_filter == 'out_of_stock' %}active{% endif %}">
+            <input type="radio" name="availability" value="out_of_stock" {% if availability_filter == 'out_of_stock' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Out of stock
+          </label>
+        </div>
+      </div>
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-star"></i> Popularity</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if popular_filter == 'all' or not popular_filter %}active{% endif %}">
+            <input type="radio" name="popular" value="all" {% if popular_filter == 'all' or not popular_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()"> All
+          </label>
+          <label class="mi2-dchip {% if popular_filter == 'popular_only' %}active{% endif %}">
+            <input type="radio" name="popular" value="popular_only" {% if popular_filter == 'popular_only' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Popular only
+          </label>
+          <label class="mi2-dchip {% if popular_filter == 'non_popular' %}active{% endif %}">
+            <input type="radio" name="popular" value="non_popular" {% if popular_filter == 'non_popular' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Regular
+          </label>
+        </div>
+      </div>
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-tag"></i> Discount</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if discount_filter == 'all' or not discount_filter %}active{% endif %}">
+            <input type="radio" name="discount" value="all" {% if discount_filter == 'all' or not discount_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Any
+          </label>
+          <label class="mi2-dchip {% if discount_filter == 'discounted' %}active{% endif %}">
+            <input type="radio" name="discount" value="discounted" {% if discount_filter == 'discounted' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Discounted
+          </label>
+          <label class="mi2-dchip {% if discount_filter == 'no_discount' %}active{% endif %}">
+            <input type="radio" name="discount" value="no_discount" {% if discount_filter == 'no_discount' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> No discount
+          </label>
+        </div>
+      </div>
+
+      <div class="mi2-drawer-group">
+        <h6><i class="fa-solid fa-indian-rupee-sign"></i> Price Range</h6>
+        <div class="mi2-drawer-chips">
+          <label class="mi2-dchip {% if price_range_filter == 'all' or not price_range_filter %}active{% endif %}">
+            <input type="radio" name="price_range" value="all" {% if price_range_filter == 'all' or not price_range_filter %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Any
+          </label>
+          <label class="mi2-dchip {% if price_range_filter == '<100' %}active{% endif %}">
+            <input type="radio" name="price_range" value="<100" {% if price_range_filter == '<100' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Under ₹100
+          </label>
+          <label class="mi2-dchip {% if price_range_filter == '100-300' %}active{% endif %}">
+            <input type="radio" name="price_range" value="100-300" {% if price_range_filter == '100-300' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> ₹100–300
+          </label>
+          <label class="mi2-dchip {% if price_range_filter == '300-500' %}active{% endif %}">
+            <input type="radio" name="price_range" value="300-500" {% if price_range_filter == '300-500' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> ₹300–500
+          </label>
+          <label class="mi2-dchip {% if price_range_filter == '>500' %}active{% endif %}">
+            <input type="radio" name="price_range" value=">500" {% if price_range_filter == '>500' %}checked{% endif %} style="display:none" onchange="this.form.submit()"> Above ₹500
+          </label>
+        </div>
+      </div>
+
+    </div>
+    <div class="mi2-drawer-foot">
+      <a href="{% url 'staff:menu_items' %}" class="btn-s" style="justify-content:center"><i class="fa-solid fa-rotate"></i> Reset</a>
+      <button type="submit" class="btn-p" style="justify-content:center"><i class="fa-solid fa-check"></i> Apply</button>
+    </div>
+  </form>
+</aside>
+
+<!-- ============================================================
+     CUSTOMER PREVIEW MODAL
+     ============================================================ -->
+<div class="modal-c" id="previewModal">
+  <div class="modal-b" style="max-width:520px;background:transparent;box-shadow:none;">
+    <div class="mi2-preview-card">
+      <div class="mi2-preview-media">
+        <img id="previewImg" src="" alt="" style="display:none">
+        <div id="previewPlaceholder" class="placeholder"><i class="fa-solid fa-utensils"></i></div>
+      </div>
+      <div class="mi2-preview-body">
+        <div class="mi2-preview-cat" id="previewCat">—</div>
+        <h2 class="mi2-preview-name" id="previewName">—</h2>
+        <p class="mi2-preview-desc" id="previewDesc">—</p>
+        <div class="mi2-preview-price-row">
+          <span class="mi2-preview-price-final" id="previewFinal">₹0</span>
+          <span class="mi2-preview-price-orig" id="previewOrig" style="display:none">₹0</span>
+        </div>
+        <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+          <button type="button" class="mi2-preview-pill" onclick="closeModal('previewModal')">
+            <i class="fa-solid fa-bag-shopping"></i> Add to Cart (demo)
+          </button>
+          <button type="button" class="btn-s" onclick="closeModal('previewModal')">Close</button>
+        </div>
+        <div style="font-size:.72rem;color:var(--muted);text-align:center;padding-top:.5rem;border-top:1px dashed var(--line);">
+          <i class="fa-solid fa-info-circle"></i> This is how customers see this item on the menu.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     STANDARD MODALS (Add / Edit / Discount)
+     ============================================================ -->
+{% if is_manager %}
+
+<!-- Add -->
+<div class="modal-c" id="addItemModal">
+  <div class="modal-b" style="max-width:640px;">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-plus me-2" style="color:var(--orange)"></i>Add New Menu Item</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Item Name *</label>
+          <input type="text" name="name" class="f-input" placeholder="e.g. Paneer Butter Masala" required>
+        </div>
+
+        <div class="mi2-form-grid" style="margin-bottom:1rem">
+          <div>
+            <label class="f-label">Category *</label>
+            <select name="category_id" class="f-input" required>
+              <option value="">— Select Category —</option>
+              {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Food Type *</label>
+            <select name="food_type" class="f-input" required>
+              <option value="veg">Veg</option>
+              <option value="non_veg">Non-Veg</option>
+              <option value="vegan">Vegan</option>
+              <option value="egg">Egg</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mi2-form-grid" style="margin-bottom:1rem">
+          <div>
+            <label class="f-label">Price (₹) *</label>
+            <input type="number" step="0.01" min="1" name="price" class="f-input" placeholder="280" required>
+          </div>
+          <div>
+            <label class="f-label">Discount (%)</label>
+            <input type="number" name="discount_percentage" value="0" min="0" max="90" class="f-input">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Description</label>
+          <textarea name="description" rows="3" class="f-input" placeholder="Short description…"></textarea>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Customizations (કસ્ટમાઇઝેશન)</label>
+          <select name="customizations" id="addItemCustomizations" multiple class="f-input" size="3" style="height:auto;padding:.5rem;">
+            {% for cust in item_customizations %}
+              <option value="{{ cust.id }}">{{ cust.name }}</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;">
+            <i class="fa-solid fa-info-circle"></i> Hold Ctrl (or Cmd) to select multiple customization groups.
+          </small>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Item Image</label>
+          <input type="file" name="image" accept="image/*" class="f-input" style="padding:.55rem;" onchange="previewImage(this,'addImgPreview')">
+          <img id="addImgPreview" class="mi2-img-preview" alt="">
+        </div>
+
+        <div class="mi2-checks">
+          <label class="mi2-check"><input type="checkbox" name="is_available" checked> Available on customer menu</label>
+          <label class="mi2-check"><input type="checkbox" name="is_popular"> Mark as Popular</label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit -->
+<div class="modal-c" id="editItemModal">
+  <div class="modal-b" style="max-width:640px;">
+    <form method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="item_id" id="editItemId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange)"></i>Edit Menu Item</h5>
+        <button type="button" class="act-btn" onclick="closeModal('editItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Item Name *</label>
+          <input type="text" name="name" id="editItemName" class="f-input" required>
+        </div>
+
+        <div class="mi2-form-grid" style="margin-bottom:1rem">
+          <div>
+            <label class="f-label">Category *</label>
+            <select name="category_id" id="editItemCategoryId" class="f-input" required>
+              {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Food Type *</label>
+            <select name="food_type" id="editItemFoodType" class="f-input" required>
+              <option value="veg">Veg</option>
+              <option value="non_veg">Non-Veg</option>
+              <option value="vegan">Vegan</option>
+              <option value="egg">Egg</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mi2-form-grid" style="margin-bottom:1rem">
+          <div>
+            <label class="f-label">Price (₹) *</label>
+            <input type="number" step="0.01" name="price" id="editItemPrice" class="f-input" required>
+          </div>
+          <div>
+            <label class="f-label">Discount (%)</label>
+            <input type="number" name="discount_percentage" id="editItemDiscount" min="0" max="90" class="f-input">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Description</label>
+          <textarea name="description" id="editItemDesc" rows="3" class="f-input"></textarea>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Customizations (કસ્ટમાઇઝેશન)</label>
+          <select name="customizations" id="editItemCustomizations" multiple class="f-input" size="3" style="height:auto;padding:.5rem;">
+            {% for cust in item_customizations %}
+              <option value="{{ cust.id }}">{{ cust.name }}</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;">
+            <i class="fa-solid fa-info-circle"></i> Hold Ctrl (or Cmd) to select multiple customization groups.
+          </small>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Change Image</label>
+          <input type="file" name="image" accept="image/*" class="f-input" style="padding:.55rem;" onchange="previewImage(this,'editImgPreview')">
+          <img id="editImgPreview" class="mi2-img-preview" alt="">
+        </div>
+
+        <div class="mi2-checks">
+          <label class="mi2-check"><input type="checkbox" name="is_available" id="editItemAvail"> Available on customer menu</label>
+          <label class="mi2-check"><input type="checkbox" name="is_popular" id="editItemPop"> Mark as Popular</label>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Discount -->
+<div class="modal-c" id="discountItemModal">
+  <div class="modal-b" style="max-width:440px;">
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="set_discount">
+      <input type="hidden" name="item_id" id="discItemId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-tag me-2" style="color:var(--orange)"></i>Set Discount — <span id="discItemName"></span></h5>
+        <button type="button" class="act-btn" onclick="closeModal('discountItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Original Price (₹)</label>
+          <input type="text" id="discOrigPrice" readonly class="f-input" style="background:var(--cream);color:var(--muted)">
+        </div>
+        <div style="margin-bottom:1rem">
+          <label class="f-label">Discount Percentage (%)</label>
+          <input type="number" name="discount_percentage" id="discPctInput" min="0" max="90" required
+                 class="f-input" oninput="calcFinalPrice()">
+        </div>
+        <div style="background:var(--green-soft);border-radius:14px;padding:.9rem 1rem">
+          <div class="f-label" style="color:var(--green)">Calculated Final Price</div>
+          <div id="discFinalPriceDisplay"
+               style="font-family:'Fredoka',sans-serif;font-size:1.5rem;font-weight:700;color:var(--green)">
+            ₹0
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('discountItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Discount</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Duplicate / clone hidden form -->
+<form id="duplicateForm" method="POST" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="duplicate">
+  <input type="hidden" name="item_id" id="duplicateItemId">
+</form>
+
+{% endif %}
+
+<script>
+/* ============ Accordion ============ */
+function toggleAcc(el){
+  el.closest('.mi2-acc').classList.toggle('open');
+}
+
+/* ============ View switch ============ */
+function setMenuView(view){
+  document.querySelectorAll('.mi2-vt-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.view === view));
+  document.getElementById('menuAccordion').style.display = (view === 'accordion') ? 'flex' : 'none';
+  document.getElementById('menuGrid').style.display = (view === 'grid') ? 'grid' : 'none';
+  document.getElementById('menuTable').style.display = (view === 'table') ? 'block' : 'none';
+  try { localStorage.setItem('menu2View', view); } catch(e){}
+}
+document.addEventListener('DOMContentLoaded', () => {
+  let v = 'accordion';
+  try { v = localStorage.getItem('menu2View') || 'accordion'; } catch(e){}
+  setMenuView(v);
+});
+
+/* ============ Drawer ============ */
+function openDrawer(){
+  document.getElementById('mi2Drawer').classList.add('show');
+  document.getElementById('mi2DrawerBg').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeDrawer(){
+  document.getElementById('mi2Drawer').classList.remove('show');
+  document.getElementById('mi2DrawerBg').classList.remove('show');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+/* ============ Selection ============ */
+let selected = new Set();
+
+function toggleSelect(btn, id){
+  btn.classList.toggle('checked');
+  const card = btn.closest('.mi2-card');
+  const rowCheck = document.querySelector(`.mi2-row-check[data-id="${id}"]`);
+  const isChecked = btn.classList.contains('checked');
+  card?.classList.toggle('selected', isChecked);
+  if (rowCheck) rowCheck.checked = isChecked;
+
+  if (isChecked) selected.add(String(id));
+  else selected.delete(String(id));
+  updateBulkBar();
+}
+
+function toggleRowSelect(el){
+  const id = el.dataset.id;
+  const card = document.querySelector(`.mi2-card[data-id="${id}"]`);
+  const selectBtn = card?.querySelector('.mi2-select');
+  if (el.checked){
+    selected.add(String(id));
+    card?.classList.add('selected');
+    selectBtn?.classList.add('checked');
+  } else {
+    selected.delete(String(id));
+    card?.classList.remove('selected');
+    selectBtn?.classList.remove('checked');
+  }
+  updateBulkBar();
+}
+
+function toggleSelectAll(el){
+  document.querySelectorAll('.mi2-row-check').forEach(cb => {
+    cb.checked = el.checked;
+    toggleRowSelect(cb);
+  });
+}
+
+function updateBulkBar(){
+  const bar = document.getElementById('mi2Bulk');
+  const count = document.getElementById('mi2BulkCount');
+  count.textContent = selected.size;
+  bar.classList.toggle('show', selected.size > 0);
+}
+
+function clearSelection(){
+  selected.clear();
+  document.querySelectorAll('.mi2-select.checked').forEach(b => b.classList.remove('checked'));
+  document.querySelectorAll('.mi2-card.selected').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.mi2-row-check').forEach(c => c.checked = false);
+  document.getElementById('mi2SelectAll').checked = false;
+  updateBulkBar();
+}
+
+/* ============ Bulk actions ============ */
+function bulkAction(action){
+  if (!selected.size) return;
+  const ids = Array.from(selected).join(',');
+
+  if (action === 'delete'){
+    if (!confirm(`Delete ${selected.size} item(s)? This cannot be undone.`)) return;
+  }
+
+  // Build a form and POST
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.style.display = 'none';
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  form.innerHTML = `
+    <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">
+    <input type="hidden" name="action" value="bulk_${action}">
+    <input type="hidden" name="item_ids" value="${ids}">
+  `;
+  document.body.appendChild(form);
+  form.submit();
+}
+
+/* ============ Duplicate ============ */
+function duplicateItem(id){
+  if (!confirm('Duplicate this item?')) return;
+  document.getElementById('duplicateItemId').value = id;
+  document.getElementById('duplicateForm').submit();
+}
+
+/* ============ Inline price edit ============ */
+function quickEditPrice(id, current){
+  const val = prompt('Enter new price (₹):', current);
+  if (val === null) return;
+  const num = parseFloat(val);
+  if (isNaN(num) || num < 0){ alert('Please enter a valid price.'); return; }
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.style.display = 'none';
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
+  form.innerHTML = `
+    <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">
+    <input type="hidden" name="action" value="quick_price">
+    <input type="hidden" name="item_id" value="${id}">
+    <input type="hidden" name="price" value="${num}">
+  `;
+  document.body.appendChild(form);
+  form.submit();
+}
+
+/* ============ Modals ============ */
+function openEditModal(id,name,catId,foodType,price,discountPct,desc,avail,pop,custIds){
+  document.getElementById('editItemId').value = id;
+  document.getElementById('editItemName').value = name;
+  document.getElementById('editItemCategoryId').value = catId;
+  document.getElementById('editItemFoodType').value = foodType;
+  document.getElementById('editItemPrice').value = price;
+  document.getElementById('editItemDiscount').value = discountPct || 0;
+  document.getElementById('editItemDesc').value = desc || '';
+  document.getElementById('editItemAvail').checked = (avail === 'True' || avail === 'true' || avail === true);
+  document.getElementById('editItemPop').checked = (pop === 'True' || pop === 'true' || pop === true);
+
+  const custSelect = document.getElementById('editItemCustomizations');
+  if (custSelect) {
+    const custArr = Array.isArray(custIds) ? custIds.map(String) : [];
+    Array.from(custSelect.options).forEach(opt => {
+      opt.selected = custArr.includes(String(opt.value));
+    });
+  }
+
+  openModal('editItemModal');
+}
+
+function openDiscountModal(id, name, origPrice, discPct){
+  document.getElementById('discItemId').value = id;
+  document.getElementById('discItemName').innerText = name;
+  document.getElementById('discOrigPrice').value = origPrice;
+  document.getElementById('discPctInput').value = discPct || 0;
+  calcFinalPrice();
+  openModal('discountItemModal');
+}
+
+function calcFinalPrice(){
+  const o = parseFloat(document.getElementById('discOrigPrice').value) || 0;
+  const p = parseFloat(document.getElementById('discPctInput').value) || 0;
+  const f = o * (1 - p/100.0);
+  document.getElementById('discFinalPriceDisplay').innerText =
+    '₹' + Math.max(0, f).toFixed(0);
+}
+
+/* ============ Customer preview ============ */
+function openPreview(name, cat, foodType, origPrice, discPct, finalPrice, desc, imgUrl){
+  document.getElementById('previewName').innerText = name;
+  document.getElementById('previewCat').innerText = cat;
+  document.getElementById('previewDesc').innerText = desc || 'A delicious dish from our kitchen.';
+
+  const final = document.getElementById('previewFinal');
+  const orig  = document.getElementById('previewOrig');
+  final.innerText = '₹' + finalPrice;
+  if (discPct && parseFloat(discPct) > 0){
+    orig.style.display = 'inline';
+    orig.innerText = '₹' + origPrice;
+  } else {
+    orig.style.display = 'none';
+  }
+
+  const img = document.getElementById('previewImg');
+  const ph  = document.getElementById('previewPlaceholder');
+  if (imgUrl){
+    img.src = imgUrl; img.style.display = 'block'; ph.style.display = 'none';
+  } else {
+    img.style.display = 'none'; ph.style.display = 'grid';
+  }
+  openModal('previewModal');
+}
+
+/* ============ Image preview ============ */
+function previewImage(input, targetId){
+  const target = document.getElementById(targetId);
+  if (!target) return;
+  if (input.files && input.files[0]){
+    const reader = new FileReader();
+    reader.onload = e => { target.src = e.target.result; target.style.display = 'block'; };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+/* ============ Cmd+K shortcut ============ */
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    document.getElementById('mi2Search')?.focus();
+  }
+});
+</script>
+
+{% endblock %}

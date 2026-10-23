@@ -1,0 +1,75 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Event Bookings{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div><h1>Event Bookings</h1><p>Manage all event reservations.</p></div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-info"><div class="num">{{ pending_count }}</div><div class="lbl">Pending</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ confirmed_count }}</div><div class="lbl">Confirmed</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-xmark"></i></div><div class="stat-info"><div class="num">{{ cancelled_count|default:0 }}</div><div class="lbl">Cancelled</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Total</div></div></div>
+</div>
+
+<div class="filters">
+  <a href="?status=all" class="chip {% if active_filter == 'all' %}active{% endif %}">All</a>
+  <a href="?status=pending" class="chip {% if active_filter == 'pending' %}active{% endif %}">Pending</a>
+  <a href="?status=confirmed" class="chip {% if active_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+  <a href="?status=cancelled" class="chip {% if active_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-calendar-days me-2" style="color:var(--orange);"></i>All Event Reservations</h5>
+    <span class="sub">{{ events|length }} event{{ events|length|pluralize }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Host</th><th>Event Type</th><th>Date &amp; Time</th><th>Guests</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ ev.name|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ ev.name }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">{{ ev.phone|default:"—" }}</small>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge-status bs-orange">{{ ev.get_event_type_display|default:ev.event_type }}</span></td>
+          <td>
+            <div><b>{{ ev.event_date|date:"d M Y" }}</b></div>
+            <small style="color:var(--muted);">{{ ev.event_time|time:"H:i" }}</small>
+          </td>
+          <td><span class="badge-status bs-blue">{{ ev.guests }} guests</span></td>
+          <td>
+            <span class="badge-status {% if ev.status == 'pending' %}bs-yellow{% elif ev.status == 'confirmed' %}bs-green{% else %}bs-red{% endif %}">
+              {{ ev.status|capfirst }}
+            </span>
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              {% if ev.status == 'pending' %}
+                <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="event_id" value="{{ ev.id }}"><input type="hidden" name="action" value="confirm"><button type="submit" class="act-btn success" title="Confirm"><i class="fa-solid fa-check"></i></button></form>
+                <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="event_id" value="{{ ev.id }}"><input type="hidden" name="action" value="cancel"><button type="submit" class="act-btn danger" title="Cancel"><i class="fa-solid fa-xmark"></i></button></form>
+              {% elif ev.status == 'confirmed' %}
+                <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="event_id" value="{{ ev.id }}"><input type="hidden" name="action" value="cancel"><button type="submit" class="act-btn danger" title="Cancel"><i class="fa-solid fa-xmark"></i></button></form>
+              {% else %}<span style="color:var(--muted);font-size:.75rem;">—</span>{% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-calendar-xmark"></i><b>No events found</b><small>Event bookings will appear here.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

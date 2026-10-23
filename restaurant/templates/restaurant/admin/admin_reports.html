@@ -1,0 +1,517 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Reports — Admin{% endblock %}
+{% block page_title %}{% endblock %}
+{% block page_sub %}{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- HEADER -->
+<!-- ============================================================ -->
+<div class="rp-header">
+  <h1 class="rp-title">Comprehensive Reports</h1>
+  <button type="button" class="btn-p" onclick="window.print();">
+    <i class="fa-solid fa-download"></i> Download PDF
+  </button>
+</div>
+
+<!-- ============================================================ -->
+<!-- DATE RANGE FILTER -->
+<!-- ============================================================ -->
+<div class="rp-filter-card">
+  <form method="get" action="{% url 'admin_reports' %}" class="rp-filter-form">
+    <div class="rp-filter-group">
+      <label class="rp-label">Date Range</label>
+      <select name="range" class="rp-input">
+        <option value="today"      {% if date_range == 'today' %}selected{% endif %}>Today</option>
+        <option value="week"       {% if date_range == 'week' %}selected{% endif %}>This Week</option>
+        <option value="month"      {% if date_range == 'month' or not date_range %}selected{% endif %}>This Month</option>
+        <option value="quarter"    {% if date_range == 'quarter' %}selected{% endif %}>This Quarter</option>
+        <option value="year"       {% if date_range == 'year' %}selected{% endif %}>This Year</option>
+        <option value="all"        {% if date_range == 'all' %}selected{% endif %}>All Time</option>
+      </select>
+    </div>
+    <button type="submit" class="rp-apply-btn">
+      <i class="fa-solid fa-filter"></i> Apply Filter
+    </button>
+  </form>
+</div>
+
+<!-- ============================================================ -->
+<!-- DATE HEADING -->
+<!-- ============================================================ -->
+<div class="rp-date-heading">
+  Showing Reports From <b>{{ start_date|date:"M d, Y" }}</b> to <b>{{ end_date|date:"M d, Y" }}</b>
+</div>
+
+<!-- ============================================================ -->
+<!-- SALES & ORDERS REPORT -->
+<!-- ============================================================ -->
+<div class="rp-section">
+  <div class="rp-section-header">
+    <span class="rp-section-icon">📊</span>
+    <span class="rp-section-title">Sales &amp; Orders Report</span>
+  </div>
+
+  <div class="rp-section-body">
+    <div class="rp-stats-grid rp-grid-3">
+
+      <div class="rp-stat-card rp-accent-orange">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Total Revenue</div>
+          <div class="rp-stat-value rp-value-dark">₹{{ total_sales|floatformat:2 }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">₹</div>
+      </div>
+
+      <div class="rp-stat-card rp-accent-orange">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Total Orders</div>
+          <div class="rp-stat-value rp-value-dark">{{ total_orders }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">🍽️</div>
+      </div>
+
+      <div class="rp-stat-card rp-accent-orange">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Total Events Booked</div>
+          <div class="rp-stat-value rp-value-dark">{{ total_events }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">📅</div>
+      </div>
+
+    </div>
+
+    <!-- Revenue Over Time -->
+    <div class="rp-chart-wrap">
+      <div class="rp-chart-title">Revenue Over Time</div>
+      <canvas id="revenueChart" height="90"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- FOOD WASTE + INVENTORY (Side by side) -->
+<!-- ============================================================ -->
+<div class="rp-two-col">
+
+  <!-- ===== FOOD WASTE ===== -->
+  <div class="rp-section">
+    <div class="rp-section-header">
+      <span class="rp-section-icon">♻️</span>
+      <span class="rp-section-title">Food Waste Report</span>
+    </div>
+
+    <div class="rp-section-body">
+      <div class="rp-stat-card rp-accent-orange" style="margin-bottom:1rem;">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Total Donations Collected</div>
+          <div class="rp-stat-value rp-value-dark">{{ total_donations }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">📦</div>
+      </div>
+
+      <div class="rp-stat-card rp-accent-orange">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Revenue from NGOs</div>
+          <div class="rp-stat-value rp-value-dark">₹{{ ngo_revenue|floatformat:2 }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">💝</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INVENTORY ===== -->
+  <div class="rp-section">
+    <div class="rp-section-header">
+      <span class="rp-section-icon">📦</span>
+      <span class="rp-section-title">Inventory Report (Current Status)</span>
+    </div>
+
+    <div class="rp-section-body">
+      <div class="rp-stat-card rp-accent-orange" style="margin-bottom:1rem;">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Items Low on Stock</div>
+          <div class="rp-stat-value rp-value-dark">{{ low_stock_count }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">⚠️</div>
+      </div>
+
+      <div class="rp-chart-wrap">
+        <div class="rp-chart-title">Current Stock by Category</div>
+        <canvas id="inventoryChart" height="180"></canvas>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- CUSTOMER REPORT -->
+<!-- ============================================================ -->
+<div class="rp-section">
+  <div class="rp-section-header">
+    <span class="rp-section-icon">👥</span>
+    <span class="rp-section-title">Customer Report</span>
+  </div>
+
+  <div class="rp-section-body">
+    <div class="rp-stats-grid rp-grid-3">
+      <div class="rp-stat-card rp-accent-orange">
+        <div class="rp-stat-left">
+          <div class="rp-stat-label">Total Registered Customers</div>
+          <div class="rp-stat-value rp-value-dark">{{ total_customers }}</div>
+        </div>
+        <div class="rp-stat-icon-big rp-icon-orange">👥</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- STYLES — ORANGE THEME -->
+<!-- ============================================================ -->
+<style>
+/* ---- Page Header ---- */
+.rp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.rp-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #FF7A00;
+    margin: 0;
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* ---- Filter Card ---- */
+.rp-filter-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #EFE9E0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+}
+
+.rp-filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.rp-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 240px;
+    flex: 1;
+    max-width: 340px;
+}
+
+.rp-label {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #2C2721;
+}
+
+.rp-input {
+    width: 100%;
+    padding: .7rem 1rem;
+    border: 1.5px solid #EFE9E0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .9rem;
+    color: #151310;
+    background: #fff;
+    outline: none;
+    transition: .2s;
+}
+.rp-input:focus {
+    border-color: #FF7A00;
+    box-shadow: 0 0 0 3px rgba(255,122,0,.12);
+}
+
+.rp-apply-btn {
+    padding: .75rem 1.5rem;
+    background: #FF7A00;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    transition: .25s;
+    font-family: inherit;
+    box-shadow: 0 4px 12px rgba(255,122,0,.3);
+}
+.rp-apply-btn:hover {
+    background: #E86F00;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255,122,0,.45);
+}
+
+/* ---- Date Heading ---- */
+.rp-date-heading {
+    text-align: center;
+    font-size: 1rem;
+    color: #7C756B;
+    padding: 14px;
+    margin-bottom: 20px;
+    background: #FFF8F4;
+    border: 1px solid #FFE4D6;
+    border-radius: 10px;
+}
+.rp-date-heading b {
+    color: #151310;
+}
+
+/* ---- Section Card ---- */
+.rp-section {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #EFE9E0;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05);
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.rp-section-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 14px 22px;
+    background: #FFF8F4;
+    border-bottom: 1px solid #EFE9E0;
+}
+
+.rp-section-icon {
+    font-size: 1.15rem;
+}
+
+.rp-section-title {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #151310;
+    font-family: 'Fredoka', sans-serif;
+}
+
+.rp-section-body {
+    padding: 22px;
+}
+
+/* ---- Two Column Grid ---- */
+.rp-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 0;
+}
+.rp-two-col .rp-section {
+    margin-bottom: 24px;
+}
+
+/* ---- Stats Grid ---- */
+.rp-stats-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+.rp-grid-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+/* ---- Stat Card ---- */
+.rp-stat-card {
+    background: #fff;
+    border: 1px solid #EFE9E0;
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    transition: transform .2s, box-shadow .2s;
+}
+.rp-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255,122,0,.12);
+}
+.rp-accent-orange {
+    border-left: 4px solid #FF7A00;
+}
+
+.rp-stat-left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.rp-stat-label {
+    font-size: .82rem;
+    color: #7C756B;
+    font-weight: 600;
+}
+
+.rp-stat-value {
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: #151310;
+    font-family: 'Fredoka', sans-serif;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.rp-value-dark { color: #151310; }
+
+.rp-stat-icon-big {
+    font-size: 2rem;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: .85;
+}
+.rp-icon-orange { color: #FF7A00; }
+
+/* ---- Chart ---- */
+.rp-chart-wrap {
+    background: #FFFBF6;
+    border: 1px solid #EFE9E0;
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 8px;
+}
+
+.rp-chart-title {
+    text-align: center;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #7C756B;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1000px) {
+    .rp-two-col { grid-template-columns: 1fr; }
+    .rp-grid-3  { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+    .rp-grid-3  { grid-template-columns: 1fr; }
+    .rp-title   { font-size: 1.4rem; }
+    .rp-stat-value { font-size: 1.4rem; }
+}
+
+/* ---- Print ---- */
+@media print {
+    .sidebar, .rp-header .btn-p, .rp-filter-card, .rp-apply-btn { display: none !important; }
+    .main-content { margin-left: 0 !important; }
+}
+</style>
+
+<!-- ============================================================ -->
+<!-- CHART.JS -->
+<!-- ============================================================ -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* ---- Revenue Over Time (Line Chart) ---- */
+document.addEventListener('DOMContentLoaded', function () {
+  const rvCanvas = document.getElementById('revenueChart');
+  if (rvCanvas) {
+    new Chart(rvCanvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+          label: 'Total Revenue (₹)',
+          data: {{ chart_values|safe }},
+          borderColor: '#FF7A00',
+          backgroundColor: 'rgba(255,122,0,0.12)',
+          borderWidth: 2.5,
+          tension: 0.35,
+          fill: true,
+          pointBackgroundColor: '#FF7A00',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            display: true,
+            labels: {
+              color: '#7C756B',
+              font: { size: 12, weight: '600' }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: { color: '#EFE9E0' },
+            ticks: { color: '#7C756B' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#7C756B', maxRotation: 60, minRotation: 45 }
+          }
+        }
+      }
+    });
+  }
+
+  /* ---- Inventory Stock by Category (Donut Chart) ---- */
+  const invCanvas = document.getElementById('inventoryChart');
+  if (invCanvas) {
+    new Chart(invCanvas.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: {{ inv_labels|safe }},
+        datasets: [{
+          data: {{ inv_values|safe }},
+          backgroundColor: [
+            '#FF7A00', '#FFA53B', '#FFC891', '#E85A28',
+            '#FF9052', '#FFB896', '#FFD9B5'
+          ],
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '62%',
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              color: '#7C756B',
+              font: { size: 12, weight: '600' },
+              boxWidth: 14,
+              padding: 12
+            }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,155 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmation #{{ order.id }} — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);text-decoration:none;}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.confirm-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2.5rem 2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.45rem 1.2rem;border-radius:50px;font-weight:700;
+  font-size:.88rem;text-transform:uppercase;letter-spacing:.05em;
+  background:var(--green-soft);color:var(--green);
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;text-decoration:none;
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <a href="{% url 'customer_orders' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">
+      <i class="fa-solid fa-clipboard-list me-1"></i> My Orders
+    </a>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:850px;">
+  <div class="confirm-card text-center mb-4">
+    <div class="mb-3">
+      <div class="d-inline-grid place-items-center rounded-circle p-3 mb-2" style="width:72px;height:72px;background:var(--green-soft);color:var(--green);margin:0 auto;display:grid;">
+        <i class="fa-solid fa-circle-check" style="font-size:2.5rem;"></i>
+      </div>
+    </div>
+
+    <h2 class="mb-2">Order Confirmed!</h2>
+    <p class="text-muted mb-3">Thank you for your order. Your food request has been sent to our kitchen.</p>
+
+    <div class="d-inline-block bg-light px-4 py-2 rounded-pill border mb-4">
+      <span class="text-muted me-2">Order ID:</span>
+      <span class="fw-bold fs-5 text-orange" style="color:var(--orange);">#{{ order.id }}</span>
+    </div>
+
+    <!-- STATUS TRACKER -->
+    <div class="p-3 rounded-4 mb-4" style="background:var(--cream);border:1px solid var(--line);">
+      <div class="small text-muted mb-2">Current Order Status</div>
+      <div class="status-pill mb-2">
+        <i class="fa-solid fa-clock-rotate-left"></i> {{ order.get_status_display|default:order.status|title }}
+      </div>
+      <div class="small text-muted">
+        Flow: Pending &rarr; Accepted &rarr; Preparing &rarr; Ready &rarr; Delivered/Served &rarr; Completed
+      </div>
+    </div>
+
+    <!-- DETAILS GRID -->
+    <div class="row text-start g-4 mt-2">
+      <div class="col-md-6">
+        <h5 class="border-bottom pb-2 mb-3"><i class="fa-solid fa-location-dot me-2" style="color:var(--orange)"></i>Customer &amp; Location Information</h5>
+        <p class="mb-1"><strong>Customer:</strong> {{ order.user.get_full_name|default:order.user.username }}</p>
+        <p class="mb-1"><strong>Phone:</strong> {{ order.phone }}</p>
+        <p class="mb-1"><strong>Address/Location:</strong> {{ order.address }}</p>
+        <p class="mb-1"><strong>Payment Method:</strong> <span class="badge bg-secondary">{{ order.payment_method }}</span></p>
+        <p class="mb-1"><strong>Payment Status:</strong> <span class="badge {% if order.payment_status == 'paid' or order.payment_status == 'success' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ order.payment_status|title }}</span></p>
+        {% if order.kitchen_notes %}
+          <p class="mb-1 text-muted"><small><strong>Notes:</strong> {{ order.kitchen_notes }}</small></p>
+        {% endif %}
+        <p class="mb-0 text-muted"><small><strong>Placed On:</strong> {{ order.created_at|date:"d M Y, h:i A" }}</small></p>
+      </div>
+
+      <div class="col-md-6">
+        <h5 class="border-bottom pb-2 mb-3"><i class="fa-solid fa-list-check me-2" style="color:var(--orange)"></i>Ordered Items</h5>
+        <div class="mb-3">
+          {% for oi in order_items %}
+            <div class="py-2 border-bottom">
+              <div class="d-flex justify-content-between">
+                <span class="fw-bold">{{ oi.quantity }}x {{ oi.menu_item.name }}</span>
+                <span class="fw-bold">₹{{ oi.line_total }}</span>
+              </div>
+              {% if oi.customization_details %}
+                <div class="small text-muted mt-1" style="font-size:.82rem;">
+                  <i class="fa-solid fa-sliders text-warning me-1"></i> {{ oi.customization_details }}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="d-flex justify-content-between pt-2 fw-bold fs-5">
+          <span>Total Paid/Due:</span>
+          <span style="color:var(--orange);font-family:'Fredoka';">₹{{ order.total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5 d-flex justify-content-center gap-3">
+      <a href="{% url 'customer_orders' %}" class="btn btn-primary px-4 py-2">
+        <i class="fa-solid fa-clipboard-list me-2"></i>Track in My Orders
+      </a>
+      <a href="{% url 'food_order_view' %}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold text-decoration-none">
+        Order More Food
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

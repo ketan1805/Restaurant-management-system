@@ -1,0 +1,89 @@
+{% extends 'restaurant/base_auth.html' %}
+{% block title %}FoodVerse · Register{% endblock %}
+
+{% block content %}
+<div class="form-container wide">
+    <div class="logo-container">
+        <div class="logo-icon"><i class="fas fa-utensils"></i></div>
+        <span class="logo-text">FoodVerse</span>
+    </div>
+
+    <div class="form-header">
+        <h2>Create Account</h2>
+        <p>Join us for an unforgettable dining experience</p>
+    </div>
+
+    <form method="post" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" name="name" placeholder="Full Name" required />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <div class="input-group-custom">
+                    <i class="fas fa-phone input-icon"></i>
+                    <input type="tel" name="mobile_no" placeholder="Phone" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group-custom">
+                    <i class="fas fa-envelope input-icon"></i>
+                    <input type="email" name="email" placeholder="Email" required />
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-map-marker-alt input-icon"></i>
+                <input type="text" name="address" placeholder="Street Address" required />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <div class="input-group-custom">
+                    <i class="fas fa-user-tag input-icon"></i>
+                    <input type="text" name="username" placeholder="Username" required />
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="input-group-custom">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" class="has-toggle" id="cus_password" name="password1" placeholder="Password" required />
+                    <button type="button" class="toggle-pass" onclick="togglePassword('cus_password', this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" class="has-toggle" id="cus_cpassword" name="password2" placeholder="Confirm Password" required />
+                <button type="button" class="toggle-pass" onclick="togglePassword('cus_cpassword', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-primary-custom">
+            <span class="loader"></span>
+            <span class="btn-text">Create Account</span>
+            <i class="fas fa-arrow-right"></i>
+        </button>
+
+
+
+        <div class="form-footer">
+            Already have an account? <a href="{% url 'login' %}">Sign In</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

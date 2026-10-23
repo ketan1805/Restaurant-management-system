@@ -1,0 +1,60 @@
+{% extends 'restaurant/base_auth.html' %}
+{% block title %}FoodVerse · Login{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="logo-container">
+        <div class="logo-icon"><i class="fas fa-utensils"></i></div>
+        <span class="logo-text">FoodVerse</span>
+    </div>
+
+    <div class="form-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to continue your culinary journey</p>
+    </div>
+
+    <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-user input-icon"></i>
+                <input type="text" name="username" placeholder="Username"
+                       required autocomplete="username" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" class="has-toggle" id="cus_password"
+                       name="password" placeholder="Password"
+                       required autocomplete="current-password" />
+                <button type="button" class="toggle-pass"
+                        onclick="togglePassword('cus_password', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="form-options">
+            <label class="remember">
+                <input type="checkbox" checked /> Remember me
+            </label>
+            <a href="{% url 'forgot_password' %}" class="forgot">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn-primary-custom">
+            <span class="loader"></span>
+            <span class="btn-text">Sign In</span>
+            <i class="fas fa-arrow-right"></i>
+        </button>
+
+
+
+        <div class="form-footer">
+            Don't have an account? <a href="{% url 'register' %}">Sign Up</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

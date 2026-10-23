@@ -1,0 +1,732 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Menu Management — Admin{% endblock %}
+
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Menu Management</h1>
+    <p>Manage categories, subcategories, items and their customizations.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TABS -->
+<!-- ============================================================ -->
+<div class="filters" style="border-bottom:2px solid var(--line);padding-bottom:0;gap:0;border-radius:0;">
+  <a href="?tab=categories"    class="chip {% if active_tab == 'categories' or not active_tab %}active{% endif %}"    style="border-radius:50px 50px 0 0;border-bottom:none;">Categories</a>
+  <a href="?tab=subcategories" class="chip {% if active_tab == 'subcategories' %}active{% endif %}" style="border-radius:50px 50px 0 0;border-bottom:none;">Subcategories</a>
+  <a href="?tab=items"         class="chip {% if active_tab == 'items' %}active{% endif %}"         style="border-radius:50px 50px 0 0;border-bottom:none;">Menu Items</a>
+  <a href="?tab=customization" class="chip {% if active_tab == 'customization' %}active{% endif %}" style="border-radius:50px 50px 0 0;border-bottom:none;">Item Customization</a>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAB: CATEGORIES -->
+<!-- ============================================================ -->
+{% if active_tab == 'categories' or not active_tab %}
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-head">
+    <h5>Menu Categories</h5>
+    <button type="button" class="btn-p" onclick="openModal('addCategoryModal')">
+      <i class="fa-solid fa-plus"></i> Add Category
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th style="width:80px;">ID</th>
+          <th>Name</th>
+          <th>Description</th>
+          <th style="width:120px;">Status</th>
+          <th style="width:170px;text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in categories %}
+        <tr>
+          <td><b>{{ cat.id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ cat.name|first|upper }}</div>
+              <b>{{ cat.name }}</b>
+            </div>
+          </td>
+          <td>{{ cat.description|default:"—" }}</td>
+          <td>
+            {% if cat.is_active %}<span class="badge-status bs-green">Active</span>
+            {% else %}<span class="badge-status bs-red">Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:center;">
+              <form method="post" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_category_status">
+                <input type="hidden" name="category_id" value="{{ cat.id }}">
+                <button type="submit" class="act-btn {% if cat.is_active %}success{% else %}warning{% endif %}"
+                        title="{% if cat.is_active %}Mark Inactive{% else %}Mark Active{% endif %}">
+                  <i class="fa-solid {% if cat.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                </button>
+              </form>
+              <button type="button" class="act-btn" title="Edit Category"
+                      onclick="openEditCategoryModal({{ cat.id }}, '{{ cat.name|escapejs }}', '{{ cat.description|default:''|escapejs }}')">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <a href="?delete_category={{ cat.id }}" class="act-btn danger"
+                 onclick="return confirm('Delete category {{ cat.name }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty"><i class="fa-solid fa-list"></i><b>No categories yet</b><small>Click "Add Category" to create your first one.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- TAB: SUBCATEGORIES -->
+<!-- ============================================================ -->
+{% if active_tab == 'subcategories' %}
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-head">
+    <h5>Menu Subcategories</h5>
+    <button type="button" class="btn-p" onclick="openModal('addSubcategoryModal')">
+      <i class="fa-solid fa-plus"></i> Add Subcategory
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th style="width:80px;">ID</th>
+          <th>Subcategory Name</th>
+          <th>Parent Category</th>
+          <th style="width:120px;">Status</th>
+          <th style="width:170px;text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for subcat in subcategories %}
+        <tr>
+          <td><b>{{ subcat.id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ subcat.name|first|upper }}</div>
+              <b>{{ subcat.name }}</b>
+            </div>
+          </td>
+          <td><span class="badge-status bs-orange">{{ subcat.category.name }}</span></td>
+          <td>
+            {% if subcat.is_active %}<span class="badge-status bs-green">Active</span>
+            {% else %}<span class="badge-status bs-red">Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:center;">
+              <form method="post" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_subcategory_status">
+                <input type="hidden" name="subcategory_id" value="{{ subcat.id }}">
+                <button type="submit" class="act-btn {% if subcat.is_active %}success{% else %}warning{% endif %}"
+                        title="Toggle Status">
+                  <i class="fa-solid {% if subcat.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                </button>
+              </form>
+              <a href="?delete_subcategory={{ subcat.id }}" class="act-btn danger"
+                 onclick="return confirm('Delete subcategory {{ subcat.name }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty"><i class="fa-solid fa-folder"></i><b>No subcategories yet</b><small>Click "Add Subcategory" to create your first one.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- TAB: MENU ITEMS -->
+<!-- ============================================================ -->
+{% if active_tab == 'items' %}
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-head">
+    <h5>Menu Items</h5>
+    <button type="button" class="btn-p" onclick="openModal('addItemModal')">
+      <i class="fa-solid fa-plus"></i> Add Item
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th style="width:70px;">ID</th>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Subcategory</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th style="width:110px;text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td><b>{{ item.id }}</b></td>
+          <td>
+            <div class="td-name">
+              {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}"
+                     style="width:38px;height:38px;border-radius:12px;object-fit:cover;flex-shrink:0;">
+              {% else %}
+                <div class="td-avatar">{{ item.name|first|upper }}</div>
+              {% endif %}
+              <div>
+                <b>{{ item.name }}</b>
+                {% if item.is_popular %}<span class="badge-status bs-orange" style="margin-left:.35rem;font-size:.62rem;">Popular</span>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td>{{ item.category.name }}</td>
+          <td>
+            {% if item.subcategory %}<span class="badge-status bs-orange">{{ item.subcategory.name }}</span>
+            {% else %}<span style="color:var(--muted);">—</span>{% endif %}
+          </td>
+          <td><b style="color:var(--orange);">₹{{ item.price|floatformat:0 }}</b></td>
+          <td>
+            {% if item.status == 'in_stock' %}<span class="badge-status bs-green">In Stock</span>
+            {% elif item.status == 'out_of_stock' %}<span class="badge-status bs-red">Out of Stock</span>
+            {% else %}<span class="badge-status bs-yellow">Coming Soon</span>{% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:center;">
+              <a href="?delete={{ item.id }}" class="act-btn danger"
+                 onclick="return confirm('Delete {{ item.name }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty"><i class="fa-solid fa-utensils"></i><b>No menu items yet</b><small>Click "Add Item" to create your first one.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- TAB: CUSTOMIZATION -->
+<!-- ============================================================ -->
+{% if active_tab == 'customization' %}
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-head">
+    <h5>Menu Item Customization</h5>
+    <button type="button" class="btn-p" onclick="openModal('addCustomizationModal')">
+      <i class="fa-solid fa-plus"></i> Add Customization
+    </button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th style="width:70px;">ID</th>
+          <th style="width:180px;">Name</th>
+          <th style="width:200px;">Linked Items</th>
+          <th>Options</th>
+          <th style="width:110px;">Status</th>
+          <th style="width:150px;text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cust in item_customizations %}
+        <tr>
+          <td><b>{{ cust.id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ cust.name|first|upper }}</div>
+              <b>{{ cust.name }}</b>
+            </div>
+          </td>
+          <td>
+            {% for item in cust.linked_items.all %}
+              <span class="badge-status bs-orange" style="margin:.1rem .25rem .1rem 0;">{{ item.name }}</span>
+            {% empty %}
+              <span style="color:var(--muted);font-style:italic;">N/A</span>
+            {% endfor %}
+          </td>
+          <td>
+            <div style="display:flex;flex-wrap:wrap;gap:.35rem;max-width:480px;">
+              {% for opt in cust.options.all %}
+                <span class="badge-status bs-blue">{{ opt.name }} (+₹{{ opt.price|floatformat:2 }})</span>
+              {% empty %}
+                <span style="color:var(--muted);font-style:italic;">No options</span>
+              {% endfor %}
+            </div>
+          </td>
+          <td>
+            {% if cust.status == 'active' %}<span class="badge-status bs-green">Active</span>
+            {% else %}<span class="badge-status bs-red">Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:center;">
+              <button type="button" class="act-btn" title="Edit Customization"
+                      onclick='openEditCustomizationModal({{ cust.id }}, "{{ cust.name|escapejs }}", "{{ cust.status }}", [{% for item in cust.linked_items.all %}{{ item.id }}{% if not forloop.last %},{% endif %}{% endfor %}], [{% for opt in cust.options.all %}{"name":"{{ opt.name|escapejs }}", "price":{{ opt.price }}}{% if not forloop.last %},{% endif %}{% endfor %}])'>
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <form method="post" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_customization_status">
+                <input type="hidden" name="customization_id" value="{{ cust.id }}">
+                <button type="submit" class="act-btn {% if cust.status == 'active' %}success{% else %}warning{% endif %}"
+                        title="Toggle Status">
+                  <i class="fa-solid {% if cust.status == 'active' %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
+                </button>
+              </form>
+              <a href="?delete_customization={{ cust.id }}" class="act-btn danger"
+                 onclick="return confirm('Delete customization {{ cust.name }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-sliders"></i><b>No customizations yet</b><small>Click "Add Customization" to create your first one.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD CATEGORY -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addCategoryModal">
+  <div class="modal-b" style="max-width:480px;">
+    <form method="post" action="{% url 'admin_menu' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_category">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-list me-2" style="color:var(--orange);"></i>Add Menu Category</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addCategoryModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Category Name *</label>
+          <input type="text" name="name" class="f-input" placeholder="e.g. Italian, Chinese" required>
+        </div>
+        <div>
+          <label class="f-label">Description</label>
+          <textarea name="description" class="f-input" rows="2" placeholder="Short description..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addCategoryModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: EDIT CATEGORY -->
+<!-- ============================================================ -->
+<div class="modal-c" id="editCategoryModal">
+  <div class="modal-b" style="max-width:480px;">
+    <form method="post" action="{% url 'admin_menu' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit_category">
+      <input type="hidden" name="category_id" id="editCatId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Category</h5>
+        <button type="button" class="act-btn" onclick="closeModal('editCategoryModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Category Name *</label>
+          <input type="text" name="name" id="editCatName" class="f-input" required>
+        </div>
+        <div>
+          <label class="f-label">Description</label>
+          <textarea name="description" id="editCatDesc" class="f-input" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editCategoryModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Update Category</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD SUBCATEGORY -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addSubcategoryModal">
+  <div class="modal-b" style="max-width:480px;">
+    <form method="post" action="{% url 'admin_menu' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_subcategory">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-folder-plus me-2" style="color:var(--orange);"></i>Add Subcategory</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addSubcategoryModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Subcategory Name *</label>
+          <input type="text" name="name" class="f-input" placeholder="e.g. Pizza, Pasta" required>
+        </div>
+        <div>
+          <label class="f-label">Parent Category *</label>
+          <select name="category" class="f-input" required>
+            <option value="">-- Select Category --</option>
+            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addSubcategoryModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Subcategory</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD MENU ITEM -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addItemModal">
+  <div class="modal-b" style="max-width:560px;">
+    <form method="post" enctype="multipart/form-data" action="{% url 'admin_menu' %}">
+      {% csrf_token %}
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-plus me-2" style="color:var(--orange);"></i>Add New Menu Item</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Item Name *</label>
+          <input type="text" name="name" class="f-input" placeholder="e.g. Margherita Pizza" required>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Description</label>
+          <textarea name="description" rows="3" class="f-input" placeholder="Short description..."></textarea>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Category *</label>
+          <select name="category" id="addItemCategory" class="f-input" required onchange="loadSubcategories()">
+            <option value="">Select Category</option>
+            {% for cat in categories %}<option value="{{ cat.id }}">{{ cat.name }}</option>{% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Subcategory</label>
+          <select name="subcategory" id="addItemSubcategory" class="f-input" disabled>
+            <option value="">Select Category First</option>
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Price (₹) *</label>
+          <input type="number" name="price" step="0.01" min="1" class="f-input" required>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+            <label class="f-label" style="margin-bottom:0;">Customizations</label>
+            <a href="?tab=customization" style="font-size:.78rem;font-weight:700;color:var(--orange);text-decoration:none;">
+              <i class="fa-solid fa-sliders me-1"></i>+ Manage / Create New
+            </a>
+          </div>
+          <select name="customizations" multiple class="f-input" size="5" style="height:auto;padding:.5rem;">
+            {% for cust in item_customizations %}
+              <option value="{{ cust.id }}">{{ cust.name }}</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;">
+            <i class="fa-solid fa-info-circle"></i> Hold Ctrl (or Cmd on Mac) to select multiple. જો બીજી આઇટમ માટે નવું કસ્ટમાઇઝેશન બનાવવું હોય, તો ઉપર <b>"Item Customization"</b> ટેબ પર જાઓ.
+          </small>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Image</label>
+          <input type="file" name="image" accept="image/*" class="f-input" style="padding:.55rem;">
+        </div>
+        <div>
+          <label class="f-label">Global Status</label>
+          <select name="status" class="f-input">
+            <option value="in_stock" selected>In Stock</option>
+            <option value="out_of_stock">Out of Stock</option>
+            <option value="coming_soon">Coming Soon</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD CUSTOMIZATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addCustomizationModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post" action="{% url 'admin_menu' %}" id="addCustomizationForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_customization">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-sliders me-2" style="color:var(--orange);"></i>Add New Customization</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addCustomizationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Customization Name *</label>
+            <input type="text" name="cust_name" class="f-input" placeholder="e.g. Pizza Base, Pizza Topping" required>
+          </div>
+          <div>
+            <label class="f-label">Status</label>
+            <select name="cust_status" class="f-input">
+              <option value="active" selected>Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Linked Menu Items</label>
+          <select name="linked_items" multiple class="f-input" size="4" style="height:auto;padding:.5rem;">
+            {% for item in items %}
+              <option value="{{ item.id }}">{{ item.name }} ({{ item.category.name }})</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;">
+            <i class="fa-solid fa-info-circle"></i> Hold Ctrl (or Cmd on Mac) to select multiple items.
+          </small>
+        </div>
+        <div>
+          <label class="f-label">Customization Options</label>
+          <div id="optionsList">
+            <div class="mm-option-row">
+              <input type="text" name="option_name[]" class="f-input" placeholder="Option name (e.g. Classic Hand Tossed)">
+              <input type="number" name="option_price[]" class="f-input" placeholder="Price" step="0.01" min="0">
+              <button type="button" class="act-btn danger" onclick="removeOptionRow(this)" title="Remove">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="mm-add-option-btn" onclick="addOptionRow()">
+            <i class="fa-solid fa-plus"></i> Add Option
+          </button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addCustomizationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Customization</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: EDIT CUSTOMIZATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="editCustomizationModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post" action="{% url 'admin_menu' %}" id="editCustomizationForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit_customization">
+      <input type="hidden" name="customization_id" id="editCustId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Customization</h5>
+        <button type="button" class="act-btn" onclick="closeModal('editCustomizationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Customization Name *</label>
+            <input type="text" name="cust_name" id="editCustName" class="f-input" required>
+          </div>
+          <div>
+            <label class="f-label">Status</label>
+            <select name="cust_status" id="editCustStatus" class="f-input">
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Linked Menu Items</label>
+          <select name="linked_items" id="editCustLinkedItems" multiple class="f-input" size="4" style="height:auto;padding:.5rem;">
+            {% for item in items %}
+              <option value="{{ item.id }}">{{ item.name }} ({{ item.category.name }})</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;">
+            <i class="fa-solid fa-info-circle"></i> Hold Ctrl (or Cmd on Mac) to select multiple items.
+          </small>
+        </div>
+        <div>
+          <label class="f-label">Customization Options</label>
+          <div id="editOptionsList">
+          </div>
+          <button type="button" class="mm-add-option-btn" onclick="addEditOptionRow()">
+            <i class="fa-solid fa-plus"></i> Add Option
+          </button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editCustomizationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Update Customization</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Small helper styles for the dynamic option rows -->
+<!-- ============================================================ -->
+<style>
+.mm-option-row{
+  display:grid;
+  grid-template-columns:2fr 1fr auto;
+  gap:.55rem;
+  align-items:center;
+  margin-bottom:.55rem;
+}
+.mm-add-option-btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.55rem 1.1rem;margin-top:.35rem;
+  font-size:.85rem;font-weight:700;color:var(--orange);
+  background:var(--orange-soft);
+  border:1.5px dashed var(--orange-2);
+  border-radius:12px;cursor:pointer;transition:.2s;font-family:inherit;
+}
+.mm-add-option-btn:hover{background:#FFE4D6;border-color:var(--orange);}
+</style>
+
+<!-- ============================================================ -->
+<!-- JAVASCRIPT -->
+<!-- ============================================================ -->
+<script>
+/* ---- Edit Category Modal ---- */
+function openEditCategoryModal(id, name, description) {
+  document.getElementById('editCatId').value = id;
+  document.getElementById('editCatName').value = name;
+  document.getElementById('editCatDesc').value = description || '';
+  openModal('editCategoryModal');
+}
+
+/* ---- Subcategory dependent dropdown ---- */
+const SUBCATEGORIES = {
+  {% for cat in categories %}
+    "{{ cat.id }}": [
+      {% for subcat in cat.subcategories.all %}
+        {"id": "{{ subcat.id }}", "name": "{{ subcat.name|escapejs }}"}{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]{% if not forloop.last %},{% endif %}
+  {% endfor %}
+};
+
+function loadSubcategories() {
+  const catSelect = document.getElementById('addItemCategory');
+  const subcatSelect = document.getElementById('addItemSubcategory');
+  const catId = catSelect.value;
+
+  subcatSelect.innerHTML = '';
+
+  if (!catId) {
+    subcatSelect.disabled = true;
+    subcatSelect.innerHTML = '<option value="">Select Category First</option>';
+    return;
+  }
+
+  const list = SUBCATEGORIES[catId] || [];
+
+  if (list.length === 0) {
+    subcatSelect.disabled = true;
+    subcatSelect.innerHTML = '<option value="">No subcategories found</option>';
+    return;
+  }
+
+  subcatSelect.disabled = false;
+  subcatSelect.innerHTML = '<option value="">-- Select Subcategory --</option>';
+  list.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.name;
+    subcatSelect.appendChild(opt);
+  });
+}
+
+/* ---- Dynamic option rows ---- */
+function addOptionRow() {
+  const list = document.getElementById('optionsList');
+  const row = document.createElement('div');
+  row.className = 'mm-option-row';
+  row.innerHTML = `
+    <input type="text" name="option_name[]" class="f-input" placeholder="Option name (e.g. Cheese Burst)">
+    <input type="number" name="option_price[]" class="f-input" placeholder="Price" step="0.01" min="0">
+    <button type="button" class="act-btn danger" onclick="removeOptionRow(this)" title="Remove">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+  list.appendChild(row);
+}
+
+function removeOptionRow(btn) {
+  const list = btn.closest('#editOptionsList') || document.getElementById('optionsList');
+  if (list && list.children.length > 1) {
+    btn.closest('.mm-option-row').remove();
+  } else if (list) {
+    const row = btn.closest('.mm-option-row');
+    row.querySelectorAll('input').forEach(inp => inp.value = '');
+  }
+}
+
+/* ---- Edit Customization Modal ---- */
+function openEditCustomizationModal(id, name, status, linkedItemIds, options) {
+  document.getElementById('editCustId').value = id;
+  document.getElementById('editCustName').value = name;
+  document.getElementById('editCustStatus').value = status;
+
+  const select = document.getElementById('editCustLinkedItems');
+  if (select) {
+    Array.from(select.options).forEach(opt => {
+      opt.selected = linkedItemIds.includes(parseInt(opt.value));
+    });
+  }
+
+  const container = document.getElementById('editOptionsList');
+  container.innerHTML = '';
+  if (options && options.length > 0) {
+    options.forEach(opt => addEditOptionRow(opt.name, opt.price));
+  } else {
+    addEditOptionRow('', 0);
+  }
+
+  openModal('editCustomizationModal');
+}
+
+function addEditOptionRow(name = '', price = '') {
+  const list = document.getElementById('editOptionsList');
+  const row = document.createElement('div');
+  row.className = 'mm-option-row';
+  row.innerHTML = `
+    <input type="text" name="option_name[]" class="f-input" value="${name}" placeholder="Option name">
+    <input type="number" name="option_price[]" class="f-input" value="${price}" placeholder="Price" step="0.01" min="0">
+    <button type="button" class="act-btn danger" onclick="removeOptionRow(this)" title="Remove">
+      <i class="fa-solid fa-xmark"></i>
+    </button>`;
+  list.appendChild(row);
+}
+</script>
+
+{% endblock %}

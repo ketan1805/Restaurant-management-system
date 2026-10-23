@@ -1,0 +1,75 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Offers — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Offers &amp; Coupons</h1>
+    <p>Create and manage promotional offers to attract more customers.</p>
+  </div>
+  <button class="btn-p" onclick="openModal('addOfferModal')"><i class="fa-solid fa-plus"></i> Add Offer</button>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-tags"></i></div><div class="stat-info"><div class="num">{{ active_count }}</div><div class="lbl">Active Offers</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-ticket"></i></div><div class="stat-info"><div class="num">{{ upcoming_count }}</div><div class="lbl">Upcoming</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-clock"></i></div><div class="stat-info"><div class="num">{{ expired_count }}</div><div class="lbl">Expired</div></div></div>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Offer Code</th><th>Title</th><th>Discount</th><th>Valid Till</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for offer in offers %}
+        <tr>
+          <td><b>{{ offer.code }}</b></td>
+          <td>{{ offer.title }}</td>
+          <td><b style="color:var(--orange);">{{ offer.discount }}</b></td>
+          <td>{{ offer.valid_till|date:"d M Y" }}</td>
+          <td>
+            {% if offer.is_active and offer.valid_till >= today %}<span class="badge-status bs-green">Active</span>
+            {% elif offer.valid_till < today %}<span class="badge-status bs-red">Expired</span>
+            {% else %}<span class="badge-status bs-gray">Inactive</span>{% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <a href="?toggle={{ offer.id }}" class="act-btn" title="Toggle active"><i class="fa-solid {% if offer.is_active %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i></a>
+              <a href="?delete={{ offer.id }}" class="act-btn danger" onclick="return confirm('Delete offer {{ offer.code }}?');"><i class="fa-solid fa-trash-can"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-tags"></i><b>No offers yet</b><small>Create your first offer to boost sales.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-c" id="addOfferModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <div class="modal-head">
+        <h5>Add New Offer</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addOfferModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div><label class="f-label">Offer Code</label><input type="text" name="code" class="f-input" placeholder="e.g. WELCOME20" required style="text-transform:uppercase;"></div>
+          <div><label class="f-label">Discount</label><input type="text" name="discount" class="f-input" placeholder="e.g. 20% OFF" required></div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Title</label><input type="text" name="title" class="f-input" placeholder="e.g. First Order Discount" required></div>
+        <div><label class="f-label">Valid Till</label><input type="date" name="valid_till" class="f-input" required></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addOfferModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Offer</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

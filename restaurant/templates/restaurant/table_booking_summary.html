@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Booking &amp; Prepaid Checkout — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.summary-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.85rem 1.8rem;border-radius:50px;
+  font-weight:700;box-shadow:0 8px 20px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <a href="{% url 'table_booking_view' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">
+      <i class="fa-solid fa-arrow-left me-1"></i> Return to Table Booking
+    </a>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:950px;">
+  <div class="mb-4 text-center">
+    <h2><i class="fa-solid fa-shield-halved me-2" style="color:var(--orange);"></i>Prepaid Table Booking Checkout</h2>
+    <p class="text-muted">Review your booking summary and complete prepaid payment via Razorpay</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form id="bookingPaymentForm">
+    {% csrf_token %}
+    <div class="row g-4">
+      <!-- BOOKING & CUSTOMER SUMMARY -->
+      <div class="col-lg-7">
+        <div class="summary-card mb-4">
+          <h4 class="mb-3 text-orange" style="color:var(--orange);"><i class="fa-solid fa-calendar-check me-2"></i>Reservation Details</h4>
+          
+          <div class="p-3 rounded-4 mb-3" style="background:var(--orange-soft);">
+            <div class="row g-2">
+              <div class="col-6">
+                <small class="text-muted d-block">Reserved Table</small>
+                <strong class="fs-5" style="font-family:'Fredoka';">Table {{ table.number }}</strong>
+                <span class="small text-muted">({{ table.seats }} Seats - {{ table.location }})</span>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Date &amp; Time</small>
+                <strong>{{ pending.date }}</strong> at <strong>{{ pending.time }}</strong>
+              </div>
+              <div class="col-6 mt-2">
+                <small class="text-muted d-block">Party Size</small>
+                <strong>{{ pending.guests }} Guests</strong>
+              </div>
+              <div class="col-6 mt-2">
+                <small class="text-muted d-block">Pre-Order Status</small>
+                {% if pre_order_selected %}
+                  <span class="badge bg-success">Pre-Order Food Selected</span>
+                {% else %}
+                  <span class="badge bg-secondary">No Pre-Order (Table Only)</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <h5 class="mb-3"><i class="fa-solid fa-user me-2" style="color:var(--orange);"></i>Customer Information</h5>
+          <div class="row g-2 mb-3 small">
+            <div class="col-6">
+              <span class="text-muted d-block">Customer Name:</span>
+              <strong>{{ pending.name }}</strong>
+            </div>
+            <div class="col-6">
+              <span class="text-muted d-block">Phone Number:</span>
+              <strong>{{ pending.phone }}</strong>
+            </div>
+            {% if pending.email %}
+              <div class="col-12 mt-1">
+                <span class="text-muted d-block">Email Address:</span>
+                <strong>{{ pending.email }}</strong>
+              </div>
+            {% endif %}
+            {% if pending.special_request %}
+              <div class="col-12 mt-1">
+                <span class="text-muted d-block">Special Requests:</span>
+                <em>{{ pending.special_request }}</em>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- COST BREAKDOWN & PAY BUTTON -->
+      <div class="col-lg-5">
+        <div class="summary-card">
+          <h4 class="mb-3"><i class="fa-solid fa-receipt me-2" style="color:var(--orange);"></i>Prepaid Summary</h4>
+
+          <div class="py-2 border-bottom">
+            <div class="d-flex justify-content-between mb-2">
+              <span>Table Booking Charge</span>
+              <span class="fw-bold">₹{{ booking_charge }}</span>
+            </div>
+
+            {% if pre_order_selected %}
+              <div class="d-flex justify-content-between mb-2">
+                <span>Pre-Order Food Total</span>
+                <span class="fw-bold" style="color:var(--orange);">₹{{ food_subtotal }}</span>
+              </div>
+
+              {% if pre_order_items %}
+                <div class="p-2 rounded-3 bg-light my-2 small">
+                  <div class="fw-bold mb-1 text-muted">Pre-Ordered Items:</div>
+                  {% for pi in pre_order_items %}
+                    <div class="d-flex justify-content-between text-muted">
+                      <span>{{ pi.quantity }}x {{ pi.item.name }}</span>
+                      <span>₹{{ pi.subtotal }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endif %}
+          </div>
+
+          <div class="d-flex justify-content-between my-3 fw-bold fs-4">
+            <span>Total Prepaid Amount</span>
+            <span style="color:var(--orange);font-family:'Fredoka';" id="totalPrepaidText">₹{{ total_prepaid }}</span>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label fw-bold small d-block mb-2">Select Payment Method</label>
+            <div class="d-flex flex-column gap-2">
+              <label class="form-check p-2.5 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer">
+                <div class="d-flex align-items-center gap-2">
+                  <input class="form-check-input mt-0" type="radio" name="payment_method" value="upi" checked>
+                  <span class="fw-semibold"><i class="fa-solid fa-qrcode text-primary me-1"></i>UPI</span>
+                </div>
+                <small class="text-muted">Instant</small>
+              </label>
+
+              <label class="form-check p-2.5 rounded-3 border d-flex align-items-center justify-content-between cursor-pointer">
+                <div class="d-flex align-items-center gap-2">
+                  <input class="form-check-input mt-0" type="radio" name="payment_method" value="card">
+                  <span class="fw-semibold"><i class="fa-solid fa-credit-card text-warning me-1"></i>Card</span>
+                </div>
+                <small class="text-muted">Debit / Credit</small>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-3 fw-bold fs-5">
+            <i class="fa-solid fa-lock me-2"></i>Pay ₹{{ total_prepaid }} &amp; Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+  const bookingForm = document.getElementById("bookingPaymentForm");
+
+  function getCsrfToken() {
+    const input = document.querySelector("input[name='csrfmiddlewaretoken']");
+    if (input && input.value) return input.value;
+    const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
+    if (cookieMatch) return decodeURIComponent(cookieMatch[1]);
+    return "{{ csrf_token }}";
+  }
+
+  if (bookingForm) {
+    bookingForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const selectedMethod = document.querySelector("input[name='payment_method']:checked")?.value || "upi";
+      const submitBtn = bookingForm.querySelector("button[type='submit']");
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : "";
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Connecting to Razorpay...';
+      }
+
+      const restoreBtn = () => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
+        }
+      };
+
+      try {
+        const res = await fetch("{% url 'api_create_booking_razorpay_order' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCsrfToken()
+          },
+          body: JSON.stringify({
+            payment_method: selectedMethod
+          })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          alert(data.error || "Failed to initialize booking payment.");
+          restoreBtn();
+          return;
+        }
+
+        const options = {
+          key: data.key_id,
+          amount: data.amount,
+          currency: data.currency,
+          name: "TableServe Restaurant",
+          description: `Prepaid Table Booking Payment (${selectedMethod.toUpperCase()})`,
+          order_id: data.razorpay_order_id,
+          prefill: {
+            name: data.customer_name,
+            contact: data.customer_phone,
+            email: data.customer_email
+          },
+          theme: { color: "#FF7A00" },
+          remember_customer: false,
+          modal: {
+            ondismiss: function() {
+              restoreBtn();
+            },
+            escape: true,
+            backdropclose: false,
+            handleback: true
+          },
+          retry: { enabled: true, max_count: 1 },
+          handler: async function (response) {
+            if (submitBtn) {
+              submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Verifying Payment...';
+            }
+
+            try {
+              const verifyRes = await fetch("{% url 'api_verify_booking_razorpay_payment' %}", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": getCsrfToken()
+                },
+                body: JSON.stringify({
+                  db_booking_id: data.db_booking_id,
+                  razorpay_order_id: response.razorpay_order_id || data.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                window.location.href = verifyData.redirect_url;
+              } else {
+                alert(verifyData.error || "Payment verification failed.");
+                restoreBtn();
+              }
+            } catch (vErr) {
+              console.error(vErr);
+              alert("Verification network error. Please contact support.");
+              restoreBtn();
+            }
+          }
+        };
+
+        if (typeof Razorpay === "undefined") {
+          alert("Razorpay checkout failed to load. Please check your internet connection.");
+          restoreBtn();
+          return;
+        }
+
+        const rzp = new Razorpay(options);
+        rzp.on("payment.failed", function (resp) {
+          alert("Payment failed: " + (resp.error.description || "Transaction cancelled"));
+          restoreBtn();
+        });
+        rzp.open();
+
+      } catch (err) {
+        console.error(err);
+        alert("Unable to process payment: " + (err.message || "Please try again."));
+        restoreBtn();
+      }
+    });
+  }
+
+  // Auto-reload on back-forward navigation (bfcache) to keep CSRF tokens in sync
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted || (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+      window.location.reload();
+    }
+  });
+});
+</script>
+</body>
+</html>

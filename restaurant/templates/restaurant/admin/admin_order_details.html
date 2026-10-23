@@ -1,0 +1,158 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Order #TS{{ order.id }} — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Order #TS{{ order.id }}</h1>
+    <p>Placed on {{ order.created_at|date:"d F Y \a\t H:i" }}</p>
+  </div>
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;">
+    <form method="post" action="{% url 'admin_order_details' order.id %}" style="display:flex;gap:.4rem;align-items:center;">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_status">
+      <select name="status" class="f-input" style="padding:.4rem .8rem;font-size:.85rem;width:auto;" onchange="this.form.submit()">
+        <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="accepted" {% if order.status == 'accepted' %}selected{% endif %}>Accepted</option>
+        <option value="preparing" {% if order.status == 'preparing' %}selected{% endif %}>Preparing</option>
+        <option value="ready" {% if order.status == 'ready' %}selected{% endif %}>Ready</option>
+        <option value="delivered" {% if order.status == 'delivered' or order.status == 'served' %}selected{% endif %}>Served / Delivered</option>
+        <option value="completed" {% if order.status == 'completed' %}selected{% endif %}>Completed</option>
+        <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+      </select>
+    </form>
+    <a href="{% url 'admin_orders' %}" class="btn-s"><i class="fa-solid fa-arrow-left"></i> Back</a>
+    <button class="btn-p" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;" class="od-grid">
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-head">
+        <h5>Order Items</h5>
+        <span class="badge-status
+          {% if order.status == 'delivered' or order.status == 'served' %}bs-green
+          {% elif order.status == 'preparing' %}bs-orange
+          {% elif order.status == 'ready' %}bs-blue
+          {% elif order.status == 'pending' %}bs-yellow
+          {% else %}bs-red{% endif %}">
+          {{ order.get_status_display }}
+        </span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data">
+          <thead><tr><th>Item</th><th>Price</th><th>Qty</th><th style="text-align:right;">Total</th></tr></thead>
+          <tbody>
+            {% for item in order.items.all %}
+            <tr>
+              <td><div class="td-name"><span style="font-size:1.2rem;">🍽</span> {{ item.menu_item.name }}</div></td>
+              <td>₹{{ item.price|floatformat:0 }}</td>
+              <td>{{ item.quantity }}</td>
+              <td style="text-align:right;"><b>₹{{ item.line_total|floatformat:0 }}</b></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4"><div class="empty"><b>No items in this order</b></div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h5>Status Timeline</h5></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:1rem;">
+          <div style="display:flex;gap:1rem;align-items:flex-start;">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--green);margin-top:6px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-weight:700;font-size:.9rem;color:var(--ink);">Order Placed</div>
+              <div style="font-size:.78rem;color:var(--muted);">{{ order.created_at|date:"H:i" }} — Customer placed the order</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:1rem;align-items:flex-start;">
+            <div style="width:12px;height:12px;border-radius:50%;background:var(--green);margin-top:6px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-weight:700;font-size:.9rem;color:var(--ink);">Last Updated</div>
+              <div style="font-size:.78rem;color:var(--muted);">{{ order.updated_at|date:"H:i" }} — Current status: {{ order.get_status_display }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if order.reviews.first %}
+    <div class="card" style="margin-top:1.25rem;">
+      <div class="card-head">
+        <h5>Customer Rating &amp; Review</h5>
+        <span class="badge-status bs-green">{{ order.reviews.first.rating }}★ Rating</span>
+      </div>
+      <div class="card-body">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;">
+          <span style="color:#FF9500;font-size:1.1rem;">
+            {% for i in "12345"|make_list %}
+              {% if forloop.counter <= order.reviews.first.rating %}★{% else %}☆{% endif %}
+            {% endfor %}
+          </span>
+          <b style="color:var(--ink);">{{ order.reviews.first.rating }} / 5 Stars</b>
+          <span style="color:var(--muted);font-size:.78rem;margin-left:auto;">{{ order.reviews.first.created_at|date:"d M Y, H:i" }}</span>
+        </div>
+        {% if order.reviews.first.title %}
+          <div style="font-weight:700;color:var(--ink);margin-bottom:.3rem;">{{ order.reviews.first.title }}</div>
+        {% endif %}
+        {% if order.reviews.first.comment %}
+          <div style="font-size:.85rem;color:var(--muted);background:var(--cream);padding:.8rem;border-radius:10px;border:1px solid var(--line);">
+            "{{ order.reviews.first.comment }}"
+          </div>
+        {% else %}
+          <div style="font-size:.82rem;color:var(--muted);font-style:italic;">No written comment provided.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-head"><h5>Customer</h5></div>
+      <div class="card-body">
+        <div style="text-align:center;">
+          <div class="td-avatar" style="width:64px;height:64px;font-size:1.3rem;border-radius:50%;margin:0 auto .8rem;">
+            {{ order.user.username|first|upper }}
+          </div>
+          <div style="font-weight:700;font-size:1rem;color:var(--ink);">{{ order.user.get_full_name|default:order.user.username }}</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:1rem;">{{ order.user.email }}</div>
+          <div style="font-size:.85rem;text-align:left;">
+            {% if order.phone %}
+            <div style="display:flex;gap:.6rem;margin-bottom:.5rem;"><i class="fa-solid fa-phone" style="color:var(--orange);width:18px;"></i>{{ order.phone }}</div>
+            {% endif %}
+            {% if order.address %}
+            <div style="display:flex;gap:.6rem;"><i class="fa-solid fa-location-dot" style="color:var(--orange);width:18px;"></i>{{ order.address }}</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h5>Payment Summary</h5></div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.6rem;color:var(--muted);"><span>Order Total</span><span style="color:var(--ink);">₹{{ order.total|floatformat:0 }}</span></div>
+        {% if payment %}
+        <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.6rem;color:var(--muted);"><span>Payment Method</span><span style="color:var(--ink);">{{ payment.get_method_display }}</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.6rem;color:var(--muted);"><span>Transaction ID</span><span style="color:var(--ink);font-size:.78rem;">{{ payment.transaction_id }}</span></div>
+        <hr style="margin:1rem 0;border:none;border-top:1px dashed var(--line);">
+        <div style="display:flex;justify-content:space-between;font-size:1.05rem;font-weight:700;">
+          <span>Amount Paid</span>
+          <span style="color:var(--orange);font-family:'Fredoka',sans-serif;font-size:1.2rem;">₹{{ payment.amount|floatformat:0 }}</span>
+        </div>
+        {% else %}
+        <div class="empty" style="padding:1rem;"><i class="fa-solid fa-credit-card"></i><b>No payment record</b></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>@media (max-width:900px){.od-grid{grid-template-columns:1fr !important;}}</style>
+{% endblock %}

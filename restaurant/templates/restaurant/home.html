@@ -1,0 +1,1715 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TableServe — Fresh Vegetarian Meals &amp; Table Booking</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --orange:#FF7A00;
+  --orange-2:#FFA53B;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --red:#E5484D;
+  --red-soft:#FDECEC;
+  --blue:#3B82F6;
+  --blue-soft:#EAF2FE;
+  --ink:#151310;
+  --ink-soft:#2C2721;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius:20px;
+  --radius-lg:28px;
+  --radius-xl:36px;
+  --shadow-xs:0 4px 14px rgba(21,19,16,.05);
+  --shadow-sm:0 10px 30px rgba(21,19,16,.07);
+  --shadow-md:0 20px 50px rgba(21,19,16,.10);
+  --shadow-orange:0 18px 40px rgba(255,122,0,.30);
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand,.display{font-family:'Fredoka',sans-serif;font-weight:600;letter-spacing:-.01em;}
+p{color:var(--muted);line-height:1.75;}
+a{text-decoration:none;color:inherit;}
+img{max-width:100%;display:block;}
+section{scroll-margin-top:100px;}
+::selection{background:var(--orange);color:#fff;}
+
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:#F6F1EA;}
+::-webkit-scrollbar-thumb{background:#E2D9CC;border-radius:20px;border:2px solid #F6F1EA;}
+::-webkit-scrollbar-thumb:hover{background:var(--orange-2);}
+
+.section-pad{padding:5.5rem 0;}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--orange);background:var(--orange-soft);
+  padding:.42rem 1rem;border-radius:50px;margin-bottom:1rem;
+}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--orange);}
+.section-title{font-size:clamp(1.75rem,3.4vw,2.5rem);line-height:1.2;margin-bottom:.75rem;}
+.section-sub{max-width:560px;margin:0 auto;}
+.text-gradient{
+  background:linear-gradient(100deg,var(--orange) 0%,#FFB347 60%,var(--orange) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.reveal{opacity:1;transform:none;transition:opacity .8s var(--ease),transform .8s var(--ease);}
+.reveal.in{opacity:1;transform:none;}
+
+.btn{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:600;border-radius:50px;
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  transition:.3s var(--ease);border:none;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;padding:.85rem 1.8rem;
+  box-shadow:var(--shadow-orange);
+  position:relative;overflow:hidden;
+}
+.btn-primary::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(135deg,#FF9A2E,var(--orange));
+  opacity:0;transition:.3s;
+}
+.btn-primary span,.btn-primary i{position:relative;z-index:1;}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 24px 50px rgba(255,122,0,.42);color:#fff;}
+.btn-primary:hover::after{opacity:1;}
+
+.btn-ghost{
+  background:#fff;color:var(--ink);
+  border:1.5px solid var(--line);
+  padding:.82rem 1.6rem;box-shadow:var(--shadow-xs);
+}
+.btn-ghost:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-3px);}
+
+.btn-dark-ink{background:var(--ink);color:#fff;padding:.85rem 1.8rem;}
+.btn-dark-ink:hover{background:var(--orange);color:#fff;transform:translateY(-3px);}
+.btn-sm{padding:.55rem 1.15rem;font-size:.85rem;}
+
+/* ============================================================
+   NAVBAR — SIMPLE
+   ============================================================ */
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.9rem 0;transition:.35s var(--ease);
+}
+.nav-wrap.scrolled{
+  padding:.5rem 0;
+  background:rgba(255,251,246,.86);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(21,19,16,.07);
+  border-bottom:1px solid rgba(239,233,224,.8);
+}
+.nav{display:flex;align-items:center;gap:1rem;}
+.brand{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:1.35rem;font-weight:700;color:var(--ink);flex-shrink:0;
+}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;font-size:1.05rem;
+  box-shadow:0 10px 22px rgba(255,122,0,.35);
+  transition:.4s var(--ease);
+}
+.brand:hover .brand-mark{transform:rotate(-10deg) scale(1.06);}
+
+.nav-links{list-style:none;display:flex;align-items:center;gap:.25rem;margin:0 auto;padding:0;}
+.nav-links > li > a{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.5rem .85rem;border-radius:50px;
+  font-weight:700;font-size:.92rem;color:var(--ink-soft);
+  transition:.25s var(--ease);white-space:nowrap;
+}
+.nav-links > li > a i.nav-ic{
+  font-size:1rem;color:var(--ink-soft);
+  transition:.25s var(--ease);
+}
+.nav-links > li > a:hover{background:var(--orange-soft);color:var(--orange);}
+.nav-links > li > a:hover i.nav-ic{color:var(--orange);}
+.nav-links > li > a.active{background:var(--ink);color:#fff;}
+.nav-links > li > a.active i.nav-ic{color:#fff;}
+
+/* ---------- SERVICES DROPDOWN ---------- */
+.nav-links .has-dropdown{position:relative;}
+.nav-links .has-dropdown > a{
+  display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;
+}
+.nav-links .has-dropdown > a::after{
+  content:"\f078";font-family:"Font Awesome 6 Free";font-weight:900;
+  font-size:.6rem;transition:transform .3s var(--ease);
+  margin-left:.15rem;
+}
+.nav-links .has-dropdown:hover > a::after{transform:rotate(180deg);}
+.nav-links .has-dropdown:hover > a,
+.nav-links .has-dropdown.open > a{
+  background:var(--orange-soft);color:var(--orange);
+}
+
+.services-dropdown{
+  position:absolute;top:calc(100% + 10px);left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  background:#fff;border-radius:16px;
+  box-shadow:0 20px 50px rgba(21,19,16,.14);
+  border:1px solid var(--line);
+  padding:.5rem;min-width:240px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:all .3s var(--ease);
+  z-index:1050;
+}
+.nav-links .has-dropdown:hover .services-dropdown,
+.nav-links .has-dropdown.open .services-dropdown{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+.services-dropdown::before{
+  content:"";position:absolute;top:-6px;left:50%;
+  transform:translateX(-50%) rotate(45deg);
+  width:12px;height:12px;background:#fff;
+  border-top:1px solid var(--line);border-left:1px solid var(--line);
+}
+.services-dropdown a{
+  display:flex;align-items:center;gap:.85rem;
+  padding:.7rem .9rem;border-radius:12px;
+  font-size:.9rem;font-weight:600;color:var(--ink-soft);
+  transition:.25s var(--ease);white-space:nowrap;
+}
+.services-dropdown a i{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:.9rem;flex-shrink:0;
+  transition:.3s var(--ease);
+}
+.services-dropdown a:hover{
+  background:var(--orange-soft);color:var(--orange);
+  transform:translateX(4px);
+}
+.services-dropdown a:hover i{
+  background:var(--orange);color:#fff;
+  transform:scale(1.08) rotate(-6deg);
+}
+
+.nav-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+
+.icon-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--line);
+  display:grid;place-items:center;color:var(--ink);
+  position:relative;cursor:pointer;transition:.28s var(--ease);
+}
+.icon-btn:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-2px);}
+.cart-badge{
+  position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;
+  padding:0 5px;border-radius:50px;
+  background:var(--orange);color:#fff;font-size:.65rem;font-weight:700;
+  display:grid;place-items:center;border:2px solid var(--cream);
+  transition:transform .3s var(--ease);
+}
+.cart-badge.bump{transform:scale(1.4);}
+
+.user-chip{
+  display:inline-flex;align-items:center;gap:.55rem;
+  background:#fff;border:1.5px solid var(--line);
+  padding:.35rem .85rem .35rem .35rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  transition:.28s var(--ease);box-shadow:var(--shadow-xs);
+}
+.user-chip:hover{border-color:var(--orange);}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+  font-weight:700;font-size:.8rem;flex-shrink:0;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+.user-chip .u-name{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.login-btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--ink);color:#fff;
+  padding:.6rem 1.2rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;border:none;cursor:pointer;
+  transition:.28s var(--ease);white-space:nowrap;
+}
+.login-btn:hover{background:var(--orange);transform:translateY(-2px);color:#fff;}
+
+.signup-btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;padding:.6rem 1.3rem;border-radius:50px;
+  font-weight:700;font-size:.85rem;border:none;cursor:pointer;
+  transition:.28s var(--ease);white-space:nowrap;
+  box-shadow:0 8px 20px rgba(255,122,0,.28);
+}
+.signup-btn:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(255,122,0,.4);color:#fff;}
+
+.offcanvas-menu{background:var(--ink);color:#fff;width:320px;}
+.offcanvas-menu .offcanvas-header{border-bottom:1px solid rgba(255,255,255,.1);}
+.offcanvas-menu .brand{color:#fff;}
+.offcanvas-menu .btn-close{filter:invert(1);opacity:.8;}
+.m-link{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem .25rem;font-size:1.1rem;font-weight:600;
+  color:rgba(255,255,255,.85);border-bottom:1px solid rgba(255,255,255,.08);
+  font-family:'Fredoka',sans-serif;transition:.25s;
+}
+.m-link:hover{color:var(--orange);padding-left:.7rem;}
+.m-link.sub{
+  padding-left:1.5rem;font-size:.95rem;font-family:'Plus Jakarta Sans',sans-serif;
+}
+.m-link.sub i.fa-solid:first-child{color:var(--orange);}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero{position:relative;padding:4.5rem 0 5rem;overflow:hidden;}
+.glow{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;}
+.glow.a{width:520px;height:520px;background:#FFC98A;top:-180px;right:-140px;opacity:.65;}
+.glow.b{width:400px;height:400px;background:#FFE3C4;bottom:-160px;left:-140px;opacity:.75;}
+.hero-grid{
+  position:absolute;inset:0;z-index:0;opacity:.5;
+  background-image:radial-gradient(rgba(255,122,0,.16) 1.4px,transparent 1.4px);
+  background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(circle at 20% 30%,#000,transparent 62%);
+  mask-image:radial-gradient(circle at 20% 30%,#000,transparent 62%);
+}
+.hero-inner{position:relative;z-index:2;}
+
+.hero-pill{
+  display:inline-flex;align-items:center;gap:.6rem;
+  background:#fff;border:1px solid var(--line);
+  padding:.5rem 1rem .5rem .5rem;border-radius:50px;
+  font-size:.82rem;font-weight:600;box-shadow:var(--shadow-xs);
+  margin-bottom:1.3rem;
+}
+.hero-pill b{
+  background:var(--green);color:#fff;padding:.25rem .7rem;border-radius:50px;
+  font-size:.7rem;letter-spacing:.04em;
+}
+.hero h1{
+  font-size:clamp(2.1rem,4.8vw,3.6rem);
+  line-height:1.08;margin-bottom:1.2rem;font-weight:700;
+}
+.hero p.lead{font-size:1rem;max-width:490px;margin-bottom:2rem;}
+.hero-cta{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center;}
+
+.hero-stats{display:flex;gap:2.2rem;margin-top:2.6rem;flex-wrap:wrap;}
+.hero-stats .stat h4{font-size:1.6rem;margin:0;font-weight:700;}
+.hero-stats .stat span{font-size:.8rem;color:var(--muted);font-weight:500;}
+.hero-stats .stat{position:relative;padding-right:2.2rem;}
+.hero-stats .stat:not(:last-child)::after{
+  content:"";position:absolute;right:0;top:12%;height:76%;width:1px;background:var(--line);
+}
+
+.hero-visual{position:relative;display:grid;place-items:center;min-height:440px;}
+.plate-ring{
+  position:absolute;width:min(500px,90%);aspect-ratio:1;border-radius:50%;
+  border:3px dashed var(--orange);
+  box-shadow:0 0 30px rgba(255,122,0,.25);
+  animation:spin 40s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.plate{
+  width:min(440px,85%);aspect-ratio:1;border-radius:50%;object-fit:cover;object-position:center;
+  border:12px solid #fff;
+  box-shadow:0 40px 80px rgba(21,19,16,.22);
+  position:relative;z-index:2;
+}
+.float-card{
+  position:absolute;z-index:4;background:#fff;border-radius:var(--radius);
+  padding:.8rem 1rem;box-shadow:var(--shadow-md);
+  display:flex;align-items:center;gap:.7rem;
+  animation:floaty 5.5s ease-in-out infinite;
+}
+.float-card .fc-icon{
+  width:40px;height:40px;border-radius:13px;display:grid;place-items:center;
+  font-size:.95rem;flex-shrink:0;
+}
+.float-card small{display:block;font-size:.7rem;color:var(--muted);line-height:1.3;}
+.float-card strong{font-size:.85rem;font-weight:700;line-height:1.3;}
+.fc-1{top:5%;left:-2%;animation-delay:.2s;}
+.fc-1 .fc-icon{background:var(--orange-soft);color:var(--orange);}
+.fc-2{bottom:8%;right:-3%;animation-delay:1.4s;}
+.fc-2 .fc-icon{background:var(--green-soft);color:var(--green);}
+@keyframes floaty{0%,100%{transform:translateY(0);}50%{transform:translateY(-16px);}}
+
+.marquee{
+  background:var(--ink);color:#fff;padding:1rem 0;overflow:hidden;
+  transform:rotate(-1.2deg);margin:1rem -2% 0;width:104%;
+}
+.marquee-track{display:flex;gap:3rem;width:max-content;animation:scrollX 26s linear infinite;}
+.marquee:hover .marquee-track{animation-play-state:paused;}
+.marquee-track span{
+  font-family:'Fredoka',sans-serif;font-size:1rem;font-weight:500;
+  display:inline-flex;align-items:center;gap:.9rem;white-space:nowrap;
+  color:rgba(255,255,255,.92);
+}
+.marquee-track span i{color:var(--orange);font-size:.85rem;}
+@keyframes scrollX{to{transform:translateX(-50%);}}
+
+.service-card{
+  background:#fff;border-radius:var(--radius-lg);padding:2rem 1.6rem;
+  box-shadow:var(--shadow-sm);height:100%;
+  border:1px solid transparent;position:relative;
+  transition:.4s var(--ease);overflow:hidden;
+}
+.service-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--orange),#FFB347);
+  transform:scaleX(0);transform-origin:left;transition:.4s var(--ease);
+}
+.service-card:hover{
+  transform:translateY(-10px);border-color:rgba(255,122,0,.28);
+  box-shadow:0 28px 60px rgba(255,122,0,.16);
+}
+.service-card:hover::before{transform:scaleX(1);}
+.service-icon{
+  width:64px;height:64px;border-radius:20px;margin-bottom:1.2rem;
+  display:grid;place-items:center;font-size:1.5rem;
+  transition:.4s var(--ease);
+}
+.service-card:hover .service-icon{transform:rotate(-8deg) scale(1.08);}
+.service-card h5{font-weight:600;margin-bottom:.6rem;font-size:1.1rem;}
+.service-card p{font-size:.9rem;margin:0 0 1rem;}
+.service-link{
+  font-weight:600;font-size:.85rem;color:var(--orange);
+  display:inline-flex;align-items:center;gap:.4rem;transition:.25s;
+}
+.service-link:hover{gap:.7rem;}
+
+.si-orange{background:var(--orange-soft);color:var(--orange);}
+.si-green{background:var(--green-soft);color:var(--green);}
+.si-blue{background:var(--blue-soft);color:var(--blue);}
+.si-red{background:var(--red-soft);color:var(--red);}
+
+.menu-toolbar{
+  display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between;
+  margin-bottom:2.4rem;
+}
+.chips{
+  display:flex;gap:.35rem;background:#fff;padding:.4rem;border-radius:50px;
+  box-shadow:var(--shadow-xs);flex-wrap:wrap;
+}
+.chips button{
+  border:none;background:transparent;padding:.55rem 1.25rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;color:var(--muted);cursor:pointer;
+  transition:.28s var(--ease);font-family:inherit;
+}
+.chips button:hover{color:var(--orange);}
+.chips button.active{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);color:#fff;
+  box-shadow:0 8px 20px rgba(255,122,0,.3);
+}
+.search-box{
+  display:flex;align-items:center;gap:.6rem;background:#fff;
+  border:1.5px solid var(--line);border-radius:50px;padding:.5rem 1.1rem;
+  box-shadow:var(--shadow-xs);transition:.3s var(--ease);min-width:230px;
+}
+.search-box:focus-within{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft);}
+.search-box i{color:var(--muted);font-size:.9rem;}
+.search-box input{
+  border:none;outline:none;background:transparent;font-family:inherit;
+  font-size:.88rem;width:100%;color:var(--ink);
+}
+
+.menu-card{
+  background:#fff;border-radius:var(--radius-lg);overflow:hidden;
+  box-shadow:var(--shadow-sm);height:100%;display:flex;flex-direction:column;
+  transition:.42s var(--ease);border:1px solid transparent;
+  animation:cardIn .5s var(--ease) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:none;}}
+.menu-card:hover{
+  transform:translateY(-10px);border-color:rgba(255,122,0,.2);
+  box-shadow:0 30px 60px rgba(21,19,16,.14);
+}
+.menu-card .img-wrap{
+  position:relative;overflow:hidden;aspect-ratio:16/11;background:#FFF6EC;
+}
+.menu-card img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease);}
+.menu-card:hover img{transform:scale(1.09);}
+.badge-pop{
+  position:absolute;top:12px;left:12px;z-index:2;
+  background:rgba(21,19,16,.9);backdrop-filter:blur(6px);
+  color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:.32rem .75rem;border-radius:50px;
+}
+.badge-veg{
+  position:absolute;bottom:12px;left:12px;z-index:2;
+  background:rgba(47,174,96,.95);backdrop-filter:blur(6px);
+  color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:.32rem .75rem;border-radius:50px;
+  display:flex;align-items:center;gap:.35rem;
+}
+.rating-pill{
+  position:absolute;top:12px;right:12px;z-index:2;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(6px);
+  color:var(--ink);font-size:.72rem;font-weight:700;
+  padding:.3rem .65rem;border-radius:50px;display:flex;align-items:center;gap:.3rem;
+}
+.rating-pill i{color:#FFB400;font-size:.68rem;}
+
+.menu-card .body{padding:1.15rem 1.25rem 1.3rem;display:flex;flex-direction:column;flex:1;}
+.menu-card h5{font-size:1rem;font-weight:600;margin:0;}
+.price-tag{font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.1rem;color:var(--orange);}
+.menu-card p{font-size:.82rem;margin:.45rem 0 .9rem;flex:1;}
+
+.add-btn{
+  width:42px;height:42px;border-radius:14px;border:none;flex-shrink:0;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:.92rem;cursor:pointer;
+  transition:.3s var(--ease);
+}
+.add-btn:hover{background:var(--orange);color:#fff;transform:scale(1.08) rotate(90deg);}
+.add-btn.added{background:var(--green);color:#fff;transform:none;}
+
+.empty-state{padding:3.5rem 1rem;text-align:center;color:var(--muted);}
+.empty-state i{font-size:2.4rem;color:#E6DCCF;margin-bottom:1rem;display:block;}
+.empty-state h5{font-family:'Fredoka',sans-serif;color:var(--ink-soft);}
+.empty-state p{font-size:.88rem;margin:0;}
+
+.booking-shell{
+  background:#fff;border-radius:var(--radius-xl);padding:2.5rem;
+  box-shadow:var(--shadow-sm);border:1px solid var(--line);
+}
+.form-label{
+  font-size:.82rem;font-weight:700;color:var(--ink-soft);
+  margin-bottom:.45rem;display:block;letter-spacing:.02em;
+}
+.form-control, .form-select{
+  border:1.5px solid var(--line);border-radius:14px;
+  padding:.7rem 1rem;font-family:inherit;font-size:.9rem;
+  background:#fff;color:var(--ink);transition:.25s var(--ease);
+}
+.form-control:focus, .form-select:focus{
+  border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft);
+  outline:none;
+}
+.form-control::placeholder{color:#B5AEA3;}
+
+.booking-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.75rem;}
+.booking-item{
+  background:var(--cream);border:1px solid var(--line);
+  border-radius:var(--radius);padding:1.1rem 1.25rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  transition:.3s var(--ease);animation:fadeUp .4s var(--ease);
+}
+.booking-item:hover{border-color:rgba(255,122,0,.3);box-shadow:var(--shadow-xs);}
+.booking-item .b-icon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:1.05rem;
+}
+.booking-item .b-info{flex:1;min-width:180px;}
+.booking-item h6{font-weight:600;margin:0 0 .2rem;font-size:.95rem;}
+.booking-item small{color:var(--muted);font-size:.78rem;display:block;}
+.b-status{
+  font-size:.7rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.05em;padding:.3rem .7rem;border-radius:50px;
+}
+.status-confirmed{background:var(--green-soft);color:var(--green);}
+.status-pending{background:#FFF4E0;color:#D97706;}
+
+.order-item{
+  background:#fff;border:1px solid var(--line);
+  border-radius:var(--radius);padding:1.1rem 1.25rem;
+  display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+  transition:.3s var(--ease);animation:fadeUp .4s var(--ease);
+}
+.order-item:hover{border-color:rgba(255,122,0,.3);box-shadow:var(--shadow-xs);}
+.order-item .o-icon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  background:var(--green-soft);color:var(--green);
+  display:grid;place-items:center;font-size:1.05rem;
+}
+.order-item .o-info{flex:1;min-width:180px;}
+.order-item h6{font-weight:600;margin:0 0 .2rem;font-size:.95rem;}
+.order-item small{color:var(--muted);font-size:.78rem;display:block;}
+.o-total{font-family:'Fredoka',sans-serif;font-weight:700;color:var(--orange);font-size:1.05rem;}
+
+.account-shell{
+  background:#fff;border-radius:var(--radius-xl);padding:2.5rem;
+  box-shadow:var(--shadow-sm);border:1px solid var(--line);
+}
+.account-avatar{
+  width:90px;height:90px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:2rem;
+  box-shadow:var(--shadow-orange);margin-bottom:1rem;
+}
+.account-stat{
+  background:var(--cream);border:1px solid var(--line);
+  border-radius:var(--radius);padding:1.1rem 1.25rem;text-align:center;
+  transition:.3s var(--ease);
+}
+.account-stat:hover{border-color:rgba(255,122,0,.3);transform:translateY(-4px);}
+.account-stat .num{
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.6rem;
+  color:var(--orange);line-height:1;
+}
+.account-stat small{color:var(--muted);font-size:.78rem;font-weight:500;}
+
+.about-visual{position:relative;}
+.about-plate{
+  width:100%;border-radius:var(--radius-xl);object-fit:cover;
+  box-shadow:var(--shadow-md);aspect-ratio:4/3;
+}
+.about-blob{
+  position:absolute;left:-50px;top:-50px;width:260px;height:260px;
+  background:linear-gradient(135deg,var(--orange),#FFB347);
+  border-radius:44% 56% 58% 42%/48% 42% 58% 52%;
+  z-index:-1;opacity:.85;filter:blur(2px);
+}
+.about-mini{
+  position:absolute;right:-15px;bottom:-15px;
+  background:#fff;border-radius:var(--radius);padding:.85rem 1.1rem;
+  box-shadow:var(--shadow-md);display:flex;align-items:center;gap:.8rem;
+  border:1px solid var(--line);
+}
+.about-mini .num{
+  font-family:'Fredoka',sans-serif;font-size:1.4rem;font-weight:700;color:var(--orange);
+  line-height:1;
+}
+.about-mini small{font-size:.72rem;color:var(--muted);}
+
+.about-feature-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius);padding:1.4rem 1.25rem;
+  height:100%;transition:.3s var(--ease);
+  box-shadow:var(--shadow-xs);position:relative;overflow:hidden;
+}
+.about-feature-card:hover{
+  border-color:var(--orange);
+  transform:translateY(-6px);
+  box-shadow:var(--shadow-sm);
+}
+.about-feature-card .f-icon{
+  width:46px;height:46px;border-radius:14px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:1.15rem;
+  margin-bottom:.9rem;transition:.3s var(--ease);
+}
+.about-feature-card:hover .f-icon{
+  background:var(--orange);color:#fff;
+  transform:scale(1.08) rotate(-6deg);
+}
+.about-feature-card h5{
+  font-size:1.02rem;font-weight:700;margin-bottom:.4rem;
+  color:var(--ink);
+}
+.about-feature-card p{
+  font-size:.84rem;color:var(--muted);margin:0;line-height:1.6;
+}
+
+.stat-box{
+  background:var(--cream);border:1.5px solid var(--line);
+  border-radius:var(--radius);padding:1.3rem 1rem;
+  text-align:center;transition:.3s var(--ease);
+}
+.stat-box:hover{
+  border-color:var(--orange);
+  transform:translateY(-4px);
+  box-shadow:var(--shadow-xs);
+  background:#fff;
+}
+.stat-box .num{
+  font-family:'Fredoka',sans-serif;font-size:1.85rem;font-weight:700;
+  color:var(--orange);line-height:1.1;
+}
+.stat-box small{
+  font-size:.78rem;font-weight:700;color:var(--ink-soft);
+  display:block;margin-top:.3rem;
+}
+
+.check-list{list-style:none;padding:0;margin:1.4rem 0 0;}
+.check-list li{
+  display:flex;align-items:flex-start;gap:.75rem;
+  font-weight:600;font-size:.9rem;margin-bottom:.85rem;color:var(--ink-soft);
+}
+.check-list i{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:.65rem;margin-top:2px;
+}
+
+.cta-banner{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  border-radius:var(--radius-xl);padding:3.2rem 2.5rem;color:#fff;
+  position:relative;overflow:hidden;
+}
+.cta-banner h2{color:#fff;font-size:clamp(1.5rem,3vw,2.1rem);}
+.cta-banner p{color:rgba(255,255,255,.66);margin-bottom:0;}
+.cta-banner::before{
+  content:"";position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,0,.5),transparent 68%);
+  right:-140px;top:-160px;
+}
+.cta-banner::after{
+  content:"";position:absolute;width:280px;height:280px;border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,.14);
+  left:-90px;bottom:-140px;
+}
+.cta-inner{position:relative;z-index:2;}
+
+footer{background:#fff;border-top:1px solid var(--line);padding:3.5rem 0 0;margin-top:2rem;}
+.footer-title{font-family:'Fredoka',sans-serif;font-size:.98rem;font-weight:600;margin-bottom:1rem;}
+.footer-links{list-style:none;padding:0;margin:0;}
+.footer-links li{margin-bottom:.6rem;}
+.footer-links a{
+  color:var(--muted);font-size:.86rem;font-weight:500;transition:.25s;
+  display:inline-flex;align-items:center;gap:.5rem;
+}
+.footer-links a:hover{color:var(--orange);transform:translateX(4px);}
+.social{
+  width:38px;height:38px;border-radius:13px;background:var(--cream);
+  border:1px solid var(--line);display:grid;place-items:center;
+  color:var(--ink);font-size:.88rem;transition:.3s var(--ease);
+}
+.social:hover{background:var(--orange);color:#fff;border-color:var(--orange);transform:translateY(-4px);}
+.footer-bottom{
+  border-top:1px solid var(--line);margin-top:2.5rem;padding:1.4rem 0;
+  font-size:.82rem;color:var(--muted);
+}
+
+.cart-panel{width:400px;max-width:92vw;}
+.cart-header{border-bottom:1px solid var(--line);padding:1.3rem 1.4rem;}
+.cart-item{
+  display:flex;gap:.9rem;padding:.95rem 0;border-bottom:1px dashed var(--line);
+  animation:fadeUp .35s var(--ease);
+}
+.cart-item img{width:60px;height:60px;border-radius:14px;object-fit:cover;flex-shrink:0;}
+.cart-item h6{font-size:.88rem;font-weight:600;margin:0 0 .2rem;}
+.cart-item .p{color:var(--orange);font-weight:700;font-size:.85rem;}
+.qty-ctrl{
+  display:inline-flex;align-items:center;gap:.15rem;
+  background:var(--cream);border-radius:50px;padding:.15rem;
+}
+.qty-ctrl button{
+  width:24px;height:24px;border-radius:50%;border:none;background:#fff;
+  color:var(--ink);display:grid;place-items:center;font-size:.62rem;
+  cursor:pointer;transition:.2s;box-shadow:var(--shadow-xs);
+}
+.qty-ctrl button:hover{background:var(--orange);color:#fff;}
+.qty-ctrl span{min-width:22px;text-align:center;font-weight:700;font-size:.82rem;}
+.remove-btn{
+  border:none;background:transparent;color:#C9BFB2;cursor:pointer;
+  font-size:.82rem;transition:.2s;padding:.2rem .3rem;
+}
+.remove-btn:hover{color:var(--red);}
+.cart-foot{border-top:1px solid var(--line);padding:1.3rem 1.4rem 1.5rem;background:var(--cream);}
+.cart-row{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.5rem;color:var(--muted);}
+.cart-row.total{
+  font-family:'Fredoka',sans-serif;font-size:1.15rem;color:var(--ink);
+  font-weight:700;margin-top:.85rem;padding-top:.85rem;border-top:1px dashed var(--line);
+}
+
+.toast-pop{
+  position:fixed;bottom:28px;left:50%;transform:translate(-50%,140%);
+  background:var(--ink);color:#fff;padding:.8rem 1.3rem;border-radius:50px;
+  display:flex;align-items:center;gap:.65rem;font-size:.88rem;font-weight:600;
+  box-shadow:0 20px 45px rgba(0,0,0,.3);z-index:3000;
+  transition:transform .45s var(--ease);
+}
+.toast-pop.show{transform:translate(-50%,0);}
+.toast-pop i{color:#4ADE80;}
+.toast-pop.error{background:#E5484D;}
+.toast-pop.error i{color:#FECACA;}
+
+.to-top{
+  position:fixed;right:22px;bottom:22px;width:46px;height:46px;border-radius:50%;
+  background:var(--ink);color:#fff;border:none;display:grid;place-items:center;
+  cursor:pointer;z-index:1030;opacity:0;pointer-events:none;
+  transition:.4s var(--ease);box-shadow:var(--shadow-md);
+}
+.to-top.show{opacity:1;pointer-events:auto;}
+.to-top:hover{background:var(--orange);transform:translateY(-5px);}
+
+@media (max-width: 1199px){
+  .nav-links > li > a{padding:.45rem .65rem;font-size:.82rem;}
+}
+@media (max-width: 991px){
+  body{padding-top:66px;}
+  .section-pad{padding:4rem 0;}
+  .hero{padding:3.5rem 0 3.5rem;}
+  .hero-visual{min-height:360px;margin-top:1.5rem;}
+  .plate{width:min(380px,80%);}
+  .plate-ring{width:min(420px,86%);}
+  .fc-1{left:2%;}
+  .fc-2{right:2%;}
+  .about-blob{display:none;}
+  .about-mini{right:0;bottom:-14px;}
+  .marquee{transform:none;width:100%;margin-left:0;margin-right:0;}
+  .cta-banner{padding:2.2rem 1.5rem;}
+  .booking-shell, .account-shell{padding:1.75rem;}
+}
+@media (max-width: 767px){
+  .hero-stats{gap:1.3rem;}
+  .hero-stats .stat{padding-right:1.3rem;}
+  .hero-stats .stat h4{font-size:1.3rem;}
+  .menu-toolbar{justify-content:center;}
+  .search-box{width:100%;min-width:0;}
+}
+@media (max-width: 575px){
+  .float-card{padding:.65rem .85rem;}
+  .float-card strong{font-size:.8rem;}
+  .fc-1{top:0;left:0;}
+  .fc-2{bottom:2%;right:0;}
+  .chips{width:100%;justify-content:center;}
+  .chips button{flex:1;padding:.5rem .6rem;font-size:.78rem;}
+  .hero-cta{width:100%;}
+  .hero-cta .btn{flex:1;}
+  .booking-item, .order-item{padding:.9rem 1rem;}
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation:none!important;transition:none!important;}
+  .reveal{opacity:1;transform:none;}
+}
+
+/* ---------- DROPDOWN & OFF CANVAS FIXES ---------- */
+.dropdown-menu,
+.dropdown-menu ul,
+.dropdown-menu li {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+.dropdown-menu li::before,
+.dropdown-menu li::after {
+  content: none !important;
+  display: none !important;
+}
+.dropdown-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: .5rem !important;
+}
+
+.offcanvas:not(.show) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+@media (min-width: 992px) {
+  #mobileMenu,
+  .offcanvas-menu {
+    display: none !important;
+    visibility: hidden !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<header class="nav-wrap" id="navWrap">
+  <nav class="container nav">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span>
+      TableServe
+    </a>
+
+    <ul class="nav-links d-none d-lg-flex" id="navLinks">
+      <li>
+        <a class="active" href="{% url 'home' %}">
+          <i class="fa-solid fa-house nav-ic"></i>
+          <span>Home</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-circle-user nav-ic"></i>
+          <span>Account</span>
+        </a>
+      </li>
+
+      <li class="has-dropdown">
+        <a href="#services">
+          <i class="fa-solid fa-bell-concierge nav-ic"></i>
+          <span>Services</span>
+        </a>
+        <div class="services-dropdown">
+          <a href="{% url 'food_order_view' %}">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Food Order</span>
+          </a>
+          <a href="{% url 'table_booking_view' %}">
+            <i class="fa-solid fa-chair"></i>
+            <span>Table Booking</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'my_bookings' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-calendar-check nav-ic"></i>
+          <span>My Bookings</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'my_orders' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-bag-shopping nav-ic"></i>
+          <span>My Orders</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="{% url 'about' %}">
+          <i class="fa-solid fa-circle-info nav-ic"></i>
+          <span>About</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-actions ms-auto ms-lg-0">
+      <a href="{% url 'cart_view' %}" class="icon-btn" aria-label="Open cart" style="text-decoration:none;">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-badge" id="cartCount">{% if cart_count %}{{ cart_count }}{% else %}0{% endif %}</span>
+      </a>
+
+      {% if user.is_authenticated %}
+        <div class="dropdown">
+          <button class="user-chip" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="user-avatar">
+              {% if user.first_name %}{{ user.first_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
+            </span>
+            <span class="u-name">
+              {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}
+            </span>
+            <i class="fa-solid fa-chevron-down" style="font-size:.65rem;color:var(--muted)"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="list-style:none!important;margin:0;padding:.4rem!important;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow-md);min-width:220px;">
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'customer_profile' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-regular fa-user me-2"></i>My Account</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'my_bookings' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-regular fa-calendar me-2"></i>My Bookings</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'my_orders' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-solid fa-bag-shopping me-2"></i>My Orders</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><hr class="dropdown-divider" style="margin:.3rem 0;"></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'logout' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;color:var(--red);"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <a href="{% url 'login' %}" class="login-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </a>
+        <a href="{% url 'register' %}" class="signup-btn d-none d-md-inline-flex">
+          <i class="fa-solid fa-user-plus"></i> Sign Up
+        </a>
+      {% endif %}
+
+      <button class="icon-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<!-- ================= MOBILE MENU ================= -->
+<div class="offcanvas offcanvas-end offcanvas-menu" tabindex="-1" id="mobileMenu">
+  <div class="offcanvas-header">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <a class="m-link" href="{% url 'home' %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-house me-2" style="color:var(--orange);"></i>Home</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-circle-user me-2" style="color:var(--orange);"></i>Account</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="#services" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-bell-concierge me-2" style="color:var(--orange);"></i>Services</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link sub" href="{% url 'food_order_view' %}" data-bs-dismiss="offcanvas">
+      <span class="d-flex align-items-center">
+        <i class="fa-solid fa-utensils me-2"></i> Food Order
+      </span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link sub" href="{% url 'table_booking_view' %}" data-bs-dismiss="offcanvas">
+      <span class="d-flex align-items-center">
+        <i class="fa-solid fa-chair me-2"></i> Table Booking
+      </span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'my_bookings' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-calendar-check me-2" style="color:var(--orange);"></i>My Bookings</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'my_orders' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-bag-shopping me-2" style="color:var(--orange);"></i>My Orders</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% url 'about' %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-circle-info me-2" style="color:var(--orange);"></i>About</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    {% if user.is_authenticated %}
+      <a class="btn btn-primary w-100 mt-4" href="{% url 'logout' %}" data-bs-dismiss="offcanvas">
+        <span>Logout</span><i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    {% else %}
+      <div class="d-flex gap-2 mt-4">
+        <a href="{% url 'login' %}" class="btn btn-ghost flex-fill" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </a>
+        <a href="{% url 'register' %}" class="btn btn-primary flex-fill" data-bs-dismiss="offcanvas">
+          <span>Sign Up</span><i class="fa-solid fa-user-plus"></i>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="home">
+  <div class="glow a"></div>
+  <div class="glow b"></div>
+  <div class="hero-grid"></div>
+
+  <div class="container hero-inner">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="hero-pill reveal"><b>TABLE RESERVATION</b> Book your table & dine 🌱</div>
+        <h1 class="reveal">Reserve Your Table<br>& Enjoy <span class="text-gradient">Fresh Veg Food</span></h1>
+        <p class="lead reveal">TableServe lets you book a table at your favourite restaurant and enjoy chef-prepped vegetarian meals cooked fresh for you.</p>
+        <div class="hero-cta reveal">
+          {% if user.is_authenticated %}
+            <a href="#menu" class="btn btn-primary"><span>Order Now</span><i class="fa-solid fa-arrow-right"></i></a>
+            <a href="{% url 'table_booking_view' %}" class="btn btn-ghost"><i class="fa-solid fa-calendar-check"></i> Book a Table</a>
+          {% else %}
+            <a href="{% url 'register' %}" class="btn btn-primary"><span>Get Started</span><i class="fa-solid fa-arrow-right"></i></a>
+            <a href="#menu" class="btn btn-ghost"><i class="fa-solid fa-utensils"></i> View Menu</a>
+          {% endif %}
+        </div>
+        <div class="hero-stats reveal">
+          <div class="stat">
+            {% if completed_guests_count > 0 %}
+              <h4 class="display">{{ completed_guests_count }}</h4><span>Happy guest{{ completed_guests_count|pluralize }}</span>
+            {% else %}
+              <h4 class="display" style="font-size:1.15rem;line-height:1.25;">Be our first guest</h4><span>Happy guests</span>
+            {% endif %}
+          </div>
+          <div class="stat">
+            {% if avg_rating %}
+              <h4 class="display">{{ avg_rating|floatformat:1 }}<span style="font-size:1rem">★</span></h4><span>Average rating{% if rating_count %} ({{ rating_count }}){% endif %}</span>
+            {% else %}
+              <h4 class="display" style="font-size:1.15rem;line-height:1.25;">No ratings yet</h4><span>Average rating</span>
+            {% endif %}
+          </div>
+          <div class="stat">
+            {% if supports_instant_confirmation %}
+              <h4 class="display">Instant</h4><span>Confirmation</span>
+            {% else %}
+              <h4 class="display">Easy</h4><span>Table Booking</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="hero-visual reveal">
+          <div class="plate-ring"></div>
+          <img class="plate" src="{% static 'images/hero_dish.jpg' %}" onerror="this.onerror=null;this.src='/static/images/hero_dish.png';" alt="TableServe Delicious Feast">
+          <div class="float-card fc-1">
+            <div class="fc-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div><small>Table for 2</small><strong>Confirmed</strong></div>
+          </div>
+          <div class="float-card fc-2">
+            <div class="fc-icon"><i class="fa-solid fa-leaf"></i></div>
+            <div><strong>100% Veg</strong><small>Plant-based only</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MARQUEE ================= -->
+<div class="marquee">
+  <div class="marquee-track" id="marqueeTrack">
+    <span><i class="fa-solid fa-calendar-check"></i> {% if supports_instant_confirmation %}Instant table booking{% else %}Easy table booking{% endif %}</span>
+    <span><i class="fa-solid fa-clock"></i> {% if supports_instant_confirmation %}Instant Confirmation{% else %}Easy Table Booking{% endif %}</span>
+    <span><i class="fa-solid fa-leaf"></i> 100% vegetarian menu</span>
+    <span><i class="fa-solid fa-fire"></i> Chef-crafted recipes</span>
+    {% if avg_rating %}
+      <span><i class="fa-solid fa-star"></i> {{ avg_rating|floatformat:1 }}★ average rating{% if rating_count %} ({{ rating_count }} review{{ rating_count|pluralize }}){% endif %}</span>
+    {% else %}
+      <span><i class="fa-solid fa-star"></i> No ratings yet</span>
+    {% endif %}
+    {% if completed_guests_count > 0 %}
+      <span><i class="fa-solid fa-heart"></i> Loved by {{ completed_guests_count }} guest{{ completed_guests_count|pluralize }}</span>
+    {% else %}
+      <span><i class="fa-solid fa-heart"></i> Be our first guest</span>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ================= SERVICES ================= -->
+<section class="section-pad" id="services">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow reveal">Our services</span>
+      <h2 class="section-title reveal">Everything you need at one table</h2>
+      <p class="section-sub reveal">From instant table reservations to group catering — TableServe has you covered.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3 reveal">
+        <div class="service-card">
+          <div class="service-icon si-orange"><i class="fa-solid fa-calendar-check"></i></div>
+          <h5>Table Booking</h5>
+          <p>Reserve your favourite spot in seconds. Instant confirmation, no calls needed.</p>
+          <a href="{% url 'table_booking_view' %}" class="service-link">Book now <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.08s">
+        <div class="service-card">
+          <div class="service-icon si-green"><i class="fa-solid fa-utensils"></i></div>
+          <h5>Dine-in Experience</h5>
+          <p>Enjoy gourmet vegetarian dishes prepped fresh by master chefs in a premium setting.</p>
+          <a href="#menu" class="service-link">View Menu <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.16s">
+        <div class="service-card">
+          <div class="service-icon si-blue"><i class="fa-solid fa-people-group"></i></div>
+          <h5>Event Catering</h5>
+          <p>Birthdays, weddings or office lunches — we cater for groups of any size.</p>
+          <a href="#contact" class="service-link">Enquire <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.24s">
+        <div class="service-card">
+          <div class="service-icon si-red"><i class="fa-solid fa-leaf"></i></div>
+          <h5>Weekly Veg Box</h5>
+          <p>Subscribe for a weekly box of prepped vegetarian meals. Pause anytime.</p>
+          <a href="#menu" class="service-link">Subscribe <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ABOUT / OUR STORY ================= -->
+<section class="section-pad" id="about-section" style="background:#fff;">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6 reveal">
+        <div class="about-visual">
+          <div class="about-blob"></div>
+          <img class="about-plate" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80" alt="TableServe Restaurant Experience">
+          <div class="about-mini">
+            <i class="fa-solid fa-award" style="font-size:1.6rem;color:var(--orange)"></i>
+            <div><div class="num">15+</div><small>Years of Excellence</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6 reveal" style="transition-delay:.1s">
+        <span class="eyebrow">Our Story</span>
+        <h2 class="section-title">A table for everyone, a meal for every moment</h2>
+        <p>TableServe was founded with a mission to elevate restaurant dining by combining authentic vegetarian culinary heritage with modern digital convenience. From reserving private party tables to serving gourmet meals at your table, we ensure seamless quality every time.</p>
+        <ul class="check-list">
+          <li><i class="fa-solid fa-check"></i> 100% Pure Vegetarian gourmet recipes prepared by master chefs</li>
+          <li><i class="fa-solid fa-check"></i> Real-time instant table booking with indoor &amp; outdoor choices</li>
+          <li><i class="fa-solid fa-check"></i> Seamless table ordering with live order tracking</li>
+          <li><i class="fa-solid fa-check"></i> Zero food waste initiative with verified partner NGOs</li>
+        </ul>
+        <div class="mt-4">
+          <a href="{% url 'about' %}" class="btn btn-primary">
+            <span>Read Full Story</span><i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY CHOOSE US ================= -->
+<section class="section-pad">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow reveal">Why Choose Us</span>
+      <h2 class="section-title reveal">Designed for Exceptional Dining</h2>
+      <p class="section-sub reveal">Experience hospitality that brings quality food, smart technology, and social care together.</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3 reveal">
+        <div class="about-feature-card">
+          <div class="f-icon"><i class="fa-solid fa-leaf"></i></div>
+          <h5>100% Pure Veg</h5>
+          <p>Handcrafted using farm-fresh organic vegetables, pure ghee, and authentic secret spices.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.08s">
+        <div class="about-feature-card">
+          <div class="f-icon"><i class="fa-solid fa-chair"></i></div>
+          <h5>Instant Reservations</h5>
+          <p>Book your favourite table in seconds with real-time slot selection and instant confirmation.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.16s">
+        <div class="about-feature-card">
+          <div class="f-icon"><i class="fa-solid fa-clock"></i></div>
+          <h5>Instant Table Booking</h5>
+          <p>Instant confirmation with real-time slot selection and zero waiting time at arrival.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3 reveal" style="transition-delay:.24s">
+        <div class="about-feature-card">
+          <div class="f-icon"><i class="fa-solid fa-hand-holding-heart"></i></div>
+          <h5>NGO Food Sharing</h5>
+          <p>We partner with local verified NGOs to share surplus food and eradicate hunger in our community.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MENU ================= -->
+<section class="section-pad" id="menu" style="background:#fff;">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="eyebrow reveal">Our menu</span>
+      <h2 class="section-title reveal">Explore our best veg menu</h2>
+      <p class="section-sub reveal">Hand-picked vegetarian favourites, prepped fresh and ready in minutes.</p>
+    </div>
+    <div class="menu-toolbar reveal">
+      <div class="chips" id="filterTabs">
+        <button class="active" data-cat="all">All</button>
+        {% for cat in categories %}
+          <button data-cat="{{ cat.name|lower }}">{{ cat.name }}</button>
+        {% empty %}
+          <button data-cat="breakfast">Breakfast</button>
+          <button data-cat="salad">Salads</button>
+          <button data-cat="mains">Mains</button>
+        {% endfor %}
+      </div>
+      <label class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="Search veg dishes…">
+      </label>
+    </div>
+    <div class="row g-4" id="menuGrid"></div>
+    <div class="text-center mt-5">
+      <button class="btn btn-dark-ink" id="loadMoreBtn">Load More <i class="fa-solid fa-rotate"></i></button>
+    </div>
+  </div>
+</section>
+
+
+
+
+<!-- ================= CTA ================= -->
+<section class="section-pad pt-0" id="contact">
+  <div class="container">
+    <div class="cta-banner reveal">
+      <div class="cta-inner row align-items-center g-4">
+        <div class="col-lg-7">
+          <h2 class="mb-2">Get 20% off your first order or booking</h2>
+          <p>Join our newsletter for weekly menus, chef tips and member-only offers.</p>
+        </div>
+        <div class="col-lg-5">
+          <form class="newsletter d-flex bg-white rounded-pill p-1" id="newsletterForm" style="max-width:420px;" onsubmit="handleNewsletter(event)">
+            {% csrf_token %}
+            <input type="email" name="email" class="flex-grow-1 border-0 px-3" style="outline:none;font-size:.9rem;background:transparent;" placeholder="yourmail@gmail.com" required>
+            <button type="submit" class="btn btn-primary"><span>Subscribe</span></button>
+          </form>
+          <div id="formMsg" class="small mt-3" style="color:var(--orange-2);min-height:1.2rem;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="row g-4 g-lg-5">
+      <div class="col-lg-4">
+        <a class="brand mb-3" href="{% url 'home' %}">
+          <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+        </a>
+        <p style="max-width:320px;font-size:.9rem;">Book a table or order fresh vegetarian meals — TableServe brings the restaurant experience to you.</p>
+        <div class="d-flex gap-2 mt-3">
+          <a href="#" class="social" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="social" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="social" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" class="social" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">Explore</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="#services">Services</a></li>
+          <li><a href="#menu">Menu</a></li>
+          <li><a href="{% url 'about' %}">About Us</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">My Account</h6>
+        <ul class="footer-links">
+          {% if user.is_authenticated %}
+            <li><a href="#bookings">My Bookings</a></li>
+            <li><a href="#orders">My Orders</a></li>
+            <li><a href="#account">Profile</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+            <li><a href="{% url 'register' %}">Sign Up</a></li>
+            <li><a href="#menu">Browse Menu</a></li>
+            <li><a href="#contact">Contact</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="col-lg-4">
+        <h6 class="footer-title">Get in touch</h6>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fa-solid fa-location-dot" style="color:var(--orange)"></i> 18 Kitchen St, Ahmedabad</a></li>
+          <li><a href="tel:+919876543210"><i class="fa-solid fa-phone" style="color:var(--orange)"></i> +91 98765 43210</a></li>
+          <li><a href="mailto:hello@tableserve.com"><i class="fa-solid fa-envelope" style="color:var(--orange)"></i> hello@tableserve.com</a></li>
+          <li><a href="#"><i class="fa-regular fa-clock" style="color:var(--orange)"></i> Mon–Sun · 7am – 11pm</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom d-flex flex-wrap justify-content-between gap-2">
+      <span>&copy; 2026 TableServe. All rights reserved.</span>
+      <span>Made with <i class="fa-solid fa-heart" style="color:var(--orange)"></i> for food lovers</span>
+    </div>
+  </div>
+</footer>
+
+<!-- ================= CART OFFCANVAS ================= -->
+<div class="offcanvas offcanvas-end cart-panel" tabindex="-1" id="cartPanel">
+  <div class="cart-header d-flex align-items-center justify-content-between">
+    <h5 class="mb-0" style="font-family:'Fredoka',sans-serif;">
+      <i class="fa-solid fa-bag-shopping me-2" style="color:var(--orange)"></i>Your Cart
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="cartBody"></div>
+  <div class="cart-foot" id="cartFoot" style="display:none;">
+    <div class="cart-row"><span>Subtotal</span><span id="subTotal">₹0</span></div>
+    <div class="cart-row"><span>Service Fee</span><span style="color:#2FAE60;font-weight:600;">Free</span></div>
+    <div class="cart-row total"><span>Total</span><span id="grandTotal">₹0</span></div>
+    <button class="btn btn-primary w-100 mt-3" id="checkoutBtn">
+      <span>Checkout</span><i class="fa-solid fa-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+<div class="toast-pop" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg">Done</span></div>
+<button class="to-top" id="toTop" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+const $  = (s, ctx = document) => ctx.querySelector(s);
+const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
+const money = n => "₹" + Number(n).toFixed(2).replace(/\.00$/, "");
+const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+
+const toast = $("#toast"), toastMsg = $("#toastMsg");
+let toastTimer;
+function showToast(msg, isError){
+  toastMsg.textContent = msg;
+  toast.classList.toggle("error", !!isError);
+  toast.querySelector("i").className = isError ? "fa-solid fa-circle-exclamation" : "fa-solid fa-circle-check";
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+toast.addEventListener("click", () => toast.classList.remove("show"));
+
+{% if messages %}
+  {% for message in messages %}
+    showToast("{{ message|escapejs }}", {% if message.tags == 'error' %}true{% else %}false{% endif %});
+  {% endfor %}
+{% endif %}
+
+/* ============================================================
+   MENU — 100% vegetarian images
+   ============================================================ */
+const menuItems = {{ db_menu_items_json|safe }};
+
+const grid = $("#menuGrid");
+const loadMoreBtn = $("#loadMoreBtn");
+const filterTabs = $("#filterTabs");
+const searchInput = $("#searchInput");
+
+const PAGE_SIZE = 6;
+let shown = 0, activeCat = "all", query = "";
+
+function starIcons(n){
+  let out = "";
+  for (let i = 0; i < 5; i++) out += `<i class="fa-${i < n ? "solid" : "regular"} fa-star"></i>`;
+  return out;
+}
+
+function filteredItems(){
+  const q = query.trim().toLowerCase();
+  return menuItems.filter(m => {
+    const catOk = activeCat === "all" || m.cat === activeCat;
+    const qOk = !q || m.name.toLowerCase().includes(q) || m.desc.toLowerCase().includes(q);
+    return catOk && qOk;
+  });
+}
+
+function cardHTML(item){
+  return `
+    <div class="menu-card">
+      <div class="img-wrap">
+        <img src="${item.img}" alt="${item.name}" loading="lazy">
+        ${item.popular ? '<span class="badge-pop">Popular</span>' : ""}
+        <span class="rating-pill"><i class="fa-solid fa-star"></i>${item.stars}.0</span>
+      </div>
+      <div class="body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+          <h5>${item.name}</h5>
+          <span class="price-tag">${money(item.price)}</span>
+        </div>
+        <p>${item.desc}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="color:#FFB400;font-size:.85rem;letter-spacing:.15em;">${starIcons(item.stars)}</span>
+          <button class="add-btn" data-id="${item.id}" data-name="${item.name}" aria-label="Add ${item.name} to cart">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderNext(){
+  const source = filteredItems();
+  const next = source.slice(shown, shown + PAGE_SIZE);
+
+  if (shown === 0 && next.length === 0){
+    grid.innerHTML = `
+      <div class="col-12">
+        <div class="empty-state">
+          <i class="fa-solid fa-utensils"></i>
+          <h5>No veg dishes found</h5>
+          <p>Try a different search or category.</p>
+        </div>
+      </div>`;
+    loadMoreBtn.style.display = "none";
+    return;
+  }
+
+  next.forEach((item, i) => {
+    const col = document.createElement("div");
+    col.className = "col-sm-6 col-lg-4";
+    col.innerHTML = cardHTML(item);
+    col.querySelector(".menu-card").style.animationDelay = (i * 60) + "ms";
+    grid.appendChild(col);
+  });
+
+  shown += next.length;
+  loadMoreBtn.style.display = shown >= source.length ? "none" : "inline-flex";
+}
+
+function resetGrid(){
+  grid.innerHTML = "";
+  shown = 0;
+  loadMoreBtn.style.display = "inline-flex";
+  renderNext();
+}
+
+filterTabs.addEventListener("click", e => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  $$("button", filterTabs).forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeCat = btn.dataset.cat;
+  resetGrid();
+});
+
+let searchTimer;
+searchInput.addEventListener("input", e => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { query = e.target.value; resetGrid(); }, 220);
+});
+
+loadMoreBtn.addEventListener("click", renderNext);
+resetGrid();
+
+const cart = new Map();
+const cartBody = $("#cartBody");
+const cartFoot = $("#cartFoot");
+const cartCount = $("#cartCount");
+const subTotalEl = $("#subTotal");
+const grandEl = $("#grandTotal");
+const cartPanel = new bootstrap.Offcanvas("#cartPanel");
+
+const cartQty = () => [...cart.values()].reduce((s, l) => s + l.qty, 0);
+const cartSum = () => [...cart.values()].reduce((s, l) => s + l.qty * l.item.price, 0);
+
+function renderCart(){
+  const entries = [...cart.values()];
+  if (!entries.length){
+    cartBody.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <h5>Your cart is empty</h5>
+        <p>Add something delicious from the menu.</p>
+      </div>`;
+    cartFoot.style.display = "none";
+  } else {
+    cartBody.innerHTML = entries.map(l => `
+      <div class="cart-item">
+        <img src="${l.item.img}" alt="${l.item.name}">
+        <div class="flex-grow-1">
+          <div class="d-flex justify-content-between align-items-start gap-2">
+            <h6>${l.item.name}</h6>
+            <button class="remove-btn" data-remove="${l.item.name}" aria-label="Remove">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          <div class="p mb-2">${money(l.item.price)}</div>
+          <div class="d-flex align-items-center justify-content-between">
+            <div class="qty-ctrl">
+              <button data-dec="${l.item.name}"><i class="fa-solid fa-minus"></i></button>
+              <span>${l.qty}</span>
+              <button data-inc="${l.item.name}"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <strong style="font-size:.88rem;">${money(l.item.price * l.qty)}</strong>
+          </div>
+        </div>
+      </div>`).join("");
+    const sum = cartSum();
+    subTotalEl.textContent = money(sum);
+    grandEl.textContent = money(sum);
+    cartFoot.style.display = "block";
+  }
+
+  cartCount.textContent = cartQty();
+  cartCount.classList.add("bump");
+  setTimeout(() => cartCount.classList.remove("bump"), 300);
+}
+
+function addToCart(name){
+  const item = menuItems.find(m => m.name === name);
+  if (!item) return;
+  const line = cart.get(name);
+  line ? line.qty++ : cart.set(name, { item, qty: 1 });
+  renderCart();
+  showToast(`${item.name} added to cart`);
+}
+
+cartBody.addEventListener("click", e => {
+  const inc = e.target.closest("[data-inc]");
+  const dec = e.target.closest("[data-dec]");
+  const rem = e.target.closest("[data-remove]");
+
+  if (inc){ cart.get(inc.dataset.inc).qty++; renderCart(); }
+  if (dec){
+    const line = cart.get(dec.dataset.dec);
+    line.qty > 1 ? line.qty-- : cart.delete(dec.dataset.dec);
+    renderCart();
+  }
+  if (rem){ cart.delete(rem.dataset.remove); renderCart(); }
+});
+
+grid.addEventListener("click", e => {
+  const btn = e.target.closest(".add-btn");
+  if (!btn) return;
+  addToCart(btn.dataset.name);
+  btn.classList.add("added");
+  btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+  setTimeout(() => {
+    btn.classList.remove("added");
+    btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+  }, 900);
+});
+
+const cartBtnEl = $("#cartBtn");
+if (cartBtnEl) cartBtnEl.addEventListener("click", () => cartPanel.show());
+
+const checkoutBtnEl = $("#checkoutBtn");
+if (checkoutBtnEl) {
+  checkoutBtnEl.addEventListener("click", () => {
+    if (!cart.size){ showToast("Your cart is empty", true); return; }
+    if (!isAuthenticated){
+      cartPanel.hide();
+      showToast("Please login to place an order", true);
+      setTimeout(() => { window.location.href = "{% url 'login' %}"; }, 900);
+      return;
+    }
+    showToast("Proceeding to checkout…");
+  });
+}
+
+function handleBooking(e){
+  e.preventDefault();
+  const form = e.target;
+  const name = form.querySelector('#bkName').value.trim();
+  const date = form.querySelector('#bkDate').value;
+  const time = form.querySelector('#bkTime').value;
+  const guests = form.querySelector('#bkGuests').value;
+  const seating = form.querySelector('#bkSeat').value;
+
+  if (!name || !date || !time){ showToast("Please fill all fields", true); return; }
+
+  const list = document.getElementById('bookingsList');
+  if (list){
+    const noBook = document.getElementById('noBookings');
+    if (noBook) noBook.remove();
+
+    const li = document.createElement('li');
+    li.className = 'booking-item';
+    li.innerHTML = `
+      <div class="b-icon"><i class="fa-solid fa-calendar-check"></i></div>
+      <div class="b-info">
+        <h6>${name} · ${guests} ${guests === "1" ? "guest" : "guests"}</h6>
+        <small>
+          <i class="fa-regular fa-calendar me-1"></i>${date} ·
+          <i class="fa-regular fa-clock me-1"></i>${time} ·
+          <i class="fa-solid fa-chair me-1"></i>${seating}
+        </small>
+      </div>
+      <span class="b-status status-confirmed">Confirmed</span>`;
+    list.prepend(li);
+
+    const countEl = document.getElementById('bookingsCount');
+    if (countEl){
+      const newCount = list.querySelectorAll('.booking-item').length;
+      countEl.textContent = newCount + " total";
+    }
+  }
+
+  showToast(`Table booked for ${guests} on ${date} at ${time} ✅`);
+  form.reset();
+  const dateInput = form.querySelector('#bkDate');
+  if (dateInput){
+    const today = new Date().toISOString().split("T")[0];
+    dateInput.value = today;
+  }
+}
+window.handleBooking = handleBooking;
+
+function handleNewsletter(e){
+  e.preventDefault();
+  const msg = $("#formMsg");
+  if (msg) msg.textContent = "Thanks! Check your inbox for your 20% code.";
+  e.target.reset();
+}
+window.handleNewsletter = handleNewsletter;
+
+const dateInput = $("#bkDate");
+if (dateInput){
+  const today = new Date().toISOString().split("T")[0];
+  dateInput.min = today;
+  dateInput.value = today;
+}
+
+/* ============================================================
+   SERVICES DROPDOWN — click-to-open on touch devices
+   ============================================================ */
+document.querySelectorAll(".has-dropdown > a").forEach(link => {
+  link.addEventListener("click", (e) => {
+    if (window.matchMedia("(hover: none)").matches) {
+      e.preventDefault();
+      link.parentElement.classList.toggle("open");
+    }
+  });
+});
+document.addEventListener("click", (e) => {
+  document.querySelectorAll(".has-dropdown.open").forEach(dd => {
+    if (!dd.contains(e.target)) dd.classList.remove("open");
+  });
+});
+
+const navWrap = $("#navWrap");
+const toTop = $("#toTop");
+
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  navWrap.classList.toggle("scrolled", y > 30);
+  toTop.classList.toggle("show", y > 600);
+}, { passive: true });
+
+toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+const sections = $$("section[id]");
+const navAnchors = $$("#navLinks > li > a");
+window.addEventListener("scroll", () => {
+  let current = "home";
+  sections.forEach(sec => {
+    if (window.scrollY >= sec.offsetTop - 140) current = sec.id;
+  });
+  navAnchors.forEach(a => {
+    const href = a.getAttribute("href") || "";
+    if (href.startsWith("#")) a.classList.toggle("active", href === "#" + current);
+  });
+}, { passive: true });
+
+$$('a[href^="#"]').forEach(a => {
+  a.addEventListener("click", function(e){
+    const id = this.getAttribute("href");
+    if (id.length > 1 && document.querySelector(id)){
+      e.preventDefault();
+      document.querySelector(id).scrollIntoView({ behavior: "smooth" });
+      const collapse = $("#mobileMenu");
+      if (collapse && collapse.classList.contains("show")) {
+        bootstrap.Offcanvas.getInstance(collapse)?.hide();
+      }
+    }
+  });
+});
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(en => {
+    if (en.isIntersecting){
+      en.target.classList.add("in");
+      io.unobserve(en.target);
+    }
+  });
+}, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+$$(".reveal").forEach(el => io.observe(el));
+document.querySelectorAll(".hero .reveal").forEach(el => el.classList.add("in"));
+
+const track = $("#marqueeTrack");
+if (track) track.innerHTML += track.innerHTML;
+
+renderCart();
+
+// Auto-reload on back-forward navigation (bfcache) to keep CSRF tokens in sync
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted || (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+    window.location.reload();
+  }
+});
+</script>
+</body>
+</html>

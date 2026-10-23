@@ -1,0 +1,80 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Order Handler{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Order Management</h1>
+    <p><span class="badge-status bs-orange">Order Handler</span> — Manage restaurant orders.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-bell-concierge"></i></div><div class="stat-info"><div class="num">{{ total_orders }}</div><div class="lbl">Total Orders</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ paid_count }}</div><div class="lbl">Paid</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-fire-burner"></i></div><div class="stat-info"><div class="num">{{ preparing_count }}</div><div class="lbl">Preparing</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-utensils"></i></div><div class="stat-info"><div class="num">{{ delivered_count }}</div><div class="lbl">Served</div></div></div>
+</div>
+
+<!-- Restaurant Orders -->
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-utensils me-2" style="color:var(--orange);"></i>Restaurant Orders</h5>
+    <span class="sub">{{ orders|length }} total</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>ID</th><th>Table</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td><b>#{{ o.id }}</b></td>
+          <td>
+            {% if o.is_pre_order %}
+              <span class="badge-status bs-blue" style="background:#E0F2FE;color:#0284C7;font-weight:700;"><i class="fa-solid fa-clock me-1"></i>PRE-ORDER Table {{ o.table.number }}</span>
+            {% elif o.table %}
+              <span class="badge-status bs-orange">Table {{ o.table.number }}</span>
+            {% else %}
+              <span class="badge-status bs-gray">Dine-in</span>
+            {% endif %}
+          </td>
+          <td>{{ o.user.get_full_name|default:o.user.username }}</td>
+          <td style="font-size:.82rem;">
+            {% for item in o.items.all %}{{ item.menu_item.name }} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+          </td>
+          <td><b>₹{{ o.total }}</b></td>
+          <td>
+            <span class="badge-status {% if o.payment_status == 'paid' or o.payment_status == 'success' %}bs-green{% else %}bs-yellow{% endif %}">
+              {{ o.payment_status|title }}
+            </span>
+          </td>
+          <td><span class="badge-status {% if o.status == 'delivered' or o.status == 'served' %}bs-green{% elif o.status == 'preparing' %}bs-blue{% elif o.status == 'ready' %}bs-orange{% elif o.status == 'cancelled' %}bs-red{% elif o.status == 'accepted' %}bs-blue{% else %}bs-yellow{% endif %}">{{ o.get_status_display|default:o.status }}</span></td>
+          <td>
+            <form method="post" style="display:inline-flex;gap:.35rem;align-items:center;">
+              {% csrf_token %}
+              <input type="hidden" name="order_id" value="{{ o.id }}">
+              {% if o.status == 'pending' or o.status == 'accepted' or o.status == 'cancelled' %}
+                <select name="status" onchange="this.form.submit()" class="f-input" style="padding:.4rem .7rem;font-size:.78rem;width:auto;">
+                  <option value="pending" {% if o.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="accepted" {% if o.status == 'accepted' %}selected{% endif %}>Send to Kitchen</option>
+                  <option value="cancelled" {% if o.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+              {% else %}
+                <span class="badge-status {% if o.status == 'delivered' or o.status == 'served' %}bs-green{% elif o.status == 'preparing' %}bs-blue{% elif o.status == 'ready' %}bs-orange{% else %}bs-gray{% endif %}" style="font-size:.75rem;">
+                  {{ o.get_status_display }}
+                </span>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-solid fa-utensils"></i><b>No restaurant orders</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

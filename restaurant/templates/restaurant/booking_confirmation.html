@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Confirmation #TS{{ reservation.id }} — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);text-decoration:none;}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.confirm-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2.5rem 2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.45rem 1.2rem;border-radius:50px;font-weight:700;
+  font-size:.88rem;text-transform:uppercase;letter-spacing:.05em;
+  background:var(--green-soft);color:var(--green);
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;text-decoration:none;
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <a href="{% url 'customer_reservations' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">
+      <i class="fa-solid fa-calendar-check me-1"></i> My Bookings
+    </a>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:850px;">
+  <div class="confirm-card text-center mb-4">
+    <div class="mb-3">
+      <div class="d-inline-grid place-items-center rounded-circle p-3 mb-2" style="width:72px;height:72px;background:var(--green-soft);color:var(--green);margin:0 auto;display:grid;">
+        <i class="fa-solid fa-circle-check" style="font-size:2.5rem;"></i>
+      </div>
+      <h2 class="fw-bold mb-1">Table Booking Confirmed!</h2>
+      <p class="text-muted mb-3">Booking Reference <strong>#TS{{ reservation.id }}</strong></p>
+      <span class="status-pill mb-2">
+        <i class="fa-solid fa-check-circle"></i> {{ reservation.status|title }}
+      </span>
+    </div>
+
+    <hr class="my-4" style="border-color:var(--line);">
+
+    <div class="row text-start g-3 mb-4">
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small fw-bold mb-2">Reservation Details</h6>
+        <p class="mb-1"><i class="fa-solid fa-calendar me-2 text-warning"></i> <strong>Date:</strong> {{ reservation.date|date:"D, d M Y" }}</p>
+        <p class="mb-1"><i class="fa-solid fa-clock me-2 text-warning"></i> <strong>Time:</strong> {{ reservation.time|time:"h:i A" }}</p>
+        <p class="mb-1"><i class="fa-solid fa-users me-2 text-warning"></i> <strong>Guests:</strong> {{ reservation.guests }} Person(s)</p>
+        <p class="mb-0"><i class="fa-solid fa-chair me-2 text-warning"></i> <strong>Table:</strong> Table #{{ reservation.table.number }} ({{ reservation.table.location|title }})</p>
+      </div>
+
+      <div class="col-md-6">
+        <h6 class="text-muted text-uppercase small fw-bold mb-2">Payment Summary</h6>
+        <p class="mb-1"><i class="fa-solid fa-receipt me-2 text-success"></i> <strong>Table Booking Charge:</strong> ₹{{ reservation.booking_charge }}</p>
+        <p class="mb-1">
+          <i class="fa-solid fa-utensils me-2 text-success"></i> <strong>Pre-Order Amount:</strong>
+          {% if reservation.pre_order_selected %}
+            ₹{{ reservation.pre_order_amount }} <span class="badge bg-success">Confirmed</span>
+          {% else %}
+            Not Selected
+          {% endif %}
+        </p>
+        <p class="mb-1"><i class="fa-solid fa-money-bill-wave me-2 text-success"></i> <strong>Total Paid:</strong> ₹{{ reservation.total_amount }}</p>
+        <p class="mb-0"><i class="fa-solid fa-credit-card me-2 text-success"></i> <strong>Payment Status:</strong> <span class="badge bg-success">PAID</span></p>
+      </div>
+    </div>
+
+    {% if pre_order_items %}
+      <div class="p-3 bg-light rounded-4 text-start mb-4">
+        <h6 class="fw-bold mb-2 text-orange" style="color:var(--orange);"><i class="fa-solid fa-list-check me-2"></i>Pre-Ordered Food Items:</h6>
+        <div class="row g-2 small">
+          {% for pi in pre_order_items %}
+            <div class="col-md-6 d-flex justify-content-between border-bottom py-1">
+              <span>{{ pi.quantity }}x {{ pi.menu_item.name }}</span>
+              <strong style="color:var(--orange);">₹{{ pi.line_total }}</strong>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="p-3 bg-light rounded-4 text-center mb-4">
+      <p class="small text-muted mb-0"><i class="fa-solid fa-circle-info me-1"></i> Please arrive 10 minutes prior to your reservation time. Your table will be held for up to 15 minutes past your reserved time.</p>
+    </div>
+
+    <div class="d-flex justify-content-center gap-3 flex-wrap">
+      <a href="{% url 'customer_reservations' %}" class="btn btn-primary fw-bold">
+        <i class="fa-solid fa-calendar-check me-2"></i> View My Booking
+      </a>
+      <a href="{% url 'food_order_view' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold text-decoration-none">
+        <i class="fa-solid fa-utensils me-2"></i> Order Food
+      </a>
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold text-decoration-none">
+        <i class="fa-solid fa-house me-2"></i> Back to Home
+      </a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

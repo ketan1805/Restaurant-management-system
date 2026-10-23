@@ -1,0 +1,83 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Orders — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Order Management</h1>
+    <p>Track restaurant orders in real time.</p>
+  </div>
+</div>
+
+<div class="filters">
+  <form method="get" style="display:flex;align-items:center;gap:.6rem;background:#fff;border:1.5px solid var(--line);border-radius:50px;padding:.5rem 1.1rem;box-shadow:var(--shadow-xs);min-width:280px;flex:1;max-width:380px;">
+    <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);font-size:.85rem;"></i>
+    <input type="text" name="q" value="{{ query }}" placeholder="Search by order ID or customer…"
+           style="border:none;outline:none;background:transparent;font-family:inherit;font-size:.88rem;width:100%;color:var(--ink);">
+  </form>
+
+  <a href="?status=all" class="chip {% if active_filter == 'all' %}active{% endif %}">All</a>
+  <a href="?status=pending" class="chip {% if active_filter == 'pending' %}active{% endif %}">Pending</a>
+  <a href="?status=preparing" class="chip {% if active_filter == 'preparing' %}active{% endif %}">Preparing</a>
+  <a href="?status=ready" class="chip {% if active_filter == 'ready' %}active{% endif %}">Ready</a>
+  <a href="?status=delivered" class="chip {% if active_filter == 'delivered' %}active{% endif %}">Delivered</a>
+  <a href="?status=cancelled" class="chip {% if active_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-utensils me-2" style="color:var(--orange);"></i> Restaurant Orders</h5>
+    <span class="sub">{{ orders|length }} total</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>ID</th><th>Date &amp; Time</th><th>Table / Customer</th><th>Items</th>
+          <th>Total</th><th>Status</th><th>Payment</th><th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <td><b>#TS{{ o.id }}</b></td>
+          <td style="white-space:nowrap;">
+            <div><b>{{ o.created_at|date:"d M Y" }}</b></div>
+            <small style="color:var(--muted);font-weight:600;">{{ o.created_at|time:"g:i A" }}</small>
+          </td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar" style="background:var(--orange-soft);color:var(--orange);">🪑</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);font-size:.88rem;">{% if o.table %}Table {{ o.table.number }}{% else %}Walk-in / Customer{% endif %}</div>
+                <small style="color:var(--muted);font-size:.75rem;">{{ o.user.get_full_name|default:o.user.username }}</small>
+              </div>
+            </div>
+          </td>
+          <td style="font-size:.82rem;max-width:240px;">
+            {% for item in o.items.all %}{{ item.menu_item.name }} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+          </td>
+          <td><b>₹{{ o.total|floatformat:0 }}</b></td>
+          <td>
+            <span class="badge-status {% if o.status == 'delivered' or o.status == 'served' %}bs-green{% elif o.status == 'preparing' %}bs-orange{% elif o.status == 'ready' %}bs-blue{% elif o.status == 'pending' %}bs-yellow{% else %}bs-red{% endif %}">
+              {{ o.get_status_display|default:o.status }}
+            </span>
+          </td>
+          <td>
+            {% with pay=o.payments.first %}
+              {% if pay %}<span class="badge-status {% if pay.status == 'success' %}bs-green{% elif pay.status == 'pending' %}bs-yellow{% elif pay.status == 'refunded' %}bs-purple{% else %}bs-red{% endif %}">{{ pay.get_status_display }}</span>
+              {% else %}<span style="color:var(--muted);">—</span>{% endif %}
+            {% endwith %}
+          </td>
+          <td style="text-align:center;">
+            <a href="{% url 'admin_order_details' o.id %}" class="act-btn" title="View Details"><i class="fa-solid fa-eye"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-solid fa-box"></i><b>No orders found</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

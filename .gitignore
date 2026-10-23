@@ -1,0 +1,37 @@
+# Python byte code
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# Django collected static
+staticfiles/
+
+# Local database (uncomment if you do not want to track db.sqlite3)
+# db.sqlite3
+# db.sqlite3-journal
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+db.sqlite3

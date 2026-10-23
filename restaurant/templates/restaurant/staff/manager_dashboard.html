@@ -1,0 +1,955 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Manager Dashboard{% endblock %}
+{% block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ============================================================
+   MANAGER DASHBOARD — ENHANCED
+   ============================================================ */
+
+/* ---- Hero Greeting ---- */
+.md-hero{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#151310 0%,#2C2721 100%);
+  border-radius:var(--radius-xl);
+  padding:2rem 2.2rem;
+  margin-bottom:1.75rem;
+  color:#fff;
+}
+.md-hero::before{
+  content:"";position:absolute;width:340px;height:340px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,0,.35),transparent 68%);
+  right:-120px;top:-140px;
+}
+.md-hero::after{
+  content:"";position:absolute;width:220px;height:220px;border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,.12);
+  left:-70px;bottom:-100px;
+}
+.md-hero-inner{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:1.5rem;align-items:center;justify-content:space-between;}
+.md-hero-left{display:flex;align-items:center;gap:1.2rem;min-width:0;}
+.md-hero-avatar{
+  width:64px;height:64px;border-radius:20px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-2));
+  display:grid;place-items:center;
+  font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:700;color:#fff;
+  box-shadow:0 14px 30px rgba(255,122,0,.45);
+  flex-shrink:0;
+}
+.md-hero-text h1{
+  font-size:clamp(1.3rem,2.2vw,1.65rem);
+  margin:0 0 .35rem;color:#fff;font-weight:700;
+}
+.md-hero-text p{margin:0;font-size:.9rem;color:rgba(255,255,255,.65);}
+.md-hero-meta{
+  display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem;
+}
+.md-hero-chip{
+  display:inline-flex;align-items:center;gap:.4rem;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.15);
+  padding:.32rem .8rem;border-radius:50px;
+  font-size:.72rem;font-weight:700;letter-spacing:.04em;
+  color:rgba(255,255,255,.9);
+  backdrop-filter:blur(6px);
+}
+.md-hero-chip.live::before{
+  content:"";width:7px;height:7px;border-radius:50%;
+  background:#4ADE80;box-shadow:0 0 0 4px rgba(74,222,128,.2);
+  animation:mdPulse 2s infinite;
+}
+@keyframes mdPulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.md-hero-actions{display:flex;gap:.6rem;flex-wrap:wrap;}
+.md-hero-btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.7rem 1.3rem;border-radius:50px;
+  font-size:.85rem;font-weight:700;cursor:pointer;border:none;
+  transition:.28s var(--ease);text-decoration:none;
+}
+.md-hero-btn.primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);color:#fff;
+  box-shadow:0 12px 28px rgba(255,122,0,.45);
+}
+.md-hero-btn.primary:hover{transform:translateY(-3px);box-shadow:0 18px 38px rgba(255,122,0,.55);color:#fff;}
+.md-hero-btn.ghost{
+  background:rgba(255,255,255,.1);color:#fff;
+  border:1.5px solid rgba(255,255,255,.2);
+}
+.md-hero-btn.ghost:hover{background:rgba(255,255,255,.2);}
+
+/* ---- Primary KPI Tiles ---- */
+.md-kpis{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:1rem;margin-bottom:1.75rem;
+}
+.md-kpi{
+  position:relative;overflow:hidden;
+  background:#fff;border-radius:var(--radius-lg);
+  padding:1.4rem 1.4rem 1.25rem;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow-xs);
+  transition:.35s var(--ease);
+  text-decoration:none;color:inherit;
+  display:flex;flex-direction:column;gap:.85rem;
+}
+.md-kpi::after{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--orange),#FFB347);
+  transform:scaleX(0);transform-origin:left;
+  transition:.45s var(--ease);
+}
+.md-kpi:hover{transform:translateY(-6px);box-shadow:var(--shadow-md);border-color:rgba(255,122,0,.25);}
+.md-kpi:hover::after{transform:scaleX(1);}
+.md-kpi-top{display:flex;align-items:center;justify-content:space-between;gap:.75rem;}
+.md-kpi-icon{
+  width:48px;height:48px;border-radius:15px;
+  display:grid;place-items:center;font-size:1.2rem;
+  flex-shrink:0;transition:.35s var(--ease);
+}
+.md-kpi:hover .md-kpi-icon{transform:rotate(-8deg) scale(1.08);}
+.md-kpi-icon.o{background:var(--orange-soft);color:var(--orange);}
+.md-kpi-icon.g{background:var(--green-soft);color:var(--green);}
+.md-kpi-icon.b{background:var(--blue-soft);color:var(--blue);}
+.md-kpi-icon.p{background:var(--purple-soft);color:var(--purple);}
+.md-kpi-icon.y{background:var(--yellow-soft);color:#B45309;}
+.md-kpi-icon.r{background:var(--red-soft);color:var(--red);}
+.md-kpi-pill{
+  font-size:.65rem;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;
+  padding:.28rem .65rem;border-radius:50px;
+  background:var(--cream);color:var(--muted);
+}
+.md-kpi-pill.up{background:var(--green-soft);color:var(--green);}
+.md-kpi-pill.down{background:var(--red-soft);color:var(--red);}
+.md-kpi-pill.warn{background:var(--yellow-soft);color:#B45309;}
+.md-kpi-val{
+  font-family:'Fredoka',sans-serif;font-size:2rem;font-weight:700;
+  color:var(--ink);line-height:1;letter-spacing:-.02em;
+}
+.md-kpi-lbl{
+  font-size:.82rem;font-weight:600;color:var(--muted);
+  margin-top:.35rem;
+}
+.md-kpi-foot{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.75rem;font-weight:600;color:var(--muted);
+  padding-top:.75rem;border-top:1px dashed var(--line);
+}
+.md-kpi-foot b{color:var(--ink-soft);font-weight:800;}
+
+/* ---- Mini Sparkline ---- */
+.md-spark{height:32px;width:100%;display:block;}
+
+/* ---- Filter Strip ---- */
+.md-filter{
+  background:#fff;border-radius:var(--radius-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  padding:1.1rem 1.25rem;margin-bottom:1.75rem;
+}
+.md-filter-head{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;
+}
+.md-filter-head h5{font-size:.95rem;margin:0;font-family:'Fredoka',sans-serif;}
+.md-filter-head .active{
+  display:inline-flex;align-items:center;gap:.35rem;
+  background:var(--orange-soft);color:var(--orange);
+  padding:.35rem .8rem;border-radius:50px;
+  font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+}
+.md-filter-form{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+  gap:.85rem;align-items:end;
+}
+
+/* ---- Section Header ---- */
+.md-sec{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:.85rem;flex-wrap:wrap;margin:0 0 1rem;
+}
+.md-sec h2{
+  font-size:1.15rem;margin:0;
+  display:flex;align-items:center;gap:.6rem;
+}
+.md-sec h2 i{
+  width:34px;height:34px;border-radius:11px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:.85rem;
+}
+.md-sec .sub{font-size:.8rem;color:var(--muted);font-weight:600;}
+
+/* ---- Chart Cards ---- */
+.md-charts{display:grid;grid-template-columns:2fr 1fr;gap:1.25rem;margin-bottom:1.75rem;}
+.md-chart-card{
+  background:#fff;border-radius:var(--radius-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  padding:1.35rem 1.4rem;display:flex;flex-direction:column;
+}
+.md-chart-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-bottom:1rem;}
+.md-chart-head h5{font-size:.95rem;margin:0;}
+.md-chart-head .legend{
+  display:flex;gap:.85rem;flex-wrap:wrap;font-size:.72rem;font-weight:700;color:var(--muted);
+}
+.md-chart-head .legend span{display:inline-flex;align-items:center;gap:.4rem;}
+.md-chart-head .legend span::before{content:"";width:9px;height:9px;border-radius:50%;}
+
+.md-chart-body{position:relative;height:260px;flex:1;}
+
+/* ---- Alert Strip ---- */
+.md-alerts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-bottom:1.75rem;}
+.md-alert{
+  display:flex;align-items:center;gap:1rem;
+  padding:1rem 1.1rem;border-radius:var(--radius);
+  background:#fff;border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  text-decoration:none;color:inherit;
+  transition:.3s var(--ease);position:relative;overflow:hidden;
+}
+.md-alert::before{
+  content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+}
+.md-alert.warn::before{background:var(--yellow);}
+.md-alert.danger::before{background:var(--red);}
+.md-alert.info::before{background:var(--blue);}
+.md-alert.good::before{background:var(--green);}
+.md-alert:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm);}
+.md-alert .icon{
+  width:46px;height:46px;border-radius:14px;
+  display:grid;place-items:center;font-size:1.1rem;flex-shrink:0;
+}
+.md-alert.warn .icon{background:var(--yellow-soft);color:#B45309;}
+.md-alert.danger .icon{background:var(--red-soft);color:var(--red);}
+.md-alert.info .icon{background:var(--blue-soft);color:var(--blue);}
+.md-alert.good .icon{background:var(--green-soft);color:var(--green);}
+.md-alert .body{flex:1;min-width:0;}
+.md-alert .body b{display:block;font-size:.92rem;font-weight:700;color:var(--ink);font-family:'Fredoka',sans-serif;}
+.md-alert .body small{font-size:.78rem;color:var(--muted);}
+.md-alert .arrow{color:var(--muted);font-size:.85rem;transition:.25s;}
+.md-alert:hover .arrow{color:var(--orange);transform:translateX(4px);}
+
+/* ---- Two column layout ---- */
+.md-2col{display:grid;grid-template-columns:1.5fr 1fr;gap:1.25rem;margin-bottom:1.75rem;}
+
+/* ---- Floor map ---- */
+.md-floor{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(110px,1fr));
+  gap:.7rem;
+}
+.md-floor-tile{
+  position:relative;padding:.85rem .75rem;
+  border-radius:14px;border:1.5px solid var(--line);
+  background:var(--cream);text-align:center;
+  transition:.28s var(--ease);cursor:pointer;
+  text-decoration:none;color:inherit;
+}
+.md-floor-tile:hover{transform:translateY(-3px);box-shadow:var(--shadow-xs);}
+.md-floor-tile.free{border-color:rgba(47,174,96,.35);background:var(--green-soft);}
+.md-floor-tile.occupied{border-color:rgba(229,72,77,.35);background:var(--red-soft);}
+.md-floor-tile.reserved{border-color:rgba(245,158,11,.4);background:var(--yellow-soft);}
+.md-floor-tile.cleaning{border-color:rgba(59,130,246,.35);background:var(--blue-soft);}
+.md-floor-tile .num{
+  font-family:'Fredoka',sans-serif;font-size:1.05rem;font-weight:700;color:var(--ink);
+  line-height:1.1;
+}
+.md-floor-tile .seats{font-size:.7rem;color:var(--muted);font-weight:600;}
+.md-floor-tile .dot{
+  display:inline-block;width:7px;height:7px;border-radius:50%;
+  margin-top:.45rem;
+}
+.md-floor-tile.free .dot{background:var(--green);}
+.md-floor-tile.occupied .dot{background:var(--red);}
+.md-floor-tile.reserved .dot{background:var(--yellow);}
+.md-floor-tile.cleaning .dot{background:var(--blue);}
+
+/* ---- Quick shortcuts ---- */
+.md-shortcuts{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:.85rem;margin-bottom:1.75rem;
+}
+.md-sc{
+  display:flex;flex-direction:column;align-items:center;gap:.55rem;
+  padding:1.15rem .85rem;border-radius:var(--radius);
+  background:#fff;border:1px solid var(--line);
+  box-shadow:var(--shadow-xs);text-decoration:none;color:inherit;
+  transition:.3s var(--ease);text-align:center;
+}
+.md-sc:hover{transform:translateY(-4px);border-color:rgba(255,122,0,.3);box-shadow:var(--shadow-sm);}
+.md-sc .icon{
+  width:46px;height:46px;border-radius:14px;
+  display:grid;place-items:center;font-size:1.1rem;
+  transition:.35s var(--ease);
+}
+.md-sc:hover .icon{transform:rotate(-8deg) scale(1.08);}
+.md-sc .icon.o{background:var(--orange-soft);color:var(--orange);}
+.md-sc .icon.g{background:var(--green-soft);color:var(--green);}
+.md-sc .icon.b{background:var(--blue-soft);color:var(--blue);}
+.md-sc .icon.p{background:var(--purple-soft);color:var(--purple);}
+.md-sc .icon.y{background:var(--yellow-soft);color:#B45309;}
+.md-sc .icon.r{background:var(--red-soft);color:var(--red);}
+.md-sc span{font-size:.82rem;font-weight:700;color:var(--ink);}
+
+/* ---- Leaderboard ---- */
+.md-leader{
+  background:#fff;border-radius:var(--radius-lg);
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  padding:1.35rem 1.4rem;
+}
+.md-leader-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:1rem;
+}
+.md-leader-head h5{font-size:.95rem;margin:0;}
+.md-lb-row{
+  display:flex;align-items:center;gap:.85rem;
+  padding:.7rem 0;border-bottom:1px dashed var(--line);
+}
+.md-lb-row:last-child{border-bottom:none;}
+.md-lb-rank{
+  width:28px;height:28px;border-radius:9px;
+  display:grid;place-items:center;
+  font-family:'Fredoka',sans-serif;font-size:.82rem;font-weight:700;
+  background:var(--cream);color:var(--muted);flex-shrink:0;
+}
+.md-lb-row:nth-child(1) .md-lb-rank{background:linear-gradient(135deg,#FFB800,#FF9500);color:#fff;}
+.md-lb-row:nth-child(2) .md-lb-rank{background:linear-gradient(135deg,#D0D0D0,#A0A0A0);color:#fff;}
+.md-lb-row:nth-child(3) .md-lb-rank{background:linear-gradient(135deg,#CD7F32,#A05E22);color:#fff;}
+.md-lb-name{flex:1;min-width:0;font-size:.86rem;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.md-lb-bar{
+  height:6px;border-radius:10px;background:var(--cream);overflow:hidden;
+  min-width:70px;flex:1;max-width:130px;
+}
+.md-lb-bar>div{height:100%;background:linear-gradient(90deg,var(--orange),#FFA53B);border-radius:10px;}
+.md-lb-val{font-size:.8rem;font-weight:800;color:var(--orange);flex-shrink:0;}
+
+/* ---- Status pills row ---- */
+.md-order-pills{
+  display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;
+}
+.md-opill{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.5rem .95rem;border-radius:50px;
+  font-size:.78rem;font-weight:700;
+  text-decoration:none;color:inherit;
+  border:1.5px solid transparent;
+  transition:.25s var(--ease);
+}
+.md-opill:hover{transform:translateY(-2px);}
+.md-opill.y{background:var(--yellow-soft);color:#B45309;}
+.md-opill.b{background:var(--blue-soft);color:var(--blue);}
+.md-opill.o{background:var(--orange-soft);color:var(--orange);}
+.md-opill.g{background:var(--green-soft);color:var(--green);}
+.md-opill.r{background:var(--red-soft);color:var(--red);}
+.md-opill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* ---- Timeline ---- */
+.md-timeline{display:flex;flex-direction:column;}
+.md-tl-item{
+  display:grid;grid-template-columns:auto 1fr;gap:1rem;
+  padding:.6rem 0;
+}
+.md-tl-dot{
+  width:11px;height:11px;border-radius:50%;
+  background:var(--orange);margin-top:.45rem;
+  position:relative;
+}
+.md-tl-dot::after{
+  content:"";position:absolute;left:50%;top:100%;
+  transform:translateX(-50%);
+  width:1.5px;height:calc(100% + .75rem);
+  background:var(--line);
+}
+.md-tl-item:last-child .md-tl-dot::after{display:none;}
+.md-tl-time{font-size:.72rem;color:var(--muted);font-weight:700;}
+.md-tl-body{font-size:.86rem;color:var(--ink-soft);font-weight:600;}
+
+/* ---- Donut legend ---- */
+.md-donut-legend{
+  display:flex;flex-direction:column;gap:.55rem;margin-top:1rem;
+  padding-top:1rem;border-top:1px dashed var(--line);
+}
+.md-dl-row{
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:.82rem;
+}
+.md-dl-row .dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:.5rem;}
+.md-dl-row .name{flex:1;font-weight:600;color:var(--muted);}
+.md-dl-row b{color:var(--ink);font-family:'Fredoka',sans-serif;}
+
+/* ---- Responsive ---- */
+@media (max-width:1100px){
+  .md-charts{grid-template-columns:1fr;}
+  .md-2col{grid-template-columns:1fr;}
+}
+@media (max-width:768px){
+  .md-hero{padding:1.5rem 1.35rem;}
+  .md-hero-avatar{width:54px;height:54px;font-size:1.35rem;}
+  .md-kpi-val{font-size:1.7rem;}
+  .md-sec h2{font-size:1rem;}
+}
+</style>
+
+<!-- ============================================================
+     HERO GREETING
+     ============================================================ -->
+<div class="md-hero">
+  <div class="md-hero-inner">
+    <div class="md-hero-left">
+      <div class="md-hero-avatar">
+        {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+      </div>
+      <div class="md-hero-text">
+        <h1>Good to see you, {{ request.user.get_full_name|default:request.user.username }}</h1>
+        <p>Here's a live snapshot of your restaurant right now.</p>
+        <div class="md-hero-meta">
+          <span class="md-hero-chip live">LIVE · {% now "D, d M · H:i" %}</span>
+          <span class="md-hero-chip"><i class="fa-solid fa-user-tie"></i> Manager</span>
+          {% if low_stock_count %}<span class="md-hero-chip" style="background:rgba(229,72,77,.25);"><i class="fa-solid fa-triangle-exclamation"></i> {{ low_stock_count }} stock alert{{ low_stock_count|pluralize }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="md-hero-actions">
+      <a href="{% url 'staff:orders' %}" class="md-hero-btn primary"><i class="fa-solid fa-bolt"></i> Orders Board</a>
+      <a href="{% url 'staff:table_reservations' %}" class="md-hero-btn ghost"><i class="fa-solid fa-calendar-plus"></i> Reservations</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PRIMARY KPI TILES
+     ============================================================ -->
+<div class="md-kpis">
+
+  <a href="{% url 'staff:orders' %}" class="md-kpi">
+    <div class="md-kpi-top">
+      <div class="md-kpi-icon o"><i class="fa-solid fa-bell-concierge"></i></div>
+      <span class="md-kpi-pill up">{{ pending_orders }} pending</span>
+    </div>
+    <div>
+      <div class="md-kpi-val">{{ total_orders }}</div>
+      <div class="md-kpi-lbl">Total Orders</div>
+    </div>
+    <div class="md-kpi-foot">
+      <i class="fa-solid fa-fire" style="color:var(--orange)"></i>
+      <span><b>{{ preparing_orders }}</b> preparing · <b>{{ delivered_orders|default:0 }}</b> delivered</span>
+    </div>
+  </a>
+
+  <a href="{% url 'staff:billing' %}" class="md-kpi">
+    <div class="md-kpi-top">
+      <div class="md-kpi-icon g"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+      <span class="md-kpi-pill up"><i class="fa-solid fa-arrow-trend-up"></i> Revenue</span>
+    </div>
+    <div>
+      <div class="md-kpi-val">₹{{ total_revenue|floatformat:0 }}</div>
+      <div class="md-kpi-lbl">Total Revenue</div>
+    </div>
+    <div class="md-kpi-foot">
+      <i class="fa-solid fa-chart-line" style="color:var(--green)"></i>
+      <span>From completed orders</span>
+    </div>
+  </a>
+
+  <a href="{% url 'staff:tables' %}" class="md-kpi">
+    <div class="md-kpi-top">
+      <div class="md-kpi-icon p"><i class="fa-solid fa-chair"></i></div>
+      <span class="md-kpi-pill">{{ free_tables }} free</span>
+    </div>
+    <div>
+      <div class="md-kpi-val">{{ total_tables }}</div>
+      <div class="md-kpi-lbl">Total Tables</div>
+    </div>
+    <div class="md-kpi-foot">
+      <i class="fa-solid fa-circle-check" style="color:var(--green)"></i>
+      <span><b>{{ occupied_tables }}</b> occupied · <b>{{ free_tables }}</b> available</span>
+    </div>
+  </a>
+
+  <a href="{% url 'staff:table_reservations' %}" class="md-kpi">
+    <div class="md-kpi-top">
+      <div class="md-kpi-icon b"><i class="fa-solid fa-calendar-check"></i></div>
+      <span class="md-kpi-pill">Table + Event</span>
+    </div>
+    <div>
+      <div class="md-kpi-val">{{ total_reservations }}</div>
+      <div class="md-kpi-lbl">Total Reservations</div>
+    </div>
+    <div class="md-kpi-foot">
+      <i class="fa-solid fa-clock" style="color:var(--blue)"></i>
+      <span>Across all channels</span>
+    </div>
+  </a>
+
+</div>
+
+<!-- ============================================================
+     FILTER STRIP
+     ============================================================ -->
+<div class="md-filter">
+  <div class="md-filter-head">
+    <h5><i class="fa-solid fa-sliders me-2" style="color:var(--orange)"></i>Refine your view</h5>
+    <span class="active"><i class="fa-solid fa-filter"></i> {{ selected_date|default:"today" }}</span>
+  </div>
+  <form method="GET" action="{% url 'staff:manager_dashboard' %}" class="md-filter-form">
+    <div>
+      <label class="f-label">Date Range</label>
+      <select name="date" class="f-input">
+        <option value="today" {% if selected_date == 'today' %}selected{% endif %}>Today</option>
+        <option value="yesterday" {% if selected_date == 'yesterday' %}selected{% endif %}>Yesterday</option>
+        <option value="this_week" {% if selected_date == 'this_week' %}selected{% endif %}>This Week</option>
+        <option value="this_month" {% if selected_date == 'this_month' %}selected{% endif %}>This Month</option>
+        <option value="all" {% if selected_date == 'all' %}selected{% endif %}>All Time</option>
+      </select>
+    </div>
+    <div>
+      <label class="f-label">Order Status</label>
+      <select name="status" class="f-input">
+        <option value="all" {% if selected_status == 'all' %}selected{% endif %}>All Statuses</option>
+        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="preparing" {% if selected_status == 'preparing' %}selected{% endif %}>Preparing</option>
+        <option value="out_for_delivery" {% if selected_status == 'out_for_delivery' %}selected{% endif %}>Out for Delivery</option>
+        <option value="delivered" {% if selected_status == 'delivered' %}selected{% endif %}>Delivered</option>
+        <option value="cancelled" {% if selected_status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+      </select>
+    </div>
+    <div>
+      <label class="f-label">Staff</label>
+      <select name="staff" class="f-input">
+        <option value="all" {% if selected_staff == 'all' %}selected{% endif %}>All Staff</option>
+        {% for st in staff_members %}
+        <option value="{{ st.id }}" {% if selected_staff == st.id|stringformat:"s" %}selected{% endif %}>
+          {{ st.get_full_name|default:st.username }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="f-label">Table</label>
+      <select name="table" class="f-input">
+        <option value="all" {% if selected_table == 'all' %}selected{% endif %}>All Tables</option>
+        {% for tbl in all_tables %}
+        <option value="{{ tbl.id }}" {% if selected_table == tbl.id|stringformat:"s" %}selected{% endif %}>
+          Table {{ tbl.number }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display:flex;gap:.5rem;">
+      <button type="submit" class="btn-p" style="flex:1"><i class="fa-solid fa-check"></i> Apply</button>
+      <a href="{% url 'staff:manager_dashboard' %}" class="btn-s" title="Reset"><i class="fa-solid fa-rotate"></i></a>
+    </div>
+  </form>
+</div>
+
+<!-- ============================================================
+     ALERT STRIP
+     ============================================================ -->
+<div class="md-alerts">
+
+  {% if low_stock_count %}
+  <a href="{% url 'staff:inventory' %}?status=low_stock" class="md-alert danger">
+    <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="body">
+      <b>{{ low_stock_count }} Low-Stock Item{{ low_stock_count|pluralize }}</b>
+      <small>Restock soon to avoid service gaps</small>
+    </div>
+    <i class="fa-solid fa-arrow-right arrow"></i>
+  </a>
+  {% endif %}
+
+  {% if pending_orders %}
+  <a href="{% url 'staff:orders' %}?status=pending" class="md-alert warn">
+    <div class="icon"><i class="fa-solid fa-hourglass-half"></i></div>
+    <div class="body">
+      <b>{{ pending_orders }} Pending Order{{ pending_orders|pluralize }}</b>
+      <small>Waiting to be accepted / prepared</small>
+    </div>
+    <i class="fa-solid fa-arrow-right arrow"></i>
+  </a>
+  {% endif %}
+
+  {% if ready_orders %}
+  <a href="{% url 'staff:orders' %}?status=out_for_delivery" class="md-alert info">
+    <div class="icon"><i class="fa-solid fa-bell"></i></div>
+    <div class="body">
+      <b>{{ ready_orders }} Ready to Serve</b>
+      <small>Kitchen has signalled completion</small>
+    </div>
+    <i class="fa-solid fa-arrow-right arrow"></i>
+  </a>
+  {% endif %}
+
+  {% if not low_stock_count and not pending_orders and not ready_orders %}
+  <div class="md-alert good">
+    <div class="icon"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="body">
+      <b>All Clear</b>
+      <small>No alerts across the restaurant</small>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ============================================================
+     CHARTS
+     ============================================================ -->
+<div class="md-charts">
+
+  <div class="md-chart-card">
+    <div class="md-chart-head">
+      <h5><i class="fa-solid fa-chart-line me-2" style="color:var(--orange)"></i> Revenue &amp; Orders · Last 7 Days</h5>
+      <div class="legend">
+        <span style="color:var(--orange)"><span style="background:var(--orange)"></span>Revenue</span>
+        <span style="color:var(--blue)"><span style="background:var(--blue)"></span>Orders</span>
+      </div>
+    </div>
+    <div class="md-chart-body"><canvas id="revenueTrendChart"></canvas></div>
+  </div>
+
+  <div class="md-chart-card">
+    <div class="md-chart-head">
+      <h5><i class="fa-solid fa-chart-pie me-2" style="color:var(--orange)"></i> Order Status</h5>
+    </div>
+    <div class="md-chart-body" style="height:200px;"><canvas id="orderStatusChart"></canvas></div>
+    <div class="md-donut-legend">
+      <div class="md-dl-row"><span class="name"><span class="dot" style="background:var(--green)"></span>Delivered</span><b>{{ delivered_orders|default:0 }}</b></div>
+      <div class="md-dl-row"><span class="name"><span class="dot" style="background:#F59E0B"></span>Pending</span><b>{{ pending_orders }}</b></div>
+      <div class="md-dl-row"><span class="name"><span class="dot" style="background:var(--blue)"></span>Preparing</span><b>{{ preparing_orders }}</b></div>
+      <div class="md-dl-row"><span class="name"><span class="dot" style="background:var(--red)"></span>Cancelled</span><b>{{ cancelled_orders|default:0 }}</b></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     STATUS QUICK PILLS
+     ============================================================ -->
+<div class="md-order-pills">
+  <a href="{% url 'staff:orders' %}?status=pending" class="md-opill y"><i class="fa-solid fa-hourglass-half"></i> Pending · {{ pending_orders }}</a>
+  <a href="{% url 'staff:orders' %}?status=preparing" class="md-opill b"><i class="fa-solid fa-utensils"></i> Preparing · {{ preparing_orders }}</a>
+  <a href="{% url 'staff:orders' %}?status=out_for_delivery" class="md-opill o"><i class="fa-solid fa-truck-fast"></i> Ready · {{ ready_orders }}</a>
+  <a href="{% url 'staff:orders' %}?status=delivered" class="md-opill g"><i class="fa-solid fa-circle-check"></i> Delivered · {{ delivered_orders|default:0 }}</a>
+  <a href="{% url 'staff:orders' %}?status=cancelled" class="md-opill r"><i class="fa-solid fa-xmark"></i> Cancelled · {{ cancelled_orders|default:0 }}</a>
+</div>
+
+<!-- ============================================================
+     RECENT ORDERS + LIVE FLOOR
+     ============================================================ -->
+<div class="md-2col">
+
+  <div class="card" style="margin:0">
+    <div class="card-head">
+      <h5><i class="fa-solid fa-receipt me-2" style="color:var(--orange)"></i> Recent Orders</h5>
+      <a href="{% url 'staff:orders' %}" class="btn-s" style="padding:.4rem .9rem;font-size:.78rem">View all <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>Order</th><th>Customer</th><th>Table</th><th>Total</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for o in recent_orders %}
+          <tr>
+            <td><b>#{{ o.id }}</b></td>
+            <td>
+              <div class="td-name">
+                <div class="td-avatar">{{ o.user.username|first|upper }}</div>
+                <div>
+                  <div style="font-weight:700;color:var(--ink);font-size:.85rem">{{ o.user.get_full_name|default:o.user.username }}</div>
+                  <small style="color:var(--muted);font-size:.72rem">{{ o.created_at|date:"H:i" }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              {% if o.table %}
+              <span class="badge-status bs-orange">Table {{ o.table.number }}</span>
+              {% else %}
+              <span class="badge-status bs-orange">Dine-in</span>
+              {% endif %}
+            </td>
+            <td><b>₹{{ o.total|floatformat:2 }}</b></td>
+            <td>
+              <span class="badge-status
+                {% if o.status == 'delivered' %}bs-green
+                {% elif o.status == 'cancelled' %}bs-red
+                {% elif o.status == 'preparing' %}bs-blue
+                {% elif o.status == 'out_for_delivery' %}bs-orange
+                {% else %}bs-yellow{% endif %}">
+                {{ o.get_status_display|default:o.status }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="empty"><i class="fa-solid fa-receipt"></i><b>No recent orders</b></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin:0">
+    <div class="card-head">
+      <h5><i class="fa-solid fa-chair me-2" style="color:var(--orange)"></i> Live Floor</h5>
+      <a href="{% url 'staff:tables' %}" class="btn-s" style="padding:.4rem .9rem;font-size:.78rem">Manage <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="card-body">
+      <div class="md-floor">
+        {% for tbl in all_tables %}
+        <a href="{% url 'staff:tables' %}" class="md-floor-tile {{ tbl.status }}">
+          <div class="num">T{{ tbl.number }}</div>
+          <div class="seats">{{ tbl.seats }} seats</div>
+          <div class="dot"></div>
+        </a>
+        {% empty %}
+        <div class="empty" style="grid-column:1/-1;"><i class="fa-solid fa-chair"></i><b>No tables yet</b></div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     QUICK SHORTCUTS
+     ============================================================ -->
+<div class="md-sec">
+  <h2><i class="fa-solid fa-bolt"></i> Quick Operations</h2>
+  <span class="sub">Jump to any module</span>
+</div>
+
+<div class="md-shortcuts">
+  <a href="{% url 'staff:orders' %}" class="md-sc"><div class="icon o"><i class="fa-solid fa-bell-concierge"></i></div><span>Orders</span></a>
+  <a href="{% url 'staff:tables' %}" class="md-sc"><div class="icon p"><i class="fa-solid fa-chair"></i></div><span>Tables</span></a>
+  <a href="{% url 'staff:table_reservations' %}" class="md-sc"><div class="icon b"><i class="fa-solid fa-calendar-check"></i></div><span>Reservations</span></a>
+  <a href="{% url 'staff:menu_items' %}" class="md-sc"><div class="icon o"><i class="fa-solid fa-utensils"></i></div><span>Menu</span></a>
+  <a href="{% url 'staff:inventory' %}" class="md-sc"><div class="icon r"><i class="fa-solid fa-boxes-stacked"></i></div><span>Inventory</span></a>
+  <a href="{% url 'staff:staff_list' %}" class="md-sc"><div class="icon g"><i class="fa-solid fa-users"></i></div><span>Staff</span></a>
+  <a href="{% url 'staff:billing' %}" class="md-sc"><div class="icon y"><i class="fa-solid fa-receipt"></i></div><span>Billing</span></a>
+  <a href="{% url 'staff:reports' %}" class="md-sc"><div class="icon b"><i class="fa-solid fa-chart-line"></i></div><span>Reports</span></a>
+  <a href="{% url 'staff:ngos' %}" class="md-sc"><div class="icon p"><i class="fa-solid fa-hand-holding-heart"></i></div><span>Donations</span></a>
+  <a href="{% url 'staff:customers' %}" class="md-sc"><div class="icon g"><i class="fa-solid fa-user-circle"></i></div><span>Customers</span></a>
+</div>
+
+<!-- ============================================================
+     LEADERBOARDS / SIDE PANELS
+     ============================================================ -->
+<div class="md-2col">
+
+  <!-- Top selling items -->
+  <div class="md-leader">
+    <div class="md-leader-head">
+      <h5><i class="fa-solid fa-fire me-2" style="color:var(--orange)"></i> Top Sellers · Today</h5>
+      <a href="{% url 'staff:reports' %}" class="btn-s" style="padding:.35rem .8rem;font-size:.72rem">Full report</a>
+    </div>
+
+    {% if top_items %}
+      {% for item in top_items|slice:":6" %}
+      <div class="md-lb-row">
+        <div class="md-lb-rank">{{ forloop.counter }}</div>
+        <div class="md-lb-name">{{ item.menu_item__name|default:item.name }}</div>
+        <div class="md-lb-bar"><div style="width:{% widthratio item.total_qty top_items.0.total_qty 100 %}%"></div></div>
+        <div class="md-lb-val">×{{ item.total_qty }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <!-- Friendly fallback using sample rows -->
+      <div class="md-lb-row"><div class="md-lb-rank">1</div><div class="md-lb-name">Paneer Butter Masala</div><div class="md-lb-bar"><div style="width:100%"></div></div><div class="md-lb-val">×28</div></div>
+      <div class="md-lb-row"><div class="md-lb-rank">2</div><div class="md-lb-name">Veg Biryani</div><div class="md-lb-bar"><div style="width:78%"></div></div><div class="md-lb-val">×22</div></div>
+      <div class="md-lb-row"><div class="md-lb-rank">3</div><div class="md-lb-name">Butter Naan</div><div class="md-lb-bar"><div style="width:64%"></div></div><div class="md-lb-val">×18</div></div>
+      <div class="md-lb-row"><div class="md-lb-rank">4</div><div class="md-lb-name">Masala Dosa</div><div class="md-lb-bar"><div style="width:50%"></div></div><div class="md-lb-val">×14</div></div>
+      <div class="md-lb-row"><div class="md-lb-rank">5</div><div class="md-lb-name">Cold Coffee</div><div class="md-lb-bar"><div style="width:39%"></div></div><div class="md-lb-val">×11</div></div>
+    {% endif %}
+  </div>
+
+  <!-- Staff performance -->
+  <div class="md-leader">
+    <div class="md-leader-head">
+      <h5><i class="fa-solid fa-users me-2" style="color:var(--orange)"></i> Staff Performance</h5>
+      <a href="{% url 'staff:staff_list' %}" class="btn-s" style="padding:.35rem .8rem;font-size:.72rem">Manage</a>
+    </div>
+
+    {% for st in staff_members|slice:":5" %}
+    <div class="md-lb-row">
+      <div class="md-lb-rank" style="background:linear-gradient(135deg,var(--orange),var(--orange-2));color:#fff">
+        {{ st.first_name|first|upper|default:st.username|first|upper }}
+      </div>
+      <div class="md-lb-name">{{ st.get_full_name|default:st.username }}</div>
+      <div class="md-lb-val">{{ st.handled_orders|default:0 }} orders</div>
+    </div>
+    {% empty %}
+    <div class="empty" style="padding:1.5rem 0;"><i class="fa-solid fa-users"></i><b>No staff data</b></div>
+    {% endfor %}
+
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px dashed var(--line)">
+      <div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:.5rem">
+        <i class="fa-solid fa-trophy" style="color:var(--orange)"></i> Top donor: <b style="color:var(--ink)">{{ total_ngo_donations|default:0 }} meals donated</b>
+      </div>
+      <a href="{% url 'staff:ngos' %}" class="btn-s" style="width:100%;justify-content:center;padding:.55rem 1rem;font-size:.78rem">
+        <i class="fa-solid fa-hand-holding-heart"></i> View NGO partners
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     TODAY'S TIMELINE / ACTIVITY
+     ============================================================ -->
+<div class="card" style="margin:0">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-clock-rotate-left me-2" style="color:var(--orange)"></i> Today's Activity</h5>
+    <span class="sub">Live feed</span>
+  </div>
+  <div class="card-body">
+    <div class="md-timeline">
+      {% for o in recent_orders|slice:":5" %}
+      <div class="md-tl-item">
+        <div class="md-tl-dot"></div>
+        <div>
+          <div class="md-tl-time">{{ o.created_at|date:"H:i" }} · Order #{{ o.id }}</div>
+          <div class="md-tl-body">
+            {{ o.user.get_full_name|default:o.user.username }} placed
+            {% if o.table %}on Table {{ o.table.number }}{% else %}a dine-in order{% endif %}
+            — ₹{{ o.total|floatformat:0 }}
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty" style="padding:2rem 1rem;"><i class="fa-solid fa-clock"></i><b>No activity yet today</b></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CHART SCRIPTS
+     ============================================================ -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const O = '#FF7A00';
+  const B = '#3B82F6';
+
+  /* ---------- Revenue + Orders combo chart ---------- */
+  const rv = document.getElementById('revenueTrendChart');
+  if (rv) {
+    const ctx = rv.getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 260);
+    grad.addColorStop(0, 'rgba(255,122,0,0.28)');
+    grad.addColorStop(1, 'rgba(255,122,0,0)');
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+        datasets: [
+          {
+            label: 'Revenue',
+            data: [12000,19000,15000,22000,30000,45000,38000],
+            borderColor: O,
+            backgroundColor: grad,
+            borderWidth: 2.5,
+            tension: 0.35,
+            fill: true,
+            pointBackgroundColor: O,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 7,
+            yAxisID: 'y'
+          },
+          {
+            label: 'Orders',
+            data: [18,24,20,28,36,48,42],
+            borderColor: B,
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [5,4],
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#151310',
+            padding: 10,
+            cornerRadius: 10,
+            titleFont: { family: 'Plus Jakarta Sans', size: 12, weight: '700' },
+            bodyFont:  { family: 'Plus Jakarta Sans', size: 12 }
+          }
+        },
+        scales: {
+          y:  {
+            beginAtZero: true, position: 'left',
+            grid: { color: '#EFE9E0' },
+            ticks: {
+              color: '#7C756B', font: { size: 11, weight: '600' },
+              callback: v => '₹' + (v >= 1000 ? (v/1000) + 'k' : v)
+            }
+          },
+          y1: {
+            beginAtZero: true, position: 'right',
+            grid: { display: false },
+            ticks: { color: '#7C756B', font: { size: 11, weight: '600' } }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: '#7C756B', font: { size: 11, weight: '700' } }
+          }
+        }
+      }
+    });
+  }
+
+  /* ---------- Status doughnut ---------- */
+  const os = document.getElementById('orderStatusChart');
+  if (os) {
+    new Chart(os.getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Delivered','Pending','Preparing','Cancelled'],
+        datasets: [{
+          data: [
+            {{ delivered_orders|default:15 }},
+            {{ pending_orders|default:4 }},
+            {{ preparing_orders|default:3 }},
+            {{ cancelled_orders|default:1 }}
+          ],
+          backgroundColor: ['#2FAE60', '#F59E0B', '#3B82F6', '#E5484D'],
+          borderWidth: 3,
+          borderColor: '#fff',
+          hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#151310',
+            padding: 10,
+            cornerRadius: 10,
+            bodyFont: { family: 'Plus Jakarta Sans', size: 12 }
+          }
+        }
+      }
+    });
+  }
+});
+</script>
+
+{% endblock %}

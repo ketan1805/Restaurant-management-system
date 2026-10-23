@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <style>
+    :root {
+      --orange: #ff7a00;
+      --orange-soft: #fff2e3;
+      --green: #2fae60;
+      --green-soft: #eaf9f0;
+      --ink: #171412;
+      --muted: #655d57;
+      --line: #efe7df;
+      --card: #ffffff;
+      --bg: #fffaf4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, #fffaf3 0%, #fff6ee 100%);
+      color: var(--ink);
+    }
+    a { text-decoration: none; }
+    .panel-shell {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px 40px;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 20px;
+      padding: 24px 28px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.04);
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: var(--orange-soft);
+      border-radius: 999px;
+      padding: 8px 12px;
+    }
+    h1 {
+      margin: 14px 0 0;
+      font-size: clamp(2rem, 3vw, 3rem);
+      font-weight: 800;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+      transition: all 0.2s ease;
+      border: none;
+    }
+    .btn-primary { background: var(--orange); color: white; }
+    .btn-primary:hover { background: #ea6800; color: white; }
+    .btn-secondary { background: #f3ece7; color: var(--ink); }
+    .btn-secondary:hover { background: #e9dfd7; }
+    .panel-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 26px;
+    }
+    .panel-nav a {
+      padding: 10px 16px;
+      border-radius: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.7);
+      border: 1px solid var(--line);
+      font-weight: 600;
+    }
+    .panel-nav a.active, .panel-nav a:hover { background: var(--ink); color: white; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    }
+    .stat-card .icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+      margin-bottom: 16px;
+    }
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .stat-card .label {
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .orange { background: var(--orange-soft); color: var(--orange); }
+    .green { background: var(--green-soft); color: var(--green); }
+    .blue { background: #eaf2ff; color: #3b82f6; }
+    .purple { background: #f4ecff; color: #7c3aed; }
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+    .panel-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 22px 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.03);
+    }
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-head h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 800;
+    }
+    .chip {
+      display: inline-flex;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      border-radius: 999px;
+      background: #f6f0ea;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.96rem;
+    }
+    th {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+    }
+    .status {
+      display: inline-flex;
+      white-space: nowrap;
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #eaf9f0;
+      color: var(--green);
+    }
+    .status.pending { background: #fff4df; color: #d97706; }
+    .status.cancelled { background: #feeceb; color: #d92d20; }
+    .empty {
+      padding: 22px 12px;
+      text-align: center;
+      color: var(--muted);
+      background: #fff;
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+    }
+    .quick-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .quick-actions a {
+      flex: 1 1 180px;
+      padding: 18px 20px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .quick-actions a:hover { border-color: var(--orange); color: var(--orange); }
+    @media (max-width: 900px) {
+      .content-grid { grid-template-columns: 1fr; }
+      .panel-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="panel-shell">
+    <header class="panel-header">
+      <div>
+        <span class="eyebrow">Customer Portal</span>
+        <h1>Welcome back, {{ request.user.first_name|default:request.user.username }}</h1>
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'customer_orders' %}" class="btn btn-primary"><i class="fa-solid fa-bag-shopping"></i> My Orders</a>
+        <a href="{% url 'logout' %}" class="btn btn-secondary"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      </div>
+    </header>
+
+    <nav class="panel-nav">
+      <a class="active" href="{% url 'customer_dashboard' %}"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="{% url 'customer_orders' %}"><i class="fa-solid fa-bag-shopping"></i> Orders</a>
+      <a href="{% url 'customer_reservations' %}"><i class="fa-solid fa-calendar-check"></i> Reservations</a>
+      <a href="{% url 'customer_profile' %}"><i class="fa-solid fa-user"></i> Profile</a>
+    </nav>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon orange"><i class="fa-solid fa-bag-shopping"></i></div>
+        <div class="value">{{ total_orders }}</div>
+        <div class="label">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon green"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="value">{{ total_reservations }}</div>
+        <div class="label">Reservations</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon blue"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div class="value">{{ request.user.profile.address|default:'Not set' }}</div>
+        <div class="label">Saved Address</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon purple"><i class="fa-solid fa-phone"></i></div>
+        <div class="value">{{ request.user.profile.mobile_no|default:'No mobile' }}</div>
+        <div class="label">Mobile Number</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div class="panel-card">
+        <div class="card-head">
+          <h3>Recent Orders</h3>
+          <a class="chip" href="{% url 'customer_orders' %}">View all</a>
+        </div>
+
+        {% if recent_orders %}
+          <table>
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for order in recent_orders %}
+                <tr>
+                  <td>#{{ order.id }} · {{ order.created_at|date:'d M Y' }}</td>
+                  <td>₹{{ order.total }}</td>
+                  <td><span class="status {{ order.status }}">{{ order.get_status_display }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty">You have not placed any orders yet.</div>
+        {% endif %}
+      </div>
+
+      <div class="panel-card">
+        <div class="card-head">
+          <h3>My Reservations</h3>
+          <a class="chip" href="{% url 'customer_reservations' %}">View all</a>
+        </div>
+
+        {% if recent_reservations %}
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Guests</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for reservation in recent_reservations %}
+                <tr>
+                  <td>{{ reservation.date|date:'d M Y' }}</td>
+                  <td>{{ reservation.guests }}</td>
+                  <td><span class="status {{ reservation.status }}">{{ reservation.get_status_display }}</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="empty">No reservations made yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="quick-actions">
+      <a href="{% url 'customer_menu' %}"><i class="fa-solid fa-utensils"></i> Browse Menu</a>
+      <a href="{% url 'customer_profile' %}"><i class="fa-solid fa-user-pen"></i> Update Profile</a>
+      <a href="{% url 'customer_reservations' %}"><i class="fa-solid fa-calendar-plus"></i> Book a Table</a>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,202 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Customers</h1>
+    <p>View and manage customer details.</p>
+  </div>
+  {% if is_manager %}<button type="button" class="btn-p" onclick="openModal('addCustomerModal')"><i class="fa-solid fa-user-plus"></i> Add Customer</button>{% endif %}
+</div>
+
+<div class="card">
+  <div class="card-head"><h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Filters</h5></div>
+  <div class="card-body">
+    <form method="get" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div>
+        <label class="f-label">Status</label>
+        <select name="status" class="f-input" onchange="this.form.submit()">
+          <option value="all" {% if active_status == 'all' %}selected{% endif %}>All</option>
+          <option value="active" {% if active_status == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if active_status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Sort By</label>
+        <select name="sort" class="f-input" onchange="this.form.submit()">
+          <option value="newest" {% if active_sort == 'newest' %}selected{% endif %}>Newest First</option>
+          <option value="oldest" {% if active_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+          <option value="name" {% if active_sort == 'name' %}selected{% endif %}>Name (A-Z)</option>
+        </select>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-users"></i></div><div class="stat-info"><div class="num">{{ total_customers }}</div><div class="lbl">Total Customers</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-user-check"></i></div><div class="stat-info"><div class="num">{{ active_customers }}</div><div class="lbl">Active</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-user-clock"></i></div><div class="stat-info"><div class="num">{{ inactive_customers }}</div><div class="lbl">Inactive</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-regular fa-envelope"></i></div><div class="stat-info"><div class="num">{{ email_registered }}</div><div class="lbl">Via Email</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5>Customer List</h5>
+    <form method="get" style="display:flex;align-items:center;gap:.5rem;background:#fff;border:1.5px solid var(--line);border-radius:50px;padding:.35rem 1rem;min-width:240px;">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);font-size:.85rem;"></i>
+      <input type="text" name="search" value="{{ search_query }}" placeholder="Search..." onchange="this.form.submit()"
+             style="border:none;outline:none;background:transparent;font-family:inherit;font-size:.85rem;width:100%;">
+    </form>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>#</th><th>Name</th><th>Phone</th><th>Email</th><th>Joined</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td><b>{{ forloop.counter }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ c.username|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ c.get_full_name|default:c.username }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">@{{ c.username }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ c.profile.mobile_no|default:"—" }}</td>
+          <td>{{ c.email|default:"—" }}</td>
+          <td>{{ c.date_joined|date:"d-m-Y" }}</td>
+          <td>{% if c.is_active %}<span class="badge-status bs-green">Active</span>{% else %}<span class="badge-status bs-yellow">Inactive</span>{% endif %}</td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <button type="button" class="act-btn" title="View" onclick="openViewCustomerModal('{{ c.get_full_name|escapejs }}','{{ c.username|escapejs }}','{{ c.email|escapejs }}','{{ c.profile.mobile_no|escapejs }}','{{ c.date_joined|date:"d-m-Y" }}','{{ c.is_active|yesno:"Active,Inactive" }}')"><i class="fa-solid fa-eye"></i></button>
+              {% if is_manager %}
+              <button type="button" class="act-btn" title="Edit" onclick="openEditCustomerModal('{{ c.id }}','{{ c.first_name|escapejs }}','{{ c.last_name|escapejs }}','{{ c.email|escapejs }}','{{ c.profile.mobile_no|escapejs }}','{{ c.is_active|yesno:"active,inactive" }}')"><i class="fa-solid fa-pen-to-square"></i></button>
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete customer {{ c.get_full_name|default:c.username }}?');">
+                {% csrf_token %}<input type="hidden" name="action" value="delete_customer"><input type="hidden" name="user_id" value="{{ c.id }}">
+                <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty"><i class="fa-solid fa-users-slash"></i><b>No customers found</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj %}
+  <div style="padding:1rem 1.4rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;font-size:.85rem;color:var(--muted);">
+    <span>Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_customers }}</span>
+    <div style="display:flex;gap:.35rem;">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&status={{ active_status }}&sort={{ active_sort }}" class="act-btn"><i class="fa-solid fa-chevron-left"></i></a>{% endif %}
+      {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="badge-status bs-orange">{{ num }}</span>{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a href="?page={{ num }}&search={{ search_query }}&status={{ active_status }}&sort={{ active_sort }}" class="act-btn">{{ num }}</a>{% endif %}{% endfor %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&status={{ active_status }}&sort={{ active_sort }}" class="act-btn"><i class="fa-solid fa-chevron-right"></i></a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Customer -->
+<div class="modal-c" id="addCustomerModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_customer">
+      <div class="modal-head"><h5><i class="fa-solid fa-user-plus me-2" style="color:var(--orange);"></i>Add New Customer</h5><button type="button" class="act-btn" onclick="closeModal('addCustomerModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name *</label><input type="text" name="first_name" class="f-input" required></div>
+          <div><label class="f-label">Last Name *</label><input type="text" name="last_name" class="f-input" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Email *</label><input type="email" name="email" class="f-input" required></div>
+          <div><label class="f-label">Phone *</label><input type="text" name="phone" class="f-input" required></div>
+        </div>
+        <div><label class="f-label">Password *</label><input type="password" name="password" class="f-input" required></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addCustomerModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit -->
+<div class="modal-c" id="editCustomerModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit_customer">
+      <input type="hidden" name="user_id" id="edit_cust_id">
+      <div class="modal-head"><h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Customer</h5><button type="button" class="act-btn" onclick="closeModal('editCustomerModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name</label><input type="text" name="first_name" id="edit_first_name" class="f-input"></div>
+          <div><label class="f-label">Last Name</label><input type="text" name="last_name" id="edit_last_name" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Email</label><input type="email" name="email" id="edit_email" class="f-input"></div>
+          <div><label class="f-label">Phone</label><input type="text" name="phone" id="edit_phone" class="f-input"></div>
+        </div>
+        <div>
+          <label class="f-label">Status</label>
+          <select name="status" id="edit_status" class="f-input">
+            <option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editCustomerModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View -->
+<div class="modal-c" id="viewCustomerModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-eye me-2" style="color:var(--orange);"></i>Customer Details</h5><button type="button" class="act-btn" onclick="closeModal('viewCustomerModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div style="background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.85rem;">
+        <div><span class="f-label" style="margin:0;">Full Name</span><b id="view_cust_name"></b></div>
+        <div><span class="f-label" style="margin:0;">Username</span><b id="view_cust_username"></b></div>
+        <div><span class="f-label" style="margin:0;">Email</span><b id="view_cust_email"></b></div>
+        <div><span class="f-label" style="margin:0;">Phone</span><b id="view_cust_phone"></b></div>
+        <div><span class="f-label" style="margin:0;">Joined</span><b id="view_cust_date"></b></div>
+        <div><span class="f-label" style="margin:0;">Status</span><b id="view_cust_status"></b></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn-s" onclick="closeModal('viewCustomerModal')">Close</button></div>
+  </div>
+</div>
+
+<script>
+function openEditCustomerModal(id,fn,ln,email,phone,status){
+  document.getElementById('edit_cust_id').value=id;
+  document.getElementById('edit_first_name').value=fn;
+  document.getElementById('edit_last_name').value=ln;
+  document.getElementById('edit_email').value=email;
+  document.getElementById('edit_phone').value=phone;
+  document.getElementById('edit_status').value=status;
+  openModal('editCustomerModal');
+}
+function openViewCustomerModal(name,username,email,phone,date,status){
+  document.getElementById('view_cust_name').innerText=name;
+  document.getElementById('view_cust_username').innerText=username;
+  document.getElementById('view_cust_email').innerText=email;
+  document.getElementById('view_cust_phone').innerText=phone;
+  document.getElementById('view_cust_date').innerText=date;
+  document.getElementById('view_cust_status').innerText=status;
+  openModal('viewCustomerModal');
+}
+</script>
+{% endblock %}

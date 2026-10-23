@@ -1,0 +1,267 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Notifications &amp; Kitchen Alerts — TableServe{% endblock %}
+{% block content %}
+
+<style>
+.notif-card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: .9rem 1.15rem;
+  border-radius: 14px;
+  margin-bottom: .6rem;
+  border: 1px solid var(--border);
+  background: #fff;
+  transition: all .15s ease;
+}
+.notif-card-item.unread {
+  background: #FFFDF9;
+  border-color: #FDBA74;
+  box-shadow: 0 2px 10px rgba(255,122,0,.06);
+}
+.notif-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.notif-icon.new_order { background: var(--orange-soft); color: var(--orange); }
+.notif-icon.rush_order { background: #FDECEC; color: #E5484D; }
+.notif-icon.order_cancelled { background: #FEF2F2; color: #DC2626; }
+.notif-icon.order_ready { background: #DCFCE7; color: #16A34A; }
+.notif-icon.default { background: #E0F2FE; color: #0284C7; }
+
+.notif-meta {
+  font-size: .74rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: .25rem;
+}
+</style>
+
+<div class="pg-head">
+  <div>
+    <h1><i class="fa-solid fa-bell me-2" style="color:var(--orange);"></i>Notifications &amp; Alerts</h1>
+    <p>Real-time order dispatches, kitchen status updates, and operation alerts.</p>
+  </div>
+  {% if kitchen_notifications %}
+  <form method="post" style="display:inline;margin:0;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="mark_all_read">
+    <button type="submit" class="btn-s">
+      <i class="fa-solid fa-check-double me-1"></i> Mark All as Read
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-row">
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-bell"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ unread_kitchen_count }}</div>
+      <div class="lbl">Unread Alerts</div>
+    </div>
+  </div>
+
+  {% if is_chef %}
+  <div class="stat">
+    <div class="stat-ic b"><i class="fa-solid fa-fire-burner"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ active_kitchen_orders }}</div>
+      <div class="lbl">Active in Kitchen</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-bolt"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ active_rush_orders }}</div>
+      <div class="lbl">RUSH Orders</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="stat">
+    <div class="stat-ic g"><i class="fa-solid fa-bell-concierge"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ ready_count }}</div>
+      <div class="lbl">Food Ready</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic p"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ pending_reservations_count }}</div>
+      <div class="lbl">Pending Bookings</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ low_stock_count }}</div>
+      <div class="lbl">Low Stock Alerts</div>
+    </div>
+  </div>
+</div>
+
+<!-- Kitchen & Order Notifications Section -->
+{% if kitchen_notifications %}
+<div class="card mb-4" style="border-left:4px solid var(--orange);">
+  <div class="card-head">
+    <h5>
+      <i class="fa-solid fa-bell me-2" style="color:var(--orange);"></i>Order &amp; Kitchen Alerts
+    </h5>
+    {% if unread_kitchen_count > 0 %}
+      <span class="badge-status bs-red">{{ unread_kitchen_count }} Unread</span>
+    {% else %}
+      <span class="badge-status bs-green">All Caught Up</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% for n in kitchen_notifications %}
+    <div class="notif-card-item {% if not n.is_read %}unread{% endif %}">
+      <div style="display:flex;gap:.85rem;align-items:flex-start;">
+        <div class="notif-icon {% if n.notification_type == 'rush_order' %}rush_order{% elif n.notification_type == 'order_ready' %}order_ready{% elif n.notification_type == 'order_cancelled' %}order_cancelled{% elif n.notification_type == 'new_order' %}new_order{% else %}default{% endif %}">
+          {% if n.notification_type == 'rush_order' %}
+            <i class="fa-solid fa-bolt"></i>
+          {% elif n.notification_type == 'order_ready' %}
+            <i class="fa-solid fa-bell-concierge"></i>
+          {% elif n.notification_type == 'order_cancelled' %}
+            <i class="fa-solid fa-ban"></i>
+          {% elif n.notification_type == 'new_order' %}
+            <i class="fa-solid fa-kitchen-set"></i>
+          {% else %}
+            <i class="fa-solid fa-info"></i>
+          {% endif %}
+        </div>
+        <div>
+          <div style="font-weight:700;color:var(--ink);font-size:.9rem;">
+            {{ n.title|default:n.message }}
+            {% if not n.is_read %}
+              <span class="badge-status bs-orange" style="font-size:.65rem;margin-left:.4rem;">NEW</span>
+            {% endif %}
+          </div>
+          <div style="font-size:.82rem;color:var(--ink);margin-top:.2rem;">
+            {{ n.message }}
+          </div>
+
+          {% if n.order %}
+          <div style="font-size:.76rem;color:var(--muted);margin-top:.3rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;">
+            <span>Order #<b>{{ n.order.id }}</b></span>
+            <span>Customer: <b>{{ n.order.user.get_full_name|default:n.order.user.username }}</b></span>
+            <span>{% if n.order.table %}Table {{ n.order.table.number }}{% else %}Dine-in{% endif %}</span>
+            <a href="{% url 'staff:orders' %}?order_id={{ n.order.id }}" style="color:var(--orange);font-weight:600;text-decoration:none;">
+              View Tracking &rarr;
+            </a>
+          </div>
+          {% endif %}
+
+          <div class="notif-meta">
+            <i class="fa-regular fa-clock"></i> {{ n.created_at|timesince }} ago ({{ n.created_at|date:"h:i A" }})
+          </div>
+        </div>
+      </div>
+
+      <div>
+        {% if not n.is_read %}
+        <form method="post" style="display:inline;margin:0;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="mark_read">
+          <input type="hidden" name="notification_id" value="{{ n.id }}">
+          <button type="submit" class="btn-s" style="padding:.25rem .6rem;font-size:.72rem;" title="Mark as Read">
+            <i class="fa-solid fa-check"></i>
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Ready to Serve Section for Waiters -->
+{% if ready_orders and not is_chef %}
+<div class="card mb-4" style="border-left:4px solid #16A34A;">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-bell-concierge me-2" style="color:#16A34A;"></i>Food Ready — Collect from Kitchen</h5>
+    <span class="badge-status bs-green">{{ ready_count }}</span>
+  </div>
+  <div class="card-body">
+    {% for o in ready_orders %}
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.75rem 1rem;background:#ECFDF5;border-radius:12px;margin-bottom:.5rem;">
+      <div>
+        <b style="color:var(--ink);">Order #{{ o.id }}</b>
+        {% if o.table %} — Table {{ o.table.number }}{% endif %}
+        <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">
+          {% for item in o.items.all %}{{ item.menu_item.name }} × {{ item.quantity }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge-status bs-green" style="font-size:.7rem;">Ready</span>
+        <small style="color:var(--muted);font-size:.72rem;display:block;margin-top:.2rem;">{{ o.updated_at|timesince }} ago</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Pending Bookings (if any) -->
+{% if pending_reservations and not is_chef %}
+<div class="card mb-4">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-calendar me-2" style="color:var(--blue);"></i>Pending Table Bookings</h5>
+    <span class="badge-status bs-blue">{{ pending_reservations_count }}</span>
+  </div>
+  <div class="card-body">
+    {% for r in pending_reservations %}
+    <div style="padding:.7rem 1rem;background:var(--blue-soft);border-radius:12px;margin-bottom:.5rem;">
+      <b>{{ r.name }}</b> — {{ r.phone|default:"—" }}
+      <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">
+        {{ r.date|date:"d M" }} at {{ r.time|time:"H:i" }} — {{ r.guests }} guests{% if r.table %} — Table {{ r.table.number }}{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Low Stock Alerts -->
+{% if low_stock %}
+<div class="card mb-4" style="border-left:4px solid var(--red);">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-triangle-exclamation me-2" style="color:var(--red);"></i>Low Stock Alert</h5>
+    <span class="badge-status bs-red">{{ low_stock_count }}</span>
+  </div>
+  <div class="card-body">
+    {% for item in low_stock %}
+    <div style="padding:.7rem 1rem;background:var(--red-soft);border-radius:12px;margin-bottom:.5rem;">
+      <b>{{ item.name }}</b> — {{ item.quantity }} {{ item.unit }}
+      <div style="font-size:.78rem;color:var(--red);margin-top:.2rem;">Below minimum threshold: {{ item.min_stock }} {{ item.unit }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<!-- Empty State -->
+{% if not kitchen_notifications and not ready_orders and not pending_reservations and not low_stock %}
+<div class="card">
+  <div class="empty" style="padding:5rem 1rem;">
+    <i class="fa-solid fa-bell-slash" style="font-size:3.5rem;color:var(--muted);margin-bottom:1rem;"></i>
+    <b style="font-size:1.2rem;">All caught up!</b>
+    <small>No new kitchen alerts or pending items right now.</small>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,355 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}FoodVerse{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+
+    <!-- ============================================================
+         THEME OVERRIDE — only colors & background
+         (structure comes from auth.css, unchanged)
+         ============================================================ -->
+    <style>
+        /* ---------- 1. Force orange theme on root variables ---------- */
+        :root{
+            --primary:#FF7A00 !important;
+            --primary-dark:#E56A00 !important;
+            --primary-light:#FFF2E3 !important;
+            --accent:#FFA53B !important;
+            --orange:#FF7A00 !important;
+            --orange-2:#FFA53B !important;
+            --orange-soft:#FFF2E3 !important;
+            --green:#2FAE60 !important;
+            --green-soft:#E8F7EE !important;
+            --dark:#151310 !important;
+            --ink:#151310 !important;
+            --muted:#7C756B !important;
+            --gray:#7C756B !important;
+            --light:#FFFBF6 !important;
+            --cream:#FFFBF6 !important;
+            --border:#EFE9E0 !important;
+            --line:#EFE9E0 !important;
+        }
+
+        /* ---------- 2. Body background ---------- */
+        body{
+            background:#FFFBF6 !important;
+            color:#151310 !important;
+            font-family:'Inter', sans-serif !important;
+        }
+
+        /* ---------- 3. Background container ---------- */
+        .bg-container{
+            background:linear-gradient(135deg, #FFFBF6 0%, #FFF6EC 50%, #FFF2E3 100%) !important;
+        }
+
+        /* ---------- 4. Floating orbs — orange + green ---------- */
+        .floating-orb{
+            background:radial-gradient(circle, rgba(255,122,0,.42), transparent 70%) !important;
+            filter:blur(80px) !important;
+        }
+        .floating-orb:nth-child(1){
+            background:radial-gradient(circle, rgba(255,122,0,.42), transparent 70%) !important;
+        }
+        .floating-orb:nth-child(2){
+            background:radial-gradient(circle, rgba(255,165,59,.35), transparent 70%) !important;
+        }
+        .floating-orb:nth-child(3){
+            background:radial-gradient(circle, rgba(47,174,96,.22), transparent 70%) !important;
+        }
+
+        /* ---------- 5. Rings — orange dashed ---------- */
+        .ring,
+        .ring-container .ring{
+            border-color:rgba(255,122,0,.28) !important;
+        }
+
+        /* ---------- 6. Orbit dots — orange gradient ---------- */
+        .orbit-dot{
+            background:linear-gradient(135deg, #FF7A00, #FFA53B) !important;
+            box-shadow:0 0 20px rgba(255,122,0,.6) !important;
+        }
+
+        /* ---------- 7. Center glow — orange ---------- */
+        .center-glow{
+            background:radial-gradient(circle, rgba(255,122,0,.18), transparent 65%) !important;
+        }
+
+        /* ---------- 8. Particles — orange ---------- */
+        .particle{
+            background:linear-gradient(135deg, #FF7A00, #FFA53B) !important;
+            box-shadow:0 0 10px rgba(255,122,0,.4) !important;
+        }
+
+        /* ---------- 9. Form card — glassy white ---------- */
+        .form-container{
+            background:rgba(255,255,255,.94) !important;
+            border:1px solid rgba(255,255,255,.9) !important;
+            box-shadow:
+                0 30px 60px rgba(21,19,16,.10),
+                0 10px 24px rgba(255,122,0,.08) !important;
+            border-radius:28px !important;
+        }
+
+        /* ---------- 10. Logo icon — orange gradient ---------- */
+        .logo-icon{
+            background:linear-gradient(135deg, #FF7A00 0%, #FFA53B 50%, #FFB347 100%) !important;
+            color:#fff !important;
+            box-shadow:
+                0 12px 26px rgba(255,122,0,.4),
+                inset 0 1px 0 rgba(255,255,255,.35) !important;
+            border-radius:16px !important;
+        }
+        .logo-text{
+            background:linear-gradient(135deg, #151310, #2C2721) !important;
+            -webkit-background-clip:text !important;
+            background-clip:text !important;
+            color:transparent !important;
+            -webkit-text-fill-color:transparent !important;
+        }
+
+        /* ---------- 11. Form header ---------- */
+        .form-header h2{
+            color:#151310 !important;
+            background:linear-gradient(135deg, #151310, #2C2721) !important;
+            -webkit-background-clip:text !important;
+            background-clip:text !important;
+            -webkit-text-fill-color:transparent !important;
+        }
+        .form-header p{
+            color:#7C756B !important;
+        }
+
+        /* ---------- 12. Input fields — orange theme ---------- */
+        .input-group-custom{
+            background:#FFFFFF !important;
+            border:1.5px solid #EFE9E0 !important;
+            border-radius:16px !important;
+            transition:all .3s ease !important;
+        }
+        .input-group-custom:hover{
+            border-color:rgba(255,122,0,.4) !important;
+        }
+        .input-group-custom:focus-within{
+            border-color:#FF7A00 !important;
+            box-shadow:0 0 0 4px rgba(255,122,0,.12) !important;
+            background:#FFFFFF !important;
+        }
+        .input-group-custom input{
+            background:transparent !important;
+            color:#151310 !important;
+            font-family:'Inter', sans-serif !important;
+        }
+        .input-group-custom input::placeholder{
+            color:#B5AEA3 !important;
+        }
+        .input-icon{
+            color:#7C756B !important;
+            transition:color .3s ease !important;
+        }
+        .input-group-custom:focus-within .input-icon{
+            color:#FF7A00 !important;
+        }
+        .toggle-pass{
+            color:#7C756B !important;
+            background:transparent !important;
+            border:none !important;
+            transition:all .3s ease !important;
+        }
+        .toggle-pass:hover{
+            background:#FFF2E3 !important;
+            color:#FF7A00 !important;
+        }
+        .input-hint{
+            color:#7C756B !important;
+        }
+
+        /* ---------- 13. Form options ---------- */
+        .form-options .remember{
+            color:#7C756B !important;
+        }
+        .form-options .remember input[type="checkbox"]{
+            accent-color:#FF7A00 !important;
+        }
+        .form-options .forgot{
+            color:#FF7A00 !important;
+        }
+        .form-options .forgot:hover{
+            color:#151310 !important;
+        }
+
+        /* ---------- 14. Primary button — orange gradient ---------- */
+        .btn-primary-custom{
+            background:linear-gradient(135deg, #FF7A00 0%, #FF9A2E 50%, #FFA53B 100%) !important;
+            color:#fff !important;
+            border:none !important;
+            border-radius:50px !important;
+            font-family:'Inter', sans-serif !important;
+            font-weight:700 !important;
+            box-shadow:0 12px 28px rgba(255,122,0,.38) !important;
+            transition:all .3s ease !important;
+        }
+        .btn-primary-custom:hover{
+            background:linear-gradient(135deg, #E56A00 0%, #FF8A1E 50%, #FF9A2E 100%) !important;
+            transform:translateY(-2px) !important;
+            box-shadow:0 18px 38px rgba(255,122,0,.5) !important;
+            color:#fff !important;
+        }
+        .btn-primary-custom .loader{
+            border-color:rgba(255,255,255,.35) !important;
+            border-top-color:#fff !important;
+        }
+
+        /* ---------- 15. Divider ---------- */
+        .divider{
+            color:#7C756B !important;
+        }
+        .divider::before,
+        .divider::after{
+            background:linear-gradient(90deg, transparent, #EFE9E0, transparent) !important;
+        }
+
+        /* ---------- 16. Social buttons ---------- */
+        .btn-social{
+            background:#fff !important;
+            border:1.5px solid #EFE9E0 !important;
+            color:#2C2721 !important;
+            border-radius:14px !important;
+            transition:all .3s ease !important;
+        }
+        .btn-social:hover{
+            border-color:#FF7A00 !important;
+            color:#FF7A00 !important;
+            box-shadow:0 8px 18px rgba(255,122,0,.15) !important;
+            transform:translateY(-2px) !important;
+        }
+        .btn-social.google i{color:#EA4335 !important;}
+        .btn-social.facebook i{color:#1877F2 !important;}
+        .btn-social.apple i{color:#000 !important;}
+
+        /* ---------- 17. Form footer & back link ---------- */
+        .form-footer{
+            color:#7C756B !important;
+        }
+        .form-footer a{
+            color:#FF7A00 !important;
+            font-weight:700 !important;
+        }
+        .form-footer a:hover{
+            color:#151310 !important;
+            text-decoration:underline !important;
+            text-underline-offset:3px !important;
+        }
+        .back-link{
+            color:#7C756B !important;
+            transition:all .3s ease !important;
+        }
+        .back-link:hover{
+            color:#FF7A00 !important;
+            background:#FFF2E3 !important;
+        }
+
+        /* ---------- 18. Toast ---------- */
+        .toast-message{
+            background:#151310 !important;
+            color:#fff !important;
+            border-radius:50px !important;
+            box-shadow:0 20px 45px rgba(0,0,0,.28) !important;
+        }
+        .toast-message i{
+            color:#4ADE80 !important;
+        }
+        .toast-message.error{
+            background:#E5484D !important;
+        }
+        .toast-message.error i{
+            color:#FECACA !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Animated Background — SAME structure -->
+    <div class="bg-container">
+        <div class="floating-orb"></div>
+        <div class="floating-orb"></div>
+        <div class="floating-orb"></div>
+
+        <div class="ring-container">
+            <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+            <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+            <div class="orbit-dot"></div><div class="orbit-dot"></div>
+            <div class="orbit-dot"></div><div class="orbit-dot"></div>
+            <div class="center-glow"></div>
+        </div>
+
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Main Content — SAME structure -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Toast — SAME structure -->
+    <div class="toast-message" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function togglePassword(id, btn) {
+            const input = document.getElementById(id);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') { input.type = 'text'; icon.className = 'fas fa-eye-slash'; }
+            else { input.type = 'password'; icon.className = 'fas fa-eye'; }
+        }
+
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        let timer = null;
+
+        function showToast(msg, isError) {
+            if (!msg) return;
+            toastMsg.textContent = msg;
+            toast.className = 'toast-message show' + (isError ? ' error' : '');
+            toast.querySelector('i').className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+            clearTimeout(timer);
+            timer = setTimeout(() => toast.className = 'toast-message', 3500);
+        }
+
+        toast.addEventListener('click', () => { toast.className = 'toast-message'; clearTimeout(timer); });
+
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    showToast("{{ message|escapejs }}", true);
+                {% else %}
+                    showToast("{{ message|escapejs }}", false);
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        // Auto-reload on back-forward navigation (bfcache) to keep CSRF tokens in sync
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted || (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+                window.location.reload();
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

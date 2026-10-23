@@ -1,0 +1,1133 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Table Reservations Management — Admin{% endblock %}
+{% block page_title %}Table Reservations Management{% endblock %}
+{% block page_sub %}Manage table bookings and available tables{% endblock %}
+
+{% block content %}
+
+<!-- ============================================================ -->
+<!-- TOP TITLE & ACTION -->
+<!-- ============================================================ -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+  <h2 class="tr-page-title">Table Reservations Management</h2>
+  <button type="button" class="btn-p" onclick="openAddModal()">
+    <i class="fa-solid fa-plus"></i> Add Reservation
+  </button>
+</div>
+
+<!-- ============================================================ -->
+<!-- FILTER SECTION -->
+<!-- ============================================================ -->
+<!-- FILTER SECTION -->
+<!-- ============================================================ -->
+<div class="tr-filter-card">
+  <div class="tr-filter-body">
+    <form method="get" action="{% url 'admin_reservations' %}" class="tr-filter-form">
+      <div class="tr-filter-field" style="max-width:200px;">
+        <label class="tr-filter-label">Filter by Date</label>
+        <input type="date" name="filter_date" value="{{ filter_date }}" class="tr-filter-input">
+      </div>
+
+      <div class="tr-filter-field" style="max-width:180px;">
+        <label class="tr-filter-label">Reservation Status</label>
+        <select name="status" class="tr-filter-input">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses ({{ total_count }})</option>
+          <option value="upcoming" {% if status_filter == 'upcoming' %}selected{% endif %}>Upcoming ({{ upcoming_count }})</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending ({{ pending_count }})</option>
+          <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed ({{ confirmed_count }})</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed ({{ completed_count }})</option>
+          <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled ({{ cancelled_count }})</option>
+        </select>
+      </div>
+
+      <div class="tr-filter-field" style="max-width:200px;">
+        <label class="tr-filter-label">Refund Status</label>
+        <select name="refund_status" class="tr-filter-input">
+          <option value="all" {% if refund_status_filter == 'all' %}selected{% endif %}>All Refund Statuses</option>
+          <option value="refund_pending" {% if refund_status_filter == 'refund_pending' %}selected{% endif %}>Refund Pending ({{ refund_pending_count }})</option>
+          <option value="refund_initiated" {% if refund_status_filter == 'refund_initiated' %}selected{% endif %}>Refund Initiated ({{ refund_initiated_count }})</option>
+          <option value="refund_completed" {% if refund_status_filter == 'refund_completed' %}selected{% endif %}>Refund Completed ({{ refund_completed_count }})</option>
+          <option value="no_refund" {% if refund_status_filter == 'no_refund' %}selected{% endif %}>No Refund ({{ no_refund_count }})</option>
+          <option value="refund_failed" {% if refund_status_filter == 'refund_failed' %}selected{% endif %}>Refund Failed ({{ refund_failed_count }})</option>
+        </select>
+      </div>
+
+      <div class="tr-filter-actions">
+        <button type="submit" class="tr-btn-filter">Filter</button>
+        <a href="{% url 'admin_reservations' %}?filter_date=all" class="tr-btn-showall">Show All</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- RESERVATIONS SECTION HEADING -->
+<!-- ============================================================ -->
+<h4 class="tr-section-title">{{ date_heading }}</h4>
+
+<!-- ============================================================ -->
+<!-- RESERVATIONS TABLE -->
+<!-- ============================================================ -->
+<div class="tr-table-card">
+  <div class="tbl-wrap">
+    <table class="tr-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Customer</th>
+          <th>Table</th>
+          <th>Guests</th>
+          <th>Pre-Order</th>
+          <th>Status</th>
+          <th>Payment</th>
+          <th>Total Paid</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in reservations %}
+        <tr class="res-row" id="row-{{ res.id }}"
+            data-id="{{ res.id }}"
+            data-name="{{ res.name }}"
+            data-phone="{{ res.phone }}"
+            data-date="{{ res.date|date:'Y-m-d' }}"
+            data-date-formatted="{{ res.date|date:'d-m-Y' }}"
+            data-time="{{ res.time|time:'H:i' }}"
+            data-time-formatted="{{ res.time|time:'g:i A' }}"
+            data-guests="{{ res.guests }}"
+            data-table-id="{{ res.table_id|default:'' }}"
+            data-table-num="{{ res.table.number|default:'—' }}"
+            data-table-seats="{{ res.table.seats|default:'' }}"
+            data-table-location="{{ res.table.location|default:'' }}"
+            data-status="{{ res.status }}"
+            data-status-display="{{ res.get_status_display }}"
+            data-payment-method="{{ res.payment_method|default:'cash' }}"
+            data-payment-amount="{{ res.payment_amount|default:'0' }}"
+            data-payment-status="{{ res.payment_status|default:'pending' }}"
+            data-special-request="{{ res.special_request|default:'' }}"
+            data-cancellation-date="{{ res.cancellation_date|date:'d M Y, g:i A' }}"
+            data-cancellation-reason="{{ res.cancellation_reason|default:'' }}"
+            data-refund-amount="{{ res.refund_amount|floatformat:2 }}"
+            data-refund-status="{{ res.refund_status }}"
+            data-refund-status-display="{{ res.get_refund_status_display }}"
+            data-razorpay-refund-id="{{ res.razorpay_refund_id|default:'' }}"
+            data-refund-failure-reason="{{ res.refund_failure_reason|default:'' }}"
+            data-created="{{ res.created_at|date:'d M Y, g:i A' }}">
+          <td><b>#{{ res.id }}</b></td>
+          <td style="white-space:nowrap;">{{ res.date|date:"d-m-Y" }}</td>
+          <td style="white-space:nowrap;"><b>{{ res.time|time:"g:i A" }}</b></td>
+          <td>
+            <div style="font-weight:700;color:#151310;">{{ res.name }}</div>
+            {% if res.phone %}<small style="color:#7C756B;font-size:.76rem;">{{ res.phone }}</small>{% endif %}
+          </td>
+          <td>
+            {% if res.table %}
+            <span style="font-weight:600;color:#151310;">Table {{ res.table.number }}</span>
+            <small style="color:#7C756B;font-size:.75rem;">({{ res.table.seats }} seats)</small>
+            {% else %}
+            <span style="color:#9ca3af;font-style:italic;">—</span>
+            {% endif %}
+          </td>
+          <td><b>{{ res.guests }}</b></td>
+          <td>
+            {% if res.pre_order_selected %}
+              <span class="badge bg-success">Yes (₹{{ res.pre_order_amount }})</span>
+            {% else %}
+              <span class="badge bg-secondary">No</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="tr-status tr-status-{{ res.status }}">
+              {{ res.get_status_display }}
+            </span>
+            {% if res.status == 'cancelled' %}
+              <div style="font-size:.72rem;margin-top:.2rem;">
+                {% if res.refund_status == 'refund_completed' %}
+                  <span class="badge bg-success" title="Refund Completed">Refunded ₹{{ res.refund_amount }}</span>
+                {% elif res.refund_status == 'refund_initiated' %}
+                  <span class="badge bg-info text-dark" title="Refund Initiated">Refund Init ₹{{ res.refund_amount }}</span>
+                {% elif res.refund_status == 'no_refund' %}
+                  <span class="badge bg-secondary">No Refund</span>
+                {% elif res.refund_status == 'refund_failed' %}
+                  <span class="badge bg-danger" title="{{ res.refund_failure_reason }}">Refund Failed</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">{{ res.get_refund_status_display }}</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </td>
+          <td>{{ res.get_payment_method_display|default:res.payment_method|title }}</td>
+          <td>
+            <div style="font-weight:700;color:#FF7A00;">₹{{ res.total_amount }}</div>
+            <small class="tr-pay tr-pay-{{ res.payment_status }}" style="font-size:.72rem;">
+              {{ res.get_payment_status_display|default:res.payment_status|title }}
+            </small>
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <button type="button" class="act-btn" onclick="openViewModal({{ res.id }})" title="View Details">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+              <button type="button" class="act-btn" onclick="openEditModal({{ res.id }})" title="Edit Reservation">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              {% if res.status != 'cancelled' and res.status != 'rejected' %}
+              <button type="button" class="act-btn" onclick="openCancelModal({{ res.id }})" title="Cancel Reservation" style="color:#F59E0B;">
+                <i class="fa-solid fa-ban"></i>
+              </button>
+              {% endif %}
+              <button type="button" class="act-btn danger" onclick="openDeleteModal({{ res.id }})" title="Delete Reservation">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" class="tr-empty">No reservations found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- AVAILABLE TABLES MANAGEMENT -->
+<!-- ============================================================ -->
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
+  <h4 class="tr-section-title" style="margin:0;">Available Tables Management</h4>
+  <button type="button" class="btn-p" onclick="openModal('addTableModal')">
+    <i class="fa-solid fa-plus me-1"></i> Add Table
+  </button>
+</div>
+
+<div class="tr-table-card" style="margin-bottom:3rem;">
+  <div class="tbl-wrap">
+    <table class="tr-table">
+      <thead>
+        <tr>
+          <th>Table Number</th>
+          <th>Seating Capacity</th>
+          <th>Location</th>
+          <th>Current Status</th>
+          <th>QR Code</th>
+          <th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for table in all_tables %}
+        <tr>
+          <td><b style="color:#151310;">Table #{{ table.number }}</b></td>
+          <td>{{ table.seats }} seat{{ table.seats|pluralize }}</td>
+          <td>{{ table.location }}</td>
+          <td>
+            <span class="tr-status {% if table.is_available %}tr-status-confirmed{% else %}tr-status-cancelled{% endif %}">
+              {% if table.is_available %}Available{% else %}Occupied{% endif %}
+            </span>
+          </td>
+          <td>
+            <a href="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Table-{{ table.number }}"
+               target="_blank" class="tr-btn-qr">
+              <i class="fa-solid fa-qrcode"></i> View QR
+            </a>
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <form method="post" action="{% url 'admin_reservations' %}" style="display:inline;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_table">
+                <input type="hidden" name="table_id" value="{{ table.id }}">
+                <button type="submit" class="act-btn" title="Toggle Availability">
+                  <i class="fa-solid fa-repeat"></i>
+                </button>
+              </form>
+              <form method="post" action="{% url 'admin_reservations' %}" style="display:inline;" onsubmit="return confirm('Delete Table {{ table.number }}?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_table">
+                <input type="hidden" name="table_id" value="{{ table.id }}">
+                <button type="submit" class="act-btn danger" title="Delete Table">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="tr-empty">No tables configured yet. Click "+ Add Table" above to create one.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD TABLE -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addTableModal">
+  <div class="modal-b" style="max-width:480px;">
+    <form method="post" action="{% url 'admin_reservations' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_table">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-chair me-2" style="color:#FF7A00;"></i>Add New Table</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addTableModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="tr-modal-label">Table Number <span style="color:#E5484D;">*</span></label>
+          <input type="text" name="table_number" class="tr-modal-input" placeholder="e.g. 6 or T-102" required>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Seats Capacity <span style="color:#E5484D;">*</span></label>
+            <input type="number" name="seats" value="4" min="1" max="20" class="tr-modal-input" required>
+          </div>
+          <div>
+            <label class="tr-modal-label">Location</label>
+            <select name="location" class="tr-modal-input">
+              <option value="Indoor">Indoor</option>
+              <option value="Outdoor">Outdoor</option>
+              <option value="Window">Window</option>
+              <option value="Rooftop">Rooftop</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addTableModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check me-1"></i> Add Table</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: ADD RESERVATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="addReservationModal">
+  <div class="modal-b" style="max-width:580px;">
+    <form method="post" action="{% url 'admin_reservations' %}" onsubmit="return validateReservationForm(this)">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-calendar-plus me-2" style="color:#FF7A00;"></i>Add New Reservation</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addReservationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Customer Name <span style="color:#E5484D;">*</span></label>
+            <input type="text" name="name" class="tr-modal-input" placeholder="e.g. Ketan Pandit" required>
+          </div>
+          <div>
+            <label class="tr-modal-label">Customer Phone <span style="color:#E5484D;">*</span></label>
+            <input type="tel" name="phone" class="tr-modal-input" placeholder="e.g. 9876543210" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Date <span style="color:#E5484D;">*</span></label>
+            <input type="date" name="date" id="addDateInput" class="tr-modal-input" required onchange="fetchTableAvailability('add')">
+          </div>
+          <div>
+            <label class="tr-modal-label">Time <span style="color:#E5484D;">*</span></label>
+            <input type="time" name="time" id="addTimeInput" class="tr-modal-input" required onchange="fetchTableAvailability('add')">
+          </div>
+          <div>
+            <label class="tr-modal-label">Guests <span style="color:#E5484D;">*</span></label>
+            <input type="number" name="guests" id="addGuestsInput" class="tr-modal-input" value="2" min="1" max="20" required onchange="fetchTableAvailability('add')">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+            <label class="tr-modal-label" style="margin-bottom:0;">Assigned Table <span style="color:#E5484D;">*</span></label>
+            <span id="addTableStatusBadge" style="font-size:.75rem;font-weight:700;"></span>
+          </div>
+          <select name="table_id" id="addTableSelect" class="tr-modal-input" required>
+            <option value="">-- Select Date, Time &amp; Guests first --</option>
+            {% for t in all_tables %}
+            <option value="{{ t.id }}" data-seats="{{ t.seats }}">Table {{ t.number }} ({{ t.seats }} seats · {{ t.location }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Payment Method</label>
+            <select name="payment_method" class="tr-modal-input">
+              <option value="cash" selected>Cash</option>
+              <option value="upi">UPI</option>
+              <option value="card">Card</option>
+              <option value="netbanking">Net Banking</option>
+            </select>
+          </div>
+          <div>
+            <label class="tr-modal-label">Payment Status</label>
+            <select name="payment_status" class="tr-modal-input">
+              <option value="pending" selected>Pending</option>
+              <option value="paid">Paid</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          <div>
+            <label class="tr-modal-label">Reservation Status</label>
+            <select name="status" class="tr-modal-input">
+              <option value="confirmed" selected>Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="tr-modal-label">Special Request</label>
+          <textarea name="special_request" class="tr-modal-input" rows="2" placeholder="e.g. Window booth, birthday decoration..."></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addReservationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check me-1"></i> Save Reservation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: EDIT RESERVATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="editReservationModal">
+  <div class="modal-b" style="max-width:580px;">
+    <form method="post" action="{% url 'admin_reservations' %}" onsubmit="return validateReservationForm(this)">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="reservation_id" id="editResId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-pen-to-square me-2" style="color:#FF7A00;"></i>Edit Reservation <span id="editModalResIdTitle" style="color:#FF7A00;"></span></h5>
+        <button type="button" class="act-btn" onclick="closeModal('editReservationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Customer Name <span style="color:#E5484D;">*</span></label>
+            <input type="text" name="name" id="editName" class="tr-modal-input" required>
+          </div>
+          <div>
+            <label class="tr-modal-label">Customer Phone <span style="color:#E5484D;">*</span></label>
+            <input type="tel" name="phone" id="editPhone" class="tr-modal-input" required>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Date <span style="color:#E5484D;">*</span></label>
+            <input type="date" name="date" id="editDate" class="tr-modal-input" required onchange="fetchTableAvailability('edit')">
+          </div>
+          <div>
+            <label class="tr-modal-label">Time <span style="color:#E5484D;">*</span></label>
+            <input type="time" name="time" id="editTime" class="tr-modal-input" required onchange="fetchTableAvailability('edit')">
+          </div>
+          <div>
+            <label class="tr-modal-label">Guests <span style="color:#E5484D;">*</span></label>
+            <input type="number" name="guests" id="editGuests" class="tr-modal-input" min="1" max="20" required onchange="fetchTableAvailability('edit')">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.35rem;">
+            <label class="tr-modal-label" style="margin-bottom:0;">Assigned Table <span style="color:#E5484D;">*</span></label>
+            <span id="editTableStatusBadge" style="font-size:.75rem;font-weight:700;"></span>
+          </div>
+          <select name="table_id" id="editTableSelect" class="tr-modal-input" required>
+            <option value="">-- Select Table --</option>
+            {% for t in all_tables %}
+            <option value="{{ t.id }}" data-seats="{{ t.seats }}">Table {{ t.number }} ({{ t.seats }} seats · {{ t.location }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="tr-modal-label">Payment Method</label>
+            <select name="payment_method" id="editPaymentMethod" class="tr-modal-input">
+              <option value="cash">Cash</option>
+              <option value="upi">UPI</option>
+              <option value="card">Card</option>
+              <option value="netbanking">Net Banking</option>
+            </select>
+          </div>
+          <div>
+            <label class="tr-modal-label">Payment Status</label>
+            <select name="payment_status" id="editPaymentStatus" class="tr-modal-input">
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          <div>
+            <label class="tr-modal-label">Reservation Status</label>
+            <select name="status" id="editStatus" class="tr-modal-input">
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="tr-modal-label">Special Request</label>
+          <textarea name="special_request" id="editSpecialRequest" class="tr-modal-input" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editReservationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check me-1"></i> Update Reservation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: VIEW RESERVATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="viewReservationModal">
+  <div class="modal-b" style="max-width:520px;">
+    <div class="modal-head">
+      <div>
+        <h5 id="viewModalTitle">Reservation Details</h5>
+        <small id="viewModalSubtitle" style="color:#7C756B;font-size:.78rem;"></small>
+      </div>
+      <button type="button" class="act-btn" onclick="closeModal('viewReservationModal')"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:1.4rem 1.5rem;">
+      <div class="tr-view-header">
+        <div class="td-avatar" id="viewAvatar" style="width:46px;height:46px;font-size:1.1rem;">K</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:1rem;color:#151310;" id="viewCustomerName">Customer</div>
+          <div style="font-size:.82rem;color:#7C756B;" id="viewCustomerPhone">Phone</div>
+        </div>
+        <div id="viewStatusBadgeWrap"></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div class="tr-info-box"><div class="tr-info-lbl">Date</div><div class="tr-info-val" id="viewDate">—</div></div>
+        <div class="tr-info-box"><div class="tr-info-lbl">Time</div><div class="tr-info-val" id="viewTime">—</div></div>
+        <div class="tr-info-box"><div class="tr-info-lbl">Assigned Table</div><div class="tr-info-val" id="viewTable">—</div></div>
+        <div class="tr-info-box"><div class="tr-info-lbl">Party Size</div><div class="tr-info-val" id="viewGuests">—</div></div>
+        <div class="tr-info-box"><div class="tr-info-lbl">Payment Method</div><div class="tr-info-val" id="viewPaymentMethod">—</div></div>
+        <div class="tr-info-box"><div class="tr-info-lbl">Payment Status</div><div class="tr-info-val" id="viewPaymentStatus">—</div></div>
+      </div>
+
+      <div style="margin-top:1rem;">
+        <div class="tr-info-lbl" style="margin-bottom:.3rem;">Special Request</div>
+        <div id="viewSpecialRequest" class="tr-special">None</div>
+      </div>
+      <div id="viewRefundDetailsBox"></div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-s" onclick="closeModal('viewReservationModal')">Close</button>
+      <button type="button" class="btn-p" id="viewEditBtn"><i class="fa-solid fa-pen-to-square me-1"></i> Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: CANCEL RESERVATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="cancelReservationModal">
+  <div class="modal-b" style="max-width:440px;">
+    <form method="post" action="{% url 'admin_reservations' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="cancel">
+      <input type="hidden" name="reservation_id" id="cancelResId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-ban me-2" style="color:#F59E0B;"></i>Cancel Reservation</h5>
+        <button type="button" class="act-btn" onclick="closeModal('cancelReservationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding:1.4rem 1.5rem;">
+        <p style="font-size:.92rem;color:#151310;margin-bottom:.75rem;">
+          Are you sure you want to cancel <b id="cancelModalResTitle">this reservation</b>?
+        </p>
+        <p style="font-size:.82rem;color:#7C756B;margin:0;">
+          The table will immediately become available again for new bookings. The reservation record will be marked as Cancelled.
+        </p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('cancelReservationModal')">Keep</button>
+        <button type="submit" class="btn-p" style="background:#F59E0B;box-shadow:0 10px 24px rgba(245,158,11,.35);">Yes, Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- MODAL: DELETE RESERVATION -->
+<!-- ============================================================ -->
+<div class="modal-c" id="deleteReservationModal">
+  <div class="modal-b" style="max-width:440px;">
+    <form method="post" action="{% url 'admin_reservations' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="delete">
+      <input type="hidden" name="reservation_id" id="deleteResId">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-trash-can me-2" style="color:#E5484D;"></i>Delete Reservation</h5>
+        <button type="button" class="act-btn" onclick="closeModal('deleteReservationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding:1.4rem 1.5rem;">
+        <p style="font-size:.92rem;color:#151310;margin-bottom:.75rem;">
+          Are you sure you want to delete <b id="deleteModalResTitle">this reservation</b>?
+        </p>
+        <p style="font-size:.82rem;color:#7C756B;margin:0;">
+          This reservation will be safely soft-deleted from the records.
+        </p>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('deleteReservationModal')">Cancel</button>
+        <button type="submit" class="btn-p" style="background:#E5484D;box-shadow:0 10px 24px rgba(229,72,77,.35);">Yes, Delete</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- STYLES — SOLID ORANGE THEME -->
+<!-- ============================================================ -->
+<style>
+/* ---- Page Title ---- */
+.tr-page-title {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #151310;
+    margin: 0;
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* ---- Filter Card ---- */
+.tr-filter-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #EFE9E0;
+    box-shadow: 0 4px 18px rgba(21,19,16,.05);
+    margin-bottom: 1.75rem;
+}
+.tr-filter-body { padding: 1.25rem 1.5rem; }
+
+.tr-filter-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+}
+.tr-filter-field {
+    min-width: 260px;
+    flex: 1;
+    max-width: 400px;
+}
+.tr-filter-label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #2C2721;
+    margin-bottom: .45rem;
+}
+.tr-filter-input {
+    width: 100%;
+    padding: .7rem 1rem;
+    border: 1.5px solid #EFE9E0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .88rem;
+    color: #151310;
+    outline: none;
+    transition: .2s;
+    background: #fff;
+}
+.tr-filter-input:focus {
+    border-color: #FF7A00;
+    box-shadow: 0 0 0 3px rgba(255,122,0,.12);
+}
+
+.tr-filter-actions { display: flex; gap: .65rem; align-items: center; }
+
+/* ---- Filter Button — SOLID ORANGE ---- */
+.tr-btn-filter {
+    background: #FF7A00;
+    color: #fff;
+    border: none;
+    padding: .72rem 1.6rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: .88rem;
+    cursor: pointer;
+    transition: .25s;
+    box-shadow: 0 6px 16px rgba(255,122,0,.35);
+    font-family: inherit;
+}
+.tr-btn-filter:hover {
+    background: #E86F00;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(255,122,0,.45);
+    color: #fff;
+}
+
+/* ---- Show All Button ---- */
+.tr-btn-showall {
+    background: #fff;
+    color: #2C2721;
+    border: 1.5px solid #EFE9E0;
+    padding: .68rem 1.35rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: .88rem;
+    text-decoration: none;
+    transition: .25s;
+    display: inline-flex;
+    align-items: center;
+}
+.tr-btn-showall:hover {
+    border-color: #FF7A00;
+    color: #FF7A00;
+}
+
+/* ---- Section Title ---- */
+.tr-section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #151310;
+    margin-bottom: .85rem;
+    font-family: 'Fredoka', sans-serif;
+}
+
+/* ---- Table Card ---- */
+.tr-table-card {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #EFE9E0;
+    box-shadow: 0 4px 18px rgba(21,19,16,.05);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+}
+
+/* ---- Table — SOLID ORANGE HEADER ---- */
+.tr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+}
+.tr-table thead th {
+    background: #FF7A00;                    /* ✅ SOLID ORANGE */
+    color: #fff;
+    font-weight: 700;
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: .95rem 1rem;
+    border: none;
+    white-space: nowrap;
+}
+.tr-table thead th:first-child { padding-left: 1.25rem; }
+.tr-table thead th:last-child { padding-right: 1.25rem; }
+
+.tr-table tbody td {
+    padding: .95rem 1rem;
+    border-bottom: 1px solid #EFE9E0;
+    vertical-align: middle;
+    color: #2C2721;
+}
+.tr-table tbody td:first-child { padding-left: 1.25rem; }
+.tr-table tbody td:last-child { padding-right: 1.25rem; }
+.tr-table tbody tr:last-child td { border-bottom: none; }
+.tr-table tbody tr:hover { background: #FFF8F4; }
+
+.tr-empty {
+    text-align: center;
+    padding: 3rem 1rem !important;
+    color: #7C756B;
+    font-size: .92rem;
+}
+
+/* ---- Status Badges ---- */
+.tr-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .32rem .8rem;
+    border-radius: 50px;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    white-space: nowrap;
+}
+.tr-status::before {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+.tr-status-confirmed { background: #E8F7EE; color: #2FAE60; }
+.tr-status-pending   { background: #FEF3C7; color: #B45309; }
+.tr-status-completed { background: #EAF2FE; color: #3B82F6; }
+.tr-status-cancelled { background: #FDECEC; color: #E5484D; }
+.tr-status-rejected  { background: #FDECEC; color: #E5484D; }
+
+/* ---- Payment Badges ---- */
+.tr-pay {
+    display: inline-block;
+    padding: .32rem .8rem;
+    border-radius: 50px;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.tr-pay-paid     { background: #E8F7EE; color: #2FAE60; }
+.tr-pay-pending  { background: #FEF3C7; color: #B45309; }
+.tr-pay-refunded { background: #EDE9FE; color: #8B5CF6; }
+
+/* ---- Action Buttons ---- */
+.act { display: inline-flex; gap: .35rem; }
+.act-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: none;
+    background: #FFF2E3;
+    color: #FF7A00;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: .25s;
+    font-size: .82rem;
+    text-decoration: none;
+}
+.act-btn:hover { background: #FFE4D6; transform: translateY(-1px); }
+.act-btn.danger { background: #FDECEC; color: #E5484D; }
+.act-btn.danger:hover { background: #FBD5D5; }
+
+/* ---- QR Button ---- */
+.tr-btn-qr {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .4rem .9rem;
+    font-size: .78rem;
+    font-weight: 600;
+    background: #fff;
+    color: #2C2721;
+    border: 1.5px solid #EFE9E0;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: .25s;
+}
+.tr-btn-qr:hover {
+    border-color: #FF7A00;
+    color: #FF7A00;
+}
+
+/* ---- Modal Form Controls ---- */
+.tr-modal-label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #2C2721;
+    margin-bottom: .35rem;
+}
+.tr-modal-input {
+    width: 100%;
+    padding: .7rem .95rem;
+    border: 1.5px solid #EFE9E0;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: .88rem;
+    color: #151310;
+    background: #fff;
+    outline: none;
+    transition: .2s;
+}
+.tr-modal-input:focus {
+    border-color: #FF7A00;
+    box-shadow: 0 0 0 3px rgba(255,122,0,.12);
+}
+
+/* ---- View Modal Info Boxes ---- */
+.tr-view-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .9rem 1.1rem;
+    background: #FFF8F4;
+    border-radius: 12px;
+    margin-bottom: 1.25rem;
+    border: 1px solid #EFE9E0;
+}
+
+.tr-info-box {
+    padding: .75rem .9rem;
+    background: #FFF8F4;
+    border-radius: 10px;
+    border: 1px solid #EFE9E0;
+}
+.tr-info-lbl {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7C756B;
+    letter-spacing: .05em;
+    margin-bottom: .2rem;
+}
+.tr-info-val {
+    font-size: .9rem;
+    font-weight: 700;
+    color: #151310;
+}
+.tr-special {
+    background: #FFF8F4;
+    border: 1px solid #EFE9E0;
+    padding: .75rem 1rem;
+    border-radius: 10px;
+    font-size: .85rem;
+    color: #2C2721;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+    .tr-page-title { font-size: 1.25rem; }
+    .tr-filter-field { min-width: 100%; }
+    .tr-table { font-size: .78rem; }
+    .tr-table thead th, .tr-table tbody td { padding: .65rem .75rem; }
+}
+</style>
+
+<!-- ============================================================ -->
+<!-- JAVASCRIPT -->
+<!-- ============================================================ -->
+<script>
+function openAddModal() {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById('addDateInput');
+  const timeInput = document.getElementById('addTimeInput');
+  if (dateInput && !dateInput.value) {
+    dateInput.value = todayStr;
+    dateInput.min = todayStr;
+  }
+  if (timeInput && !timeInput.value) {
+    const now = new Date();
+    now.setHours(now.getHours() + 1, 0, 0, 0);
+    timeInput.value = now.toTimeString().slice(0, 5);
+  }
+  openModal('addReservationModal');
+  fetchTableAvailability('add');
+}
+
+function openEditModal(resId) {
+  const row = document.getElementById('row-' + resId);
+  if (!row) return;
+
+  document.getElementById('editResId').value = resId;
+  document.getElementById('editModalResIdTitle').textContent = '#' + resId;
+  document.getElementById('editName').value = row.getAttribute('data-name') || '';
+  document.getElementById('editPhone').value = row.getAttribute('data-phone') || '';
+  document.getElementById('editGuests').value = row.getAttribute('data-guests') || '2';
+  document.getElementById('editDate').value = row.getAttribute('data-date') || '';
+  document.getElementById('editTime').value = row.getAttribute('data-time') || '';
+  document.getElementById('editPaymentMethod').value = row.getAttribute('data-payment-method') || 'cash';
+  document.getElementById('editPaymentStatus').value = row.getAttribute('data-payment-status') || 'pending';
+  document.getElementById('editStatus').value = row.getAttribute('data-status') || 'confirmed';
+  document.getElementById('editSpecialRequest').value = row.getAttribute('data-special-request') || '';
+
+  const tableId = row.getAttribute('data-table-id') || '';
+  openModal('editReservationModal');
+  fetchTableAvailability('edit', tableId, resId);
+}
+
+function openViewModal(resId) {
+  const row = document.getElementById('row-' + resId);
+  if (!row) return;
+
+  const name = row.getAttribute('data-name') || '';
+  const phone = row.getAttribute('data-phone') || 'No phone recorded';
+  const dateFormatted = row.getAttribute('data-date-formatted') || '';
+  const timeFormatted = row.getAttribute('data-time-formatted') || '';
+  const guests = row.getAttribute('data-guests') || '1';
+  const tableNum = row.getAttribute('data-table-num') || '—';
+  const tableSeats = row.getAttribute('data-table-seats') || '';
+  const tableLocation = row.getAttribute('data-table-location') || '';
+  const status = row.getAttribute('data-status') || 'pending';
+  const statusDisplay = row.getAttribute('data-status-display') || 'Pending';
+  const payMethod = row.getAttribute('data-payment-method') || 'Cash';
+  const payStatus = row.getAttribute('data-payment-status') || 'Pending';
+  const specialReq = row.getAttribute('data-special-request') || 'None specified';
+
+  document.getElementById('viewModalTitle').textContent = `Reservation #${resId}`;
+  document.getElementById('viewModalSubtitle').textContent = `Booked for ${dateFormatted} at ${timeFormatted}`;
+  document.getElementById('viewAvatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('viewCustomerName').textContent = name;
+  document.getElementById('viewCustomerPhone').textContent = phone;
+
+  let badgeClass = 'tr-status-pending';
+  if (status === 'confirmed') badgeClass = 'tr-status-confirmed';
+  else if (status === 'completed') badgeClass = 'tr-status-completed';
+  else if (status === 'cancelled' || status === 'rejected') badgeClass = 'tr-status-cancelled';
+
+  document.getElementById('viewStatusBadgeWrap').innerHTML =
+    `<span class="tr-status ${badgeClass}">${statusDisplay}</span>`;
+
+  document.getElementById('viewDate').textContent = dateFormatted;
+  document.getElementById('viewTime').textContent = timeFormatted;
+  document.getElementById('viewTable').innerHTML = tableNum !== '—'
+    ? `Table ${tableNum} <small style="color:#7C756B;">(${tableSeats} seats · ${tableLocation})</small>`
+    : 'None assigned';
+  document.getElementById('viewGuests').textContent = `${guests} guest${guests > 1 ? 's' : ''}`;
+  document.getElementById('viewPaymentMethod').textContent = payMethod.toUpperCase();
+  document.getElementById('viewPaymentStatus').textContent = payStatus.charAt(0).toUpperCase() + payStatus.slice(1);
+  document.getElementById('viewSpecialRequest').textContent = specialReq.trim() || 'No special requests submitted.';
+
+  const cancellationDate = row.getAttribute('data-cancellation-date') || '';
+  const cancellationReason = row.getAttribute('data-cancellation-reason') || '';
+  const refundAmount = row.getAttribute('data-refund-amount') || '0.00';
+  const refundStatusDisplay = row.getAttribute('data-refund-status-display') || 'N/A';
+  const razorpayRefundId = row.getAttribute('data-razorpay-refund-id') || '';
+  const refundFailureReason = row.getAttribute('data-refund-failure-reason') || '';
+
+  const refundBoxEl = document.getElementById('viewRefundDetailsBox');
+  if (refundBoxEl) {
+    if (status === 'cancelled') {
+      refundBoxEl.style.display = 'block';
+      refundBoxEl.innerHTML = `
+        <div style="background:#FFF8F4;border:1px solid #EFE9E0;padding:1rem;border-radius:12px;margin-top:1rem;">
+          <div style="font-weight:700;color:#E74C3C;margin-bottom:.5rem;"><i class="fa-solid fa-ban me-1"></i> Cancellation & Refund Information</div>
+          <div style="font-size:.85rem;margin-bottom:.3rem;"><strong>Cancellation Date:</strong> ${cancellationDate || 'N/A'}</div>
+          ${cancellationReason ? `<div style="font-size:.85rem;margin-bottom:.3rem;"><strong>Reason:</strong> ${cancellationReason}</div>` : ''}
+          <div style="font-size:.85rem;margin-bottom:.3rem;"><strong>Refund Status:</strong> <span class="badge bg-info text-dark">${refundStatusDisplay}</span></div>
+          <div style="font-size:.85rem;margin-bottom:.3rem;"><strong>Refund Amount:</strong> <span style="font-weight:700;color:#2FAE60;">₹${refundAmount}</span></div>
+          ${razorpayRefundId ? `<div style="font-size:.85rem;margin-bottom:.3rem;"><strong>Razorpay Refund ID:</strong> <code>${razorpayRefundId}</code></div>` : ''}
+          ${refundFailureReason ? `<div style="font-size:.82rem;color:#E74C3C;margin-top:.4rem;"><strong>Refund Error:</strong> ${refundFailureReason}</div>` : ''}
+        </div>
+      `;
+    } else {
+      refundBoxEl.style.display = 'none';
+      refundBoxEl.innerHTML = '';
+    }
+  }
+
+  document.getElementById('viewEditBtn').onclick = () => {
+    closeModal('viewReservationModal');
+    openEditModal(resId);
+  };
+
+  openModal('viewReservationModal');
+}
+
+function openCancelModal(resId) {
+  const row = document.getElementById('row-' + resId);
+  const name = row ? row.getAttribute('data-name') : '';
+  document.getElementById('cancelResId').value = resId;
+  document.getElementById('cancelModalResTitle').textContent = `Reservation #${resId} for ${name}`;
+  openModal('cancelReservationModal');
+}
+
+function openDeleteModal(resId) {
+  const row = document.getElementById('row-' + resId);
+  const name = row ? row.getAttribute('data-name') : '';
+  document.getElementById('deleteResId').value = resId;
+  document.getElementById('deleteModalResTitle').textContent = `Reservation #${resId} (${name})`;
+  openModal('deleteReservationModal');
+}
+
+function fetchTableAvailability(mode, selectedTableId = null, excludeId = null) {
+  const isAdd = (mode === 'add');
+  const dateInput = document.getElementById(isAdd ? 'addDateInput' : 'editDate');
+  const timeInput = document.getElementById(isAdd ? 'addTimeInput' : 'editTime');
+  const guestsInput = document.getElementById(isAdd ? 'addGuestsInput' : 'editGuests');
+  const tableSelect = document.getElementById(isAdd ? 'addTableSelect' : 'editTableSelect');
+  const statusBadge = document.getElementById(isAdd ? 'addTableStatusBadge' : 'editTableStatusBadge');
+
+  if (!dateInput || !timeInput || !guestsInput || !tableSelect) return;
+
+  const date = dateInput.value;
+  const time = timeInput.value;
+  const guests = guestsInput.value || '2';
+
+  if (!date || !time) {
+    if (statusBadge) statusBadge.textContent = 'Pick date & time to check availability';
+    return;
+  }
+
+  if (statusBadge) {
+    statusBadge.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Checking tables...';
+  }
+
+  let url = `{% url 'admin_check_tables' %}?date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}&guests=${encodeURIComponent(guests)}`;
+  if (excludeId) {
+    url += `&exclude_id=${encodeURIComponent(excludeId)}`;
+  }
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      if (!data.tables) return;
+
+      const previousVal = selectedTableId || tableSelect.value;
+      tableSelect.innerHTML = '';
+
+      let availableCount = 0;
+      const defaultOption = document.createElement('option');
+      defaultOption.value = '';
+      defaultOption.textContent = '-- Select an Available Table --';
+      tableSelect.appendChild(defaultOption);
+
+      data.tables.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.dataset.seats = t.seats;
+
+        if (t.available) {
+          availableCount++;
+          opt.textContent = `Table ${t.number} (${t.seats} seats · ${t.location}) ✓ Available`;
+          if (String(t.id) === String(previousVal)) {
+            opt.selected = true;
+          }
+        } else {
+          opt.disabled = true;
+          opt.style.color = '#dc2626';
+          opt.textContent = `Table ${t.number} (${t.seats} seats · ${t.location}) ✕ ${t.reason}`;
+        }
+        tableSelect.appendChild(opt);
+      });
+
+      if (statusBadge) {
+        if (availableCount > 0) {
+          statusBadge.innerHTML = `<span style="color:#2FAE60;"><i class="fa-solid fa-check-circle me-1"></i>${availableCount} table${availableCount > 1 ? 's' : ''} available</span>`;
+        } else {
+          statusBadge.innerHTML = `<span style="color:#E5484D;"><i class="fa-solid fa-triangle-exclamation me-1"></i>No tables available</span>`;
+        }
+      }
+    })
+    .catch(err => {
+      console.error('Error checking table availability:', err);
+      if (statusBadge) statusBadge.textContent = 'Could not verify table availability.';
+    });
+}
+
+function validateReservationForm(form) {
+  const tableSelect = form.querySelector('select[name="table_id"]');
+  if (!tableSelect || !tableSelect.value) {
+    alert('Please select an available table before submitting.');
+    tableSelect.focus();
+    return false;
+  }
+  return true;
+}
+</script>
+
+{% endblock %}

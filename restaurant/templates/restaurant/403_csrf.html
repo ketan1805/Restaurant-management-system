@@ -1,0 +1,254 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>સુરક્ષા સેશન સમાપ્ત | Security Session Expired — TableServe</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF7A00;
+            --primary-dark: #E56A00;
+            --primary-light: #FFF2E3;
+            --ink: #151310;
+            --muted: #7C756B;
+            --cream: #FFFBF6;
+            --line: #EFE9E0;
+            --radius: 20px;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            background: linear-gradient(135deg, #FFFBF6 0%, #FFF5EA 50%, #FFEEDD 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            color: var(--ink);
+            margin: 0;
+        }
+
+        .csrf-card {
+            background: #ffffff;
+            border-radius: var(--radius);
+            box-shadow: 0 20px 60px rgba(255, 122, 0, 0.12), 0 4px 16px rgba(0,0,0,0.04);
+            border: 1px solid var(--line);
+            max-width: 540px;
+            width: 100%;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeIn .4s ease-out;
+        }
+
+        .csrf-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #FF7A00, #FFA53B, #FF7A00);
+        }
+
+        .icon-circle {
+            width: 86px;
+            height: 86px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.4rem;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 8px 24px rgba(255, 122, 0, 0.18);
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: .35rem .9rem;
+            border-radius: 50px;
+            font-size: .82rem;
+            font-weight: 700;
+            letter-spacing: .5px;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.65rem;
+            font-weight: 800;
+            margin-bottom: .6rem;
+            color: var(--ink);
+        }
+
+        p.subtitle {
+            color: var(--muted);
+            font-size: .95rem;
+            line-height: 1.55;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+            background: #FAFAF8;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            text-align: left;
+            margin-bottom: 1.8rem;
+            font-size: .88rem;
+            color: #4A443D;
+        }
+
+        .info-box ul {
+            margin: .5rem 0 0 1.2rem;
+            padding: 0;
+        }
+
+        .info-box li {
+            margin-bottom: .35rem;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: .75rem;
+        }
+
+        .btn-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .6rem;
+            padding: .85rem 1.4rem;
+            border-radius: 14px;
+            font-size: .95rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all .2s ease;
+        }
+
+        .btn-primary-action {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(255, 122, 0, 0.28);
+        }
+
+        .btn-primary-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(255, 122, 0, 0.35);
+            color: #ffffff;
+        }
+
+        .btn-secondary-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .75rem;
+        }
+
+        .btn-secondary-action {
+            background: #F4F1EC;
+            color: var(--ink);
+            border: 1px solid var(--line);
+        }
+
+        .btn-secondary-action:hover {
+            background: #EAE5DC;
+            color: var(--ink);
+        }
+
+        .tech-details {
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px dashed var(--line);
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="csrf-card">
+    <div class="brand-badge">
+        <i class="fa-solid fa-utensils"></i> TableServe Security
+    </div>
+
+    <div class="icon-circle">
+        <i class="fa-solid fa-shield-halved"></i>
+    </div>
+
+    <h1>સુરક્ષા સેશન સમાપ્ત થયું છે</h1>
+    <p class="subtitle">
+        Security session expired or form token mismatch.<br>
+        તમારા એકાઉન્ટની સુરક્ષા માટે આ વિનંતી રોકવામાં આવી હતી.
+    </p>
+
+    <div class="info-box">
+        <strong><i class="fa-solid fa-lightbulb text-warning me-1"></i> આ સમસ્યા કેમ થઈ?</strong>
+        <ul>
+            <li>તમે બ્રાઉઝરમાં <b>Back</b> બટન દબાવ્યું હોય અથવા</li>
+            <li>બીજા કોઈ ટેબમાં લોગિન/લોગઆઉટ કર્યું હોય, અથવા</li>
+            <li>પેજ ઘણા સમયથી ખુલ્લું રહેવાથી સેશન રીન્યુ થયું હોય.</li>
+        </ul>
+        <div class="mt-2 text-muted" style="font-size:.82rem;">
+            👉 <b>ઉકેલ:</b> માત્ર નીચે આપેલ બટનથી પેજ રિફ્રેશ કરો અને ફરી પ્રયાસ કરો.
+        </div>
+    </div>
+
+    <div class="actions">
+        <button type="button" class="btn-action btn-primary-action" onclick="handleRetry()">
+            <i class="fa-solid fa-arrows-rotate"></i> પેજ રિફ્રેશ કરો અને ફરી પ્રયાસ કરો
+        </button>
+
+        <div class="btn-secondary-group">
+            <a href="{% url 'home' %}" class="btn-action btn-secondary-action">
+                <i class="fa-solid fa-house"></i> હોમ પેજ
+            </a>
+            <a href="{% url 'login' %}" class="btn-action btn-secondary-action">
+                <i class="fa-solid fa-right-to-bracket"></i> લોગિન
+            </a>
+        </div>
+    </div>
+
+    {% if reason %}
+    <div class="tech-details">
+        <details>
+            <summary style="cursor:pointer; outline:none;">ટેકનિકલ વિગતો (Technical Reason)</summary>
+            <div class="mt-1 font-monospace" style="word-break:break-all;">{{ reason }}</div>
+        </details>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function handleRetry() {
+    {% if referer %}
+        window.location.href = "{{ referer|escapejs }}";
+    {% else %}
+        if (document.referrer && document.referrer !== window.location.href) {
+            window.location.href = document.referrer;
+        } else {
+            window.location.reload();
+        }
+    {% endif %}
+}
+</script>
+
+</body>
+</html>

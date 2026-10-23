@@ -1,0 +1,170 @@
+{% extends "restaurant/admin/admin_base.html" %}
+{% block title %}Staff — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Staff Management</h1>
+    <p>Create and manage staff accounts and their roles.</p>
+  </div>
+  <button class="btn-p" onclick="openAddStaffModal()"><i class="fa-solid fa-plus"></i> Add Staff</button>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-users"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Total Staff</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ active_count }}</div><div class="lbl">Active Staff</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-shield-halved"></i></div><div class="stat-info"><div class="num">3</div><div class="lbl">Role Types</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-list me-2" style="color:var(--orange);"></i>All Staff Members</h5>
+    <span class="sub">{{ total_count }} total</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for staff_user in staff_list %}
+        <tr>
+          <td>
+            <b style="color:var(--ink);">{{ staff_user.get_full_name|default:staff_user.username }}</b>
+            <div style="font-size:.75rem;color:var(--muted);">@{{ staff_user.username }}</div>
+          </td>
+          <td>{{ staff_user.email }}</td>
+          <td>
+            {% for g in staff_user.groups.all %}
+              <span class="badge-status bs-orange">{{ g.name }}</span>
+            {% empty %}
+              <span class="badge-status bs-red">No Role</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if staff_user.is_active %}<span class="badge-status bs-green">Active</span>
+            {% else %}<span class="badge-status bs-red">Disabled</span>{% endif %}
+          </td>
+          <td>{{ staff_user.date_joined|date:"d M Y" }}</td>
+          <td>
+            <div class="act">
+              <button type="button" class="btn-s" style="padding:.4rem .85rem;font-size:.75rem;"
+                      data-user-id="{{ staff_user.id }}"
+                      data-username="{{ staff_user.username }}"
+                      data-role="{% for g in staff_user.groups.all %}{{ g.name }}{% endfor %}"
+                      data-update-url="{% url 'staff:update_staff_role' staff_user.id %}">
+                <i class="fa-solid fa-arrows-rotate"></i> Update Role
+              </button>
+              <a href="{% url 'admin_delete_staff' staff_user.id %}"
+                 class="btn-s" style="padding:.4rem .85rem;font-size:.75rem;color:var(--red);border-color:#FBD5D5;"
+                 onclick="return confirm('Delete {{ staff_user.username }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-users"></i><b>No staff members yet</b><small>Click "Add Staff" to create one.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div class="modal-c" id="addStaffModal">
+  <div class="modal-b">
+    <form method="post" action="{% url 'admin_add_staff' %}">
+      {% csrf_token %}
+      <div class="modal-head">
+        <h5>Create New Staff</h5>
+        <button type="button" class="act-btn" onclick="closeAddStaffModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">Username *</label><input type="text" name="username" class="f-input" placeholder="e.g. rahul_staff" required></div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Email *</label><input type="email" name="email" class="f-input" placeholder="staff@restaurant.com" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name</label><input type="text" name="first_name" class="f-input" placeholder="Rahul"></div>
+          <div><label class="f-label">Last Name</label><input type="text" name="last_name" class="f-input" placeholder="Patel"></div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Mobile No</label><input type="text" name="mobile_no" class="f-input" placeholder="+91 98765 43210"></div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Password * (min 8 characters)</label><input type="password" name="password" class="f-input" placeholder="••••••••" required minlength="8"></div>
+        <div>
+          <label class="f-label">Assign Staff Role *</label>
+          <select name="sub_role" class="f-input" required>
+            <option value="">-- Select Role --</option>
+            <option value="Manager">Manager</option>
+            <option value="Chef">Chef</option>
+            <option value="Kitchen Staff">Kitchen Staff</option>
+            <option value="OrderHandler">Order Handler</option>
+            <option value="Waiter">Waiter</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeAddStaffModal()">Cancel</button>
+        <button type="submit" class="btn-p">Create Staff Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Update Role Modal -->
+<div class="modal-c" id="updateRoleModal">
+  <div class="modal-b">
+    <form method="post" id="updateRoleForm" action="">
+      {% csrf_token %}
+      <div class="modal-head">
+        <h5>Update Staff Role</h5>
+        <button type="button" class="act-btn" onclick="closeUpdateRoleModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="background:var(--orange-soft);border-radius:14px;padding:.85rem 1rem;font-size:.88rem;color:var(--muted);margin-bottom:1rem;">
+          Updating role for: <strong id="updateRoleUsername" style="color:var(--ink);">—</strong>
+        </div>
+        <div>
+          <label class="f-label">Select New Role *</label>
+          <select name="sub_role" id="updateRoleSelect" class="f-input" required>
+            <option value="">-- No Role --</option>
+            <option value="Manager">Manager</option>
+            <option value="Chef">Chef</option>
+            <option value="Kitchen Staff">Kitchen Staff</option>
+            <option value="OrderHandler">Order Handler</option>
+            <option value="Waiter">Waiter</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeUpdateRoleModal()">Cancel</button>
+        <button type="submit" class="btn-p">Update Role</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+const addStaffModal = document.getElementById('addStaffModal');
+const updateRoleModal = document.getElementById('updateRoleModal');
+
+function openAddStaffModal(){ addStaffModal.classList.add('show'); }
+function closeAddStaffModal(){ addStaffModal.classList.remove('show'); }
+
+document.querySelectorAll('[data-update-url]').forEach(btn => {
+  btn.addEventListener('click', function(){
+    document.getElementById('updateRoleForm').action = this.dataset.updateUrl;
+    document.getElementById('updateRoleUsername').textContent = '@' + this.dataset.username;
+    document.getElementById('updateRoleSelect').value = this.dataset.role || '';
+    updateRoleModal.classList.add('show');
+  });
+});
+function closeUpdateRoleModal(){ updateRoleModal.classList.remove('show'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ closeAddStaffModal(); closeUpdateRoleModal(); }
+});
+addStaffModal.addEventListener('click', e => { if (e.target === addStaffModal) closeAddStaffModal(); });
+updateRoleModal.addEventListener('click', e => { if (e.target === updateRoleModal) closeUpdateRoleModal(); });
+
+{% if messages %}{% for msg in messages %}{% if msg.tags == 'error' %}openAddStaffModal();{% endif %}{% endfor %}{% endif %}
+</script>
+{% endblock %}

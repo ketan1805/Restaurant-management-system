@@ -1,0 +1,164 @@
+{% extends "restaurant/admin/admin_base.html" %}
+{% block title %}Food Waste & NGOs — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Food Waste Management</h1>
+    <p>Track donations and registered NGO partners.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-hand-holding-heart"></i></div><div class="stat-info"><div class="num">{{ total_donations|default:"0" }}</div><div class="lbl">Total Donations</div></div></div>
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-info"><div class="num">{{ pending_approval|default:"0" }}</div><div class="lbl">Pending Approval</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-handshake"></i></div><div class="stat-info"><div class="num">{{ registered_ngos|default:"0" }}</div><div class="lbl">Registered NGOs</div></div></div>
+</div>
+
+<!-- Donation List -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-box me-2" style="color:var(--orange);"></i>Donation List</h5>
+    <button type="button" class="btn-p" onclick="openModal('donationModal')"><i class="fa-solid fa-plus"></i> Add Donation</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>ID</th><th>Food Items</th><th>Expiry</th><th>Status</th><th>NGO Partner</th><th style="text-align:center;">Actions</th></tr></thead>
+      <tbody>
+        {% for donation in donations %}
+        <tr>
+          <td><b>#DON-{{ donation.id }}</b></td>
+          <td>{{ donation.food_items }}</td>
+          <td>{% if donation.expiry_date %}{{ donation.expiry_date|date:"d M Y" }}{% else %}—{% endif %}</td>
+          <td>
+            {% if donation.status == 'approved' or donation.status == 'Approved' %}<span class="badge-status bs-green">Approved</span>
+            {% elif donation.status == 'collected' or donation.status == 'Collected' %}<span class="badge-status bs-blue">Collected</span>
+            {% else %}<span class="badge-status bs-yellow">{{ donation.get_status_display|default:donation.status }}</span>{% endif %}
+          </td>
+          <td>
+            {% if donation.ngo %}<span class="badge-status bs-orange">{{ donation.ngo.name }}</span>
+            {% else %}<span style="color:var(--muted);">Unassigned</span>{% endif %}
+          </td>
+          <td style="text-align:center;">
+            <a href="?delete_donation={{ donation.id }}" class="act-btn danger" title="Delete" onclick="return confirm('Delete this donation record?')"><i class="fa-solid fa-trash-can"></i></a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-box"></i><b>No donations found</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- NGOs -->
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-handshake me-2" style="color:var(--orange);"></i>Registered NGOs</h5>
+    <button type="button" class="btn-p" onclick="openModal('ngoModal')"><i class="fa-solid fa-plus"></i> Add NGO</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>ID</th><th>Name</th><th>Contact Person</th><th>Email &amp; Phone</th><th style="text-align:center;">Actions</th></tr></thead>
+      <tbody>
+        {% for ngo in ngos %}
+        <tr>
+          <td><b>#NGO-{{ ngo.id }}</b></td>
+          <td><span class="badge-status bs-orange">{{ ngo.name }}</span></td>
+          <td>{{ ngo.contact_person }}</td>
+          <td>
+            {{ ngo.email }}<br>
+            <small style="color:var(--muted);font-size:.75rem;">{{ ngo.phone }}</small>
+          </td>
+          <td style="text-align:center;">
+            <div class="act" style="justify-content:center;">
+              <a href="?delete_ngo={{ ngo.id }}" class="act-btn danger" title="Delete" onclick="return confirm('Delete this NGO?')"><i class="fa-solid fa-trash-can"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty"><i class="fa-solid fa-handshake"></i><b>No NGOs registered</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Donation Modal -->
+<div class="modal-c" id="donationModal">
+  <div class="modal-b">
+    <form method="post" enctype="multipart/form-data" action="{% url 'admin_ngos' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_donation">
+      <div class="modal-head">
+        <h5>Add Food Donation</h5>
+        <button type="button" class="act-btn" onclick="closeModal('donationModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">Food Items *</label><textarea name="food_items" rows="2" class="f-input" required></textarea></div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Food Type</label>
+          <select name="food_type" class="f-input">
+            <option value="prepared">Prepared Food</option>
+            <option value="raw">Raw Material</option>
+            <option value="packaged">Packaged</option>
+            <option value="beverages">Beverages</option>
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Quantity (kg / meals)</label><input type="text" name="quantity" class="f-input" placeholder="e.g. 15"></div>
+          <div><label class="f-label">Expiry Date</label><input type="date" name="expiry_date" class="f-input"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('donationModal')">Cancel</button>
+        <button type="submit" class="btn-p">Submit for Approval</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add NGO Modal -->
+<div class="modal-c" id="ngoModal">
+  <div class="modal-b">
+    <form method="post" action="{% url 'admin_ngos' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_ngo">
+      <div class="modal-head">
+        <h5>Add New NGO</h5>
+        <button type="button" class="act-btn" onclick="closeModal('ngoModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">NGO Name *</label><input type="text" name="ngo_name" class="f-input" required></div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Contact Person *</label><input type="text" name="contact_person" class="f-input" required></div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Email</label><input type="email" name="email" class="f-input"></div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Phone *</label><input type="text" name="phone" class="f-input" required></div>
+        <div><label class="f-label">Location / Address</label><input type="text" name="location" class="f-input"></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('ngoModal')">Cancel</button>
+        <button type="submit" class="btn-p">Add NGO</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+/* Small filter strip at the top of the donation list */
+.ngo-filter{display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:1.1rem 1.25rem;box-shadow:var(--shadow-xs);margin-bottom:1.5rem;}
+.ngo-filter .fg{flex:1;min-width:200px;}
+</style>
+
+<div class="ngo-filter" style="margin-top:-1rem;margin-bottom:1.5rem;">
+  <div class="fg">
+    <label class="f-label">Filter by Status</label>
+    <select class="f-input">
+      <option>All Statuses</option>
+      <option value="Approved">Approved</option>
+      <option value="Pending">Pending</option>
+      <option value="Collected">Collected</option>
+    </select>
+  </div>
+  <button class="btn-p"><i class="fa-solid fa-filter"></i> Filter</button>
+</div>
+{% endblock %}

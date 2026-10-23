@@ -1,0 +1,312 @@
+{% extends 'restaurant/staff/staff_base.html' %}
+{% block title %}NGO & Food Donation{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>NGO &amp; Food Donation</h1>
+    <p>Manage NGO partners, track donations and reduce food waste.</p>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <button type="button" class="btn-p" onclick="openModal('addDonationModal')"><i class="fa-solid fa-plus"></i> Log Donation</button>
+    <button type="button" class="btn-s" onclick="openModal('addNgoModal')"><i class="fa-solid fa-building"></i> Register NGO</button>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-hand-holding-heart"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Registered NGOs</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ active_count }}</div><div class="lbl">Active Partners</div></div></div>
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-bowl-rice"></i></div><div class="stat-info"><div class="num">{{ meals_served }}</div><div class="lbl">Meals Served</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-box"></i></div><div class="stat-info"><div class="num">{{ total_donations_count }}</div><div class="lbl">Donations Logged</div></div></div>
+</div>
+
+<!-- Donations -->
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-box me-2" style="color:var(--orange);"></i>Food Donation Logs</h5>
+    <button type="button" class="btn-s" onclick="openModal('addDonationModal')"><i class="fa-solid fa-plus"></i> New Donation</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>ID</th><th>Food Items</th><th>Type</th><th>Qty</th><th>Meals</th><th>Expiry</th><th>NGO</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for d in donations %}
+        <tr>
+          <td><b>#{{ d.id }}</b></td>
+          <td>{{ d.food_items }}</td>
+          <td>{{ d.get_food_type_display }}</td>
+          <td><b style="color:var(--orange);">{{ d.quantity_kg }} kg</b></td>
+          <td><b style="color:var(--green);">{{ d.meals_count }}</b></td>
+          <td>{% if d.expiry_date %}{{ d.expiry_date|date:"d-m-Y" }}{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+          <td>{% if d.ngo %}{{ d.ngo.name }}{% else %}<span style="color:var(--muted);">Unassigned</span>{% endif %}</td>
+          <td><span class="badge-status {% if d.status == 'approved' %}bs-orange{% elif d.status == 'collected' %}bs-blue{% elif d.status == 'completed' %}bs-green{% elif d.status == 'cancelled' %}bs-red{% else %}bs-yellow{% endif %}">{{ d.get_status_display }}</span></td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <button type="button" class="act-btn" title="Status" onclick="openUpdateDonationModal('{{ d.id }}','{{ d.status }}')"><i class="fa-solid fa-arrows-rotate"></i></button>
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete Food Donation #{{ d.id }}?');">
+                {% csrf_token %}<input type="hidden" name="action" value="delete_donation"><input type="hidden" name="donation_id" value="{{ d.id }}">
+                <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9"><div class="empty"><i class="fa-solid fa-box"></i><b>No donations logged yet</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- NGOs -->
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-building me-2" style="color:var(--orange);"></i>Registered NGO Partners</h5>
+    <button type="button" class="btn-s" onclick="openModal('addNgoModal')"><i class="fa-solid fa-plus"></i> Add NGO</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>#</th><th>NGO Name</th><th>Contact</th><th>Phone / Email</th><th>Preference</th><th>Meals Served</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for ngo in ngos %}
+        <tr>
+          <td><b>{{ forloop.counter }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ ngo.name|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ ngo.name }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">Joined {{ ngo.joined_at|date:"d-m-Y" }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ ngo.contact_person }}</td>
+          <td>
+            <div>{{ ngo.phone }}</div>
+            {% if ngo.email %}<small style="color:var(--blue);">{{ ngo.email }}</small>{% endif %}
+          </td>
+          <td>{{ ngo.food_preference|default:"Any Food" }}</td>
+          <td><b style="color:var(--orange);">{{ ngo.meals_served }}</b></td>
+          <td>{% if ngo.status == 'active' %}<span class="badge-status bs-green">Active</span>{% else %}<span class="badge-status bs-gray">Inactive</span>{% endif %}</td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <button type="button" class="act-btn" title="View" onclick="openViewNgoModal('{{ ngo.name|escapejs }}','{{ ngo.contact_person|escapejs }}','{{ ngo.phone|escapejs }}','{{ ngo.email|escapejs }}','{{ ngo.address|escapejs }}','{{ ngo.food_preference|escapejs }}','{{ ngo.meals_served }}','{{ ngo.get_status_display }}')"><i class="fa-solid fa-eye"></i></button>
+              <button type="button" class="act-btn" title="Edit" onclick="openEditNgoModal('{{ ngo.id }}','{{ ngo.name|escapejs }}','{{ ngo.contact_person|escapejs }}','{{ ngo.phone|escapejs }}','{{ ngo.email|escapejs }}','{{ ngo.address|escapejs }}','{{ ngo.food_preference|escapejs }}','{{ ngo.meals_served }}','{{ ngo.status }}')"><i class="fa-solid fa-pen-to-square"></i></button>
+              <form method="post" style="display:inline;">
+                {% csrf_token %}<input type="hidden" name="action" value="toggle_ngo"><input type="hidden" name="ngo_id" value="{{ ngo.id }}">
+                <button type="submit" class="act-btn" title="Toggle"><i class="fa-solid {% if ngo.status == 'active' %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i></button>
+              </form>
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete NGO Partner {{ ngo.name|escapejs }}?');">
+                {% csrf_token %}<input type="hidden" name="action" value="delete_ngo"><input type="hidden" name="ngo_id" value="{{ ngo.id }}">
+                <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-solid fa-building"></i><b>No NGO partners registered yet</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Donation -->
+<div class="modal-c" id="addDonationModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_donation">
+      <div class="modal-head"><h5><i class="fa-solid fa-hand-holding-heart me-2" style="color:var(--orange);"></i>Log Food Donation</h5><button type="button" class="act-btn" onclick="closeModal('addDonationModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">Food Items &amp; Description *</label><textarea name="food_items" rows="2" class="f-input" required></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Food Type</label>
+            <select name="food_type" class="f-input">
+              <option value="prepared">Prepared Food</option>
+              <option value="raw">Raw Ingredients</option>
+              <option value="packaged">Packaged Food</option>
+              <option value="beverages">Beverages</option>
+            </select>
+          </div>
+          <div><label class="f-label">Quantity (KG)</label><input type="number" step="0.1" name="quantity_kg" class="f-input" value="10"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Estimated Meals</label><input type="number" name="meals_count" class="f-input" value="25"></div>
+          <div><label class="f-label">Expiry Date</label><input type="date" name="expiry_date" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Assign NGO</label>
+            <select name="ngo_id" class="f-input">
+              <option value="">-- Optional --</option>
+              {% for ngo in ngos %}{% if ngo.status == 'active' %}<option value="{{ ngo.id }}">{{ ngo.name }}</option>{% endif %}{% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Initial Status</label>
+            <select name="status" class="f-input">
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="collected">Collected</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="f-label">Notes</label><input type="text" name="notes" class="f-input" placeholder="e.g. Ready for pickup by 8:00 PM"></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addDonationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add NGO -->
+<div class="modal-c" id="addNgoModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_ngo">
+      <div class="modal-head"><h5><i class="fa-solid fa-building me-2" style="color:var(--orange);"></i>Register NGO Partner</h5><button type="button" class="act-btn" onclick="closeModal('addNgoModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">NGO Name *</label><input type="text" name="name" class="f-input" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Contact Person *</label><input type="text" name="contact_person" class="f-input" required></div>
+          <div><label class="f-label">Phone *</label><input type="text" name="phone" class="f-input" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Email</label><input type="email" name="email" class="f-input"></div>
+          <div><label class="f-label">Food Preference</label><input type="text" name="food_preference" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Meals Served</label><input type="number" name="meals_served" value="0" class="f-input"></div>
+          <div>
+            <label class="f-label">Status</label>
+            <select name="status" class="f-input"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+          </div>
+        </div>
+        <div><label class="f-label">Address</label><textarea name="address" rows="2" class="f-input"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addNgoModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Register</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit NGO -->
+<div class="modal-c" id="editNgoModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit_ngo">
+      <input type="hidden" name="ngo_id" id="edit_ngo_id">
+      <div class="modal-head"><h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit NGO Partner</h5><button type="button" class="act-btn" onclick="closeModal('editNgoModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">NGO Name</label><input type="text" name="name" id="edit_ngo_name" class="f-input" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Contact Person</label><input type="text" name="contact_person" id="edit_ngo_contact" class="f-input" required></div>
+          <div><label class="f-label">Phone</label><input type="text" name="phone" id="edit_ngo_phone" class="f-input" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Email</label><input type="email" name="email" id="edit_ngo_email" class="f-input"></div>
+          <div><label class="f-label">Preference</label><input type="text" name="food_preference" id="edit_ngo_pref" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Meals Served</label><input type="number" name="meals_served" id="edit_ngo_meals" class="f-input"></div>
+          <div>
+            <label class="f-label">Status</label>
+            <select name="status" id="edit_ngo_status" class="f-input"><option value="active">Active</option><option value="inactive">Inactive</option></select>
+          </div>
+        </div>
+        <div><label class="f-label">Address</label><textarea name="address" id="edit_ngo_address" rows="2" class="f-input"></textarea></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editNgoModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View NGO -->
+<div class="modal-c" id="viewNgoModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-eye me-2" style="color:var(--orange);"></i>NGO Details</h5><button type="button" class="act-btn" onclick="closeModal('viewNgoModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div style="text-align:center;padding-bottom:1rem;border-bottom:1px solid var(--line);margin-bottom:1rem;">
+        <div class="td-avatar" style="width:60px;height:60px;font-size:1.5rem;border-radius:50%;margin:0 auto .5rem;" id="view_ngo_avatar">N</div>
+        <h3 style="margin:0 0 .35rem;font-size:1.2rem;" id="view_ngo_name">NGO</h3>
+        <span class="badge-status bs-green" id="view_ngo_status">Active</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;font-size:.85rem;">
+        <div><span class="f-label" style="margin:0;">Contact</span><b id="view_ngo_contact"></b></div>
+        <div><span class="f-label" style="margin:0;">Phone</span><b id="view_ngo_phone"></b></div>
+        <div><span class="f-label" style="margin:0;">Email</span><b id="view_ngo_email"></b></div>
+        <div><span class="f-label" style="margin:0;">Preference</span><b id="view_ngo_pref"></b></div>
+        <div><span class="f-label" style="margin:0;">Meals Served</span><b id="view_ngo_meals" style="color:var(--orange);"></b></div>
+        <div style="grid-column:1/-1;"><span class="f-label" style="margin:0;">Address</span><span id="view_ngo_address"></span></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn-s" onclick="closeModal('viewNgoModal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Update Donation Status -->
+<div class="modal-c" id="updateDonationStatusModal">
+  <div class="modal-b" style="max-width:440px;">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_donation_status">
+      <input type="hidden" name="donation_id" id="update_donation_id">
+      <div class="modal-head"><h5><i class="fa-solid fa-arrows-rotate me-2" style="color:var(--orange);"></i>Update Status</h5><button type="button" class="act-btn" onclick="closeModal('updateDonationStatusModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <label class="f-label">New Status</label>
+        <select name="status" id="update_donation_status_val" class="f-input">
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="collected">Collected</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('updateDonationStatusModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openEditNgoModal(id,name,contact,phone,email,address,pref,meals,status){
+  document.getElementById('edit_ngo_id').value=id;
+  document.getElementById('edit_ngo_name').value=name;
+  document.getElementById('edit_ngo_contact').value=contact;
+  document.getElementById('edit_ngo_phone').value=phone;
+  document.getElementById('edit_ngo_email').value=email;
+  document.getElementById('edit_ngo_address').value=address;
+  document.getElementById('edit_ngo_pref').value=pref;
+  document.getElementById('edit_ngo_meals').value=meals;
+  document.getElementById('edit_ngo_status').value=status;
+  openModal('editNgoModal');
+}
+function openViewNgoModal(name,contact,phone,email,address,pref,meals,status){
+  document.getElementById('view_ngo_avatar').innerText=name.charAt(0).toUpperCase();
+  document.getElementById('view_ngo_name').innerText=name;
+  document.getElementById('view_ngo_contact').innerText=contact||'—';
+  document.getElementById('view_ngo_phone').innerText=phone||'—';
+  document.getElementById('view_ngo_email').innerText=email||'—';
+  document.getElementById('view_ngo_address').innerText=address||'—';
+  document.getElementById('view_ngo_pref').innerText=pref||'Any Food';
+  document.getElementById('view_ngo_meals').innerText=meals||'0';
+  document.getElementById('view_ngo_status').innerText=status;
+  openModal('viewNgoModal');
+}
+function openUpdateDonationModal(id,current){ document.getElementById('update_donation_id').value=id; document.getElementById('update_donation_status_val').value=current; openModal('updateDonationStatusModal'); }
+</script>
+{% endblock %}

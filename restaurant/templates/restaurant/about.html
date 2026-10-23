@@ -1,0 +1,1048 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About TableServe — More Than Food, It's Our Journey</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ============================================================
+   DESIGN TOKENS — Reused from TableServe Home Page
+   ============================================================ */
+:root{
+  --orange:#FF7A00;
+  --orange-2:#FFA53B;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --red:#E5484D;
+  --red-soft:#FDECEC;
+  --blue:#3B82F6;
+  --blue-soft:#EAF2FE;
+  --ink:#151310;
+  --ink-soft:#2C2721;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius:20px;
+  --radius-lg:28px;
+  --radius-xl:36px;
+  --shadow-xs:0 4px 14px rgba(21,19,16,.05);
+  --shadow-sm:0 10px 30px rgba(21,19,16,.07);
+  --shadow-md:0 20px 50px rgba(21,19,16,.10);
+  --shadow-orange:0 18px 40px rgba(255,122,0,.30);
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand,.display{font-family:'Fredoka',sans-serif;font-weight:600;letter-spacing:-.01em;}
+p{color:var(--muted);line-height:1.75;}
+a{text-decoration:none;color:inherit;}
+img{max-width:100%;display:block;}
+
+.section-pad{padding:5.5rem 0;}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:.75rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--orange);background:var(--orange-soft);
+  padding:.42rem 1rem;border-radius:50px;margin-bottom:1rem;
+}
+.eyebrow::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--orange);}
+.section-title{font-size:clamp(1.8rem,3.5vw,2.6rem);line-height:1.2;margin-bottom:.75rem;}
+.section-sub{max-width:580px;margin:0 auto;color:var(--muted);}
+
+.text-gradient{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+
+.btn{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:600;border-radius:50px;
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  transition:.3s var(--ease);border:none;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;padding:.85rem 1.8rem;
+  box-shadow:var(--shadow-orange);
+  position:relative;overflow:hidden;
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 24px 50px rgba(255,122,0,.42);color:#fff;}
+.btn-ghost{
+  background:#fff;color:var(--ink);
+  border:1.5px solid var(--line);
+  padding:.82rem 1.6rem;box-shadow:var(--shadow-xs);
+}
+.btn-ghost:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-3px);}
+
+/* ============================================================
+   NAVBAR & HEADER
+   ============================================================ */
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.9rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(21,19,16,.07);
+  border-bottom:1px solid rgba(239,233,224,.8);
+}
+.nav{display:flex;align-items:center;gap:1rem;}
+.brand{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:1.35rem;font-weight:700;color:var(--ink);flex-shrink:0;
+}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;font-size:1.05rem;
+  box-shadow:0 10px 22px rgba(255,122,0,.35);
+  transition:.4s var(--ease);
+}
+.brand:hover .brand-mark{transform:rotate(-10deg) scale(1.06);}
+
+.nav-links{list-style:none;display:flex;align-items:center;gap:.25rem;margin:0 auto;padding:0;}
+.nav-links > li > a{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.5rem .85rem;border-radius:50px;
+  font-weight:700;font-size:.92rem;color:var(--ink-soft);
+  transition:.25s var(--ease);white-space:nowrap;
+}
+.nav-links > li > a i.nav-ic{
+  font-size:1rem;color:var(--ink-soft);
+  transition:.25s var(--ease);
+}
+.nav-links > li > a:hover{background:var(--orange-soft);color:var(--orange);}
+.nav-links > li > a:hover i.nav-ic{color:var(--orange);}
+.nav-links > li > a.active{background:var(--ink);color:#fff;}
+.nav-links > li > a.active i.nav-ic{color:#fff;}
+
+.nav-links .has-dropdown{position:relative;}
+.nav-links .has-dropdown > a{
+  display:inline-flex;align-items:center;gap:.45rem;cursor:pointer;
+}
+.nav-links .has-dropdown > a::after{
+  content:"\f078";font-family:"Font Awesome 6 Free";font-weight:900;
+  font-size:.6rem;transition:transform .3s var(--ease);
+  margin-left:.15rem;
+}
+.nav-links .has-dropdown:hover > a::after{transform:rotate(180deg);}
+.nav-links .has-dropdown:hover > a,
+.nav-links .has-dropdown.open > a{
+  background:var(--orange-soft);color:var(--orange);
+}
+.services-dropdown{
+  position:absolute;top:calc(100% + 10px);left:50%;
+  transform:translateX(-50%) translateY(-8px);
+  background:#fff;border-radius:16px;
+  box-shadow:0 20px 50px rgba(21,19,16,.14);
+  border:1px solid var(--line);
+  padding:.5rem;min-width:240px;
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:all .3s var(--ease);
+  z-index:1050;
+}
+.nav-links .has-dropdown:hover .services-dropdown{
+  opacity:1;visibility:visible;pointer-events:auto;
+  transform:translateX(-50%) translateY(0);
+}
+.services-dropdown a{
+  display:flex;align-items:center;gap:.85rem;
+  padding:.7rem .9rem;border-radius:12px;
+  font-size:.9rem;font-weight:600;color:var(--ink-soft);
+  transition:.25s var(--ease);white-space:nowrap;
+}
+.services-dropdown a i{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:.9rem;flex-shrink:0;
+  transition:.3s var(--ease);
+}
+.services-dropdown a:hover{
+  background:var(--orange-soft);color:var(--orange);
+  transform:translateX(4px);
+}
+.services-dropdown a:hover i{
+  background:var(--orange);color:#fff;
+  transform:scale(1.08) rotate(-6deg);
+}
+
+.nav-actions{display:flex;align-items:center;gap:.5rem;flex-shrink:0;}
+.icon-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:#fff;border:1.5px solid var(--line);
+  display:grid;place-items:center;color:var(--ink);
+  position:relative;cursor:pointer;transition:.28s var(--ease);
+}
+.icon-btn:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-2px);}
+.cart-badge{
+  position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;
+  padding:0 5px;border-radius:50px;
+  background:var(--orange);color:#fff;font-size:.65rem;font-weight:700;
+  display:grid;place-items:center;border:2px solid var(--cream);
+}
+.user-chip{
+  display:inline-flex;align-items:center;gap:.55rem;
+  background:#fff;border:1.5px solid var(--line);
+  padding:.35rem .85rem .35rem .35rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;cursor:pointer;
+  transition:.28s var(--ease);box-shadow:var(--shadow-xs);
+}
+.user-chip:hover{border-color:var(--orange);}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+  font-weight:700;font-size:.8rem;flex-shrink:0;
+}
+
+.login-btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:var(--ink);color:#fff;
+  padding:.6rem 1.2rem;border-radius:50px;
+  font-weight:600;font-size:.85rem;border:none;cursor:pointer;
+  transition:.28s var(--ease);
+}
+.login-btn:hover{background:var(--orange);color:#fff;transform:translateY(-2px);}
+.signup-btn{
+  display:inline-flex;align-items:center;gap:.45rem;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;padding:.6rem 1.3rem;border-radius:50px;
+  font-weight:700;font-size:.85rem;border:none;cursor:pointer;
+  transition:.28s var(--ease);box-shadow:0 8px 20px rgba(255,122,0,.28);
+}
+.signup-btn:hover{transform:translateY(-2px);color:#fff;}
+
+/* Dropdown reset */
+.dropdown-menu, .dropdown-menu ul, .dropdown-menu li {
+  list-style: none !important;
+  list-style-type: none !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+.dropdown-menu li::before, .dropdown-menu li::after {
+  content: none !important; display: none !important;
+}
+.dropdown-item {
+  display: flex !important; align-items: center !important; gap: .5rem !important;
+}
+.offcanvas:not(.show) {
+  display: none !important; visibility: hidden !important; pointer-events: none !important;
+}
+@media (min-width: 992px) {
+  #mobileMenu, .offcanvas-menu { display: none !important; visibility: hidden !important; }
+}
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+.about-hero{position:relative;padding:5rem 0 5.5rem;overflow:hidden;}
+.glow{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0;}
+.glow.a{width:520px;height:520px;background:#FFC98A;top:-180px;right:-140px;opacity:.65;}
+.glow.b{width:400px;height:400px;background:#FFE3C4;bottom:-160px;left:-140px;opacity:.75;}
+
+.about-visual{position:relative;display:grid;place-items:center;}
+.about-main-img{
+  width:100%;border-radius:var(--radius-xl);object-fit:cover;
+  box-shadow:var(--shadow-md);aspect-ratio:4/3;
+  border:4px solid #fff;
+}
+.about-blob{
+  position:absolute;left:-40px;top:-40px;width:240px;height:240px;
+  background:linear-gradient(135deg,var(--orange),#FFB347);
+  border-radius:44% 56% 58% 42%/48% 42% 58% 52%;
+  z-index:-1;opacity:.85;filter:blur(2px);
+}
+.about-badge-card{
+  position:absolute;right:-15px;bottom:-15px;
+  background:#fff;border-radius:var(--radius);padding:.9rem 1.25rem;
+  box-shadow:var(--shadow-md);display:flex;align-items:center;gap:.9rem;
+  border:1px solid var(--line);z-index:3;
+}
+.about-badge-card i{
+  font-size:1.8rem;color:var(--orange);
+}
+.about-badge-card .num{
+  font-family:'Fredoka',sans-serif;font-size:1.25rem;font-weight:700;color:var(--ink);
+  line-height:1.1;
+}
+.about-badge-card small{font-size:.75rem;color:var(--muted);font-weight:600;}
+
+/* ============================================================
+   CHECKLIST
+   ============================================================ */
+.check-list{list-style:none;padding:0;margin:1.4rem 0 0;}
+.check-list li{
+  display:flex;align-items:center;gap:.75rem;
+  font-weight:600;font-size:.95rem;margin-bottom:.85rem;color:var(--ink-soft);
+}
+.check-list i{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  background:var(--green-soft);color:var(--green);
+  display:grid;place-items:center;font-size:.72rem;
+}
+
+/* ============================================================
+   OUR JOURNEY — TIMELINE SECTION
+   ============================================================ */
+.timeline-section{position:relative;background:#fff;}
+.timeline-container{
+  position:relative;max-width:960px;margin:3rem auto 0;padding:2rem 0;
+}
+.timeline-container::before{
+  content:"";position:absolute;top:0;bottom:0;left:50%;width:3px;
+  background:linear-gradient(180deg,var(--orange-soft) 0%,var(--orange) 20%,var(--orange) 80%,var(--orange-soft) 100%);
+  transform:translateX(-50%);border-radius:3px;
+}
+
+.timeline-item{
+  position:relative;margin-bottom:3rem;width:50%;padding:0 2.5rem;
+}
+.timeline-item.left{left:0;text-align:right;}
+.timeline-item.right{left:50%;text-align:left;}
+
+.timeline-marker{
+  position:absolute;top:15px;width:44px;height:44px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;display:grid;place-items:center;font-weight:700;
+  font-size:.88rem;font-family:'Fredoka',sans-serif;
+  box-shadow:0 8px 20px rgba(255,122,0,.35);
+  border:4px solid #fff;z-index:2;
+  transition:transform .3s var(--ease);
+}
+.timeline-item.left .timeline-marker{right:-22px;}
+.timeline-item.right .timeline-marker{left:-22px;}
+.timeline-item:hover .timeline-marker{transform:scale(1.15) rotate(10deg);}
+
+.timeline-card{
+  background:var(--cream);border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:1.6rem 1.8rem;
+  box-shadow:var(--shadow-xs);transition:.35s var(--ease);
+  position:relative;
+}
+.timeline-card:hover{
+  border-color:var(--orange);transform:translateY(-5px);
+  box-shadow:var(--shadow-sm);background:#fff;
+}
+.timeline-year{
+  font-family:'Fredoka',sans-serif;font-size:1.6rem;font-weight:700;
+  color:var(--orange);line-height:1;margin-bottom:.3rem;
+}
+.timeline-tag{
+  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-soft);margin-bottom:.6rem;display:block;
+}
+.timeline-card p{font-size:.88rem;margin:0;line-height:1.6;}
+
+/* ============================================================
+   OUR MISSION — HIGHLIGHT BANNER
+   ============================================================ */
+.mission-banner{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  border-radius:var(--radius-xl);padding:4rem 3rem;color:#fff;
+  position:relative;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.mission-banner h2{color:#fff;font-size:clamp(1.8rem,3.2vw,2.5rem);margin-bottom:1rem;}
+.mission-banner p{color:rgba(255,255,255,.75);font-size:1.05rem;max-width:680px;margin:0 auto 2rem;}
+.mission-banner::before{
+  content:"";position:absolute;width:450px;height:450px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,0,.45),transparent 68%);
+  right:-140px;top:-160px;pointer-events:none;
+}
+.mission-banner::after{
+  content:"";position:absolute;width:300px;height:300px;border-radius:50%;
+  border:1.5px dashed rgba(255,255,255,.14);
+  left:-90px;bottom:-140px;pointer-events:none;
+}
+.mission-inner{position:relative;z-index:2;}
+
+/* ============================================================
+   BELIEF / VALUES CARDS
+   ============================================================ */
+.belief-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2rem 1.6rem;
+  height:100%;transition:.35s var(--ease);
+  box-shadow:var(--shadow-xs);position:relative;overflow:hidden;
+}
+.belief-card:hover{
+  border-color:var(--orange);transform:translateY(-8px);
+  box-shadow:var(--shadow-sm);
+}
+.belief-card .b-icon{
+  width:58px;height:58px;border-radius:18px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:1.35rem;
+  margin-bottom:1.2rem;transition:.35s var(--ease);
+}
+.belief-card:hover .b-icon{
+  background:var(--orange);color:#fff;
+  transform:scale(1.08) rotate(-6deg);
+}
+.belief-card h5{font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--ink);}
+.belief-card p{font-size:.88rem;color:var(--muted);margin:0;}
+
+/* ============================================================
+   STATS SECTION
+   ============================================================ */
+.stat-box{
+  background:var(--cream);border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:1.8rem 1.2rem;
+  text-align:center;transition:.3s var(--ease);height:100%;
+}
+.stat-box:hover{
+  border-color:var(--orange);transform:translateY(-4px);
+  box-shadow:var(--shadow-xs);background:#fff;
+}
+.stat-box .num{
+  font-family:'Fredoka',sans-serif;font-size:2.2rem;font-weight:700;
+  color:var(--orange);line-height:1.1;
+}
+.stat-box small{
+  font-size:.82rem;font-weight:700;color:var(--ink-soft);
+  display:block;margin-top:.4rem;
+}
+
+/* ============================================================
+   OUR PEOPLE / TEAM SECTION
+   ============================================================ */
+.team-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);overflow:hidden;
+  box-shadow:var(--shadow-xs);transition:.35s var(--ease);
+  height:100%;
+}
+.team-card:hover{
+  border-color:var(--orange);transform:translateY(-8px);
+  box-shadow:var(--shadow-sm);
+}
+.team-card .img-wrap{
+  aspect-ratio:4/3;overflow:hidden;position:relative;background:#FFF6EC;
+}
+.team-card img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease);}
+.team-card:hover img{transform:scale(1.08);}
+.team-card .body{padding:1.4rem 1.3rem;text-align:center;}
+.team-card h5{font-size:1.15rem;font-weight:700;margin-bottom:.3rem;color:var(--ink);}
+.team-card p{font-size:.82rem;color:var(--orange);font-weight:600;margin:0;}
+
+/* ============================================================
+   FINAL CTA BANNER
+   ============================================================ */
+.cta-banner{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  border-radius:var(--radius-xl);padding:3.5rem 2.5rem;color:#fff;
+  position:relative;overflow:hidden;box-shadow:var(--shadow-md);
+}
+.cta-banner h2{color:#fff;font-size:clamp(1.6rem,3.2vw,2.4rem);}
+.cta-banner p{color:rgba(255,255,255,.7);margin-bottom:0;font-size:1rem;}
+.cta-banner::before{
+  content:"";position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,122,0,.5),transparent 68%);
+  right:-140px;top:-160px;pointer-events:none;
+}
+.cta-inner{position:relative;z-index:2;}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer{background:#fff;border-top:1px solid var(--line);padding:3.5rem 0 0;margin-top:2rem;}
+.footer-title{font-family:'Fredoka',sans-serif;font-size:.98rem;font-weight:600;margin-bottom:1rem;}
+.footer-links{list-style:none;padding:0;margin:0;}
+.footer-links li{margin-bottom:.6rem;}
+.footer-links a{
+  color:var(--muted);font-size:.86rem;font-weight:500;transition:.25s;
+  display:inline-flex;align-items:center;gap:.5rem;
+}
+.footer-links a:hover{color:var(--orange);transform:translateX(4px);}
+.social{
+  width:38px;height:38px;border-radius:13px;background:var(--cream);
+  border:1px solid var(--line);display:grid;place-items:center;
+  color:var(--ink);font-size:.88rem;transition:.3s var(--ease);
+}
+.social:hover{background:var(--orange);color:#fff;border-color:var(--orange);transform:translateY(-4px);}
+.footer-bottom{
+  border-top:1px solid var(--line);margin-top:2.5rem;padding:1.4rem 0;
+  font-size:.82rem;color:var(--muted);
+}
+
+/* ============================================================
+   RESPONSIVE MEDIA QUERIES
+   ============================================================ */
+@media (max-width: 991px){
+  .timeline-container::before{left:24px;}
+  .timeline-item{width:100%;padding-left:4rem;padding-right:0;}
+  .timeline-item.left, .timeline-item.right{left:0;text-align:left;}
+  .timeline-item.left .timeline-marker, .timeline-item.right .timeline-marker{left:2px;right:auto;}
+  .mission-banner{padding:3rem 1.75rem;}
+  .cta-banner{padding:2.5rem 1.5rem;}
+  .about-badge-card{right:0;bottom:-14px;}
+}
+@media (max-width: 575px){
+  .timeline-container::before{left:18px;}
+  .timeline-item{padding-left:3.2rem;}
+  .timeline-marker{width:36px;height:36px;font-size:.78rem;left:0;}
+  .timeline-card{padding:1.2rem 1.3rem;}
+  .timeline-year{font-size:1.35rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= NAVBAR ================= -->
+<header class="nav-wrap" id="navWrap">
+  <nav class="container nav">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span>
+      TableServe
+    </a>
+
+    <ul class="nav-links d-none d-lg-flex" id="navLinks">
+      <li>
+        <a href="{% url 'home' %}">
+          <i class="fa-solid fa-house nav-ic"></i>
+          <span>Home</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-circle-user nav-ic"></i>
+          <span>Account</span>
+        </a>
+      </li>
+
+      <li class="has-dropdown">
+        <a href="javascript:void(0)">
+          <i class="fa-solid fa-bell-concierge nav-ic"></i>
+          <span>Services</span>
+        </a>
+        <div class="services-dropdown">
+          <a href="{% url 'food_order_view' %}">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Food Order</span>
+          </a>
+          <a href="{% url 'table_booking_view' %}">
+            <i class="fa-solid fa-chair"></i>
+            <span>Table Booking</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'my_bookings' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-calendar-check nav-ic"></i>
+          <span>My Bookings</span>
+        </a>
+      </li>
+
+      <li>
+        <a href="{% if user.is_authenticated %}{% url 'my_orders' %}{% else %}{% url 'login' %}{% endif %}">
+          <i class="fa-solid fa-bag-shopping nav-ic"></i>
+          <span>My Orders</span>
+        </a>
+      </li>
+
+      <li>
+        <a class="active" href="{% url 'about' %}">
+          <i class="fa-solid fa-circle-info nav-ic"></i>
+          <span>About</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="nav-actions ms-auto ms-lg-0">
+      <a href="{% url 'cart_view' %}" class="icon-btn" aria-label="Open cart" style="text-decoration:none;">
+        <i class="fa-solid fa-bag-shopping"></i>
+        <span class="cart-badge" id="cartCount">{% if cart_count %}{{ cart_count }}{% else %}0{% endif %}</span>
+      </a>
+
+      {% if user.is_authenticated %}
+        <div class="dropdown">
+          <button class="user-chip" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="user-avatar">
+              {% if user.first_name %}{{ user.first_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
+            </span>
+            <span class="u-name">
+              {% if user.first_name %}{{ user.first_name }}{% else %}{{ user.username }}{% endif %}
+            </span>
+            <i class="fa-solid fa-chevron-down" style="font-size:.65rem;color:var(--muted)"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="list-style:none!important;margin:0;padding:.4rem!important;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow-md);min-width:220px;">
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'customer_profile' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-regular fa-user me-2"></i>My Account</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'my_bookings' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-regular fa-calendar me-2"></i>My Bookings</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'my_orders' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;"><i class="fa-solid fa-bag-shopping me-2"></i>My Orders</a></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><hr class="dropdown-divider" style="margin:.3rem 0;"></li>
+            <li style="list-style:none!important;margin:0;padding:0;"><a class="dropdown-item" href="{% url 'logout' %}" style="border-radius:10px;font-size:.88rem;padding:.5rem .8rem;color:var(--red);"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <a href="{% url 'login' %}" class="login-btn">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </a>
+        <a href="{% url 'register' %}" class="signup-btn d-none d-md-inline-flex">
+          <i class="fa-solid fa-user-plus"></i> Sign Up
+        </a>
+      {% endif %}
+
+      <button class="icon-btn d-lg-none" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-label="Menu">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+
+<!-- ================= MOBILE MENU ================= -->
+<div class="offcanvas offcanvas-end offcanvas-menu" tabindex="-1" id="mobileMenu">
+  <div class="offcanvas-header">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <a class="m-link" href="{% url 'home' %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-house me-2" style="color:var(--orange);"></i>Home</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-circle-user me-2" style="color:var(--orange);"></i>Account</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link sub" href="{% url 'food_order_view' %}" data-bs-dismiss="offcanvas">
+      <span class="d-flex align-items-center"><i class="fa-solid fa-utensils me-2"></i> Food Order</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link sub" href="{% url 'table_booking_view' %}" data-bs-dismiss="offcanvas">
+      <span class="d-flex align-items-center"><i class="fa-solid fa-chair me-2"></i> Table Booking</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'my_bookings' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-calendar-check me-2" style="color:var(--orange);"></i>My Bookings</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% if user.is_authenticated %}{% url 'my_orders' %}{% else %}{% url 'login' %}{% endif %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-bag-shopping me-2" style="color:var(--orange);"></i>My Orders</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    <a class="m-link" href="{% url 'about' %}" data-bs-dismiss="offcanvas">
+      <span><i class="fa-solid fa-circle-info me-2" style="color:var(--orange);"></i>About</span>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+    {% if user.is_authenticated %}
+      <a class="btn btn-primary w-100 mt-4" href="{% url 'logout' %}" data-bs-dismiss="offcanvas">
+        <span>Logout</span><i class="fa-solid fa-right-from-bracket"></i>
+      </a>
+    {% else %}
+      <div class="d-flex gap-2 mt-4">
+        <a href="{% url 'login' %}" class="btn btn-ghost flex-fill" data-bs-dismiss="offcanvas">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </a>
+        <a href="{% url 'register' %}" class="btn btn-primary flex-fill" data-bs-dismiss="offcanvas">
+          <span>Sign Up</span><i class="fa-solid fa-user-plus"></i>
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ================= HERO SECTION ================= -->
+<section class="about-hero">
+  <div class="glow a"></div>
+  <div class="glow b"></div>
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <span class="eyebrow"><i class="fa-solid fa-heart me-1"></i>OUR STORY</span>
+        <h1 class="section-title fw-bold">More Than Food, <br><span class="text-gradient">It's Our Journey</span></h1>
+        <p class="lead" style="font-size:1.08rem;color:var(--muted);margin-bottom:1.8rem;">
+          From a simple idea to a modern dining experience, TableServe is built around fresh food, warm hospitality and smarter restaurant experiences.
+        </p>
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+          <a href="{% url 'table_booking_view' %}" class="btn btn-primary">
+            <span>Book a Table</span><i class="fa-solid fa-arrow-right"></i>
+          </a>
+          <a href="{% url 'home' %}#menu" class="btn btn-ghost">
+            <i class="fa-solid fa-utensils"></i> Explore Menu
+          </a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="about-visual">
+          <div class="about-blob"></div>
+          <img class="about-main-img" src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&q=80" alt="TableServe Restaurant Experience">
+          <div class="about-badge-card">
+            <i class="fa-solid fa-award"></i>
+            <div>
+              <div class="num">Serving Happiness</div>
+              <small>Since 2018</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 1: OUR STORY ================= -->
+<section class="section-pad" style="background:#fff;">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-6">
+        <div class="position-relative">
+          <img class="rounded-4 shadow-sm w-100" style="aspect-ratio:4/3;object-fit:cover;border:3px solid var(--line);" src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&q=80" alt="TableServe Interior">
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <span class="eyebrow">OUR STORY</span>
+        <h2 class="section-title">A Table for Everyone, a Meal for Every Moment</h2>
+        <p>
+          TableServe started with the goal of creating a comfortable restaurant experience where customers can enjoy fresh vegetarian food, easy table booking and seamless ordering. We combine traditional warm hospitality with modern digital technology to make every visit memorable.
+        </p>
+        <ul class="check-list">
+          <li><i class="fa-solid fa-check"></i> Fresh and quality ingredients</li>
+          <li><i class="fa-solid fa-check"></i> Customer-first service</li>
+          <li><i class="fa-solid fa-check"></i> Smart and simple dining experience</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 2: OUR JOURNEY (TIMELINE) ================= -->
+<section class="section-pad timeline-section">
+  <div class="container">
+    <div class="text-center mb-4">
+      <span class="eyebrow">MILESTONES</span>
+      <h2 class="section-title">Our Journey</h2>
+      <p class="section-sub">From a small dream to a modern vegetarian dining destination</p>
+    </div>
+
+    <div class="timeline-container">
+      <!-- 2018 -->
+      <div class="timeline-item left">
+        <div class="timeline-marker">18</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2018</div>
+          <span class="timeline-tag">THE BEGINNING</span>
+          <p>TableServe started with a simple idea — to create a fresh, welcoming and quality-focused vegetarian dining experience.</p>
+        </div>
+      </div>
+
+      <!-- 2019 -->
+      <div class="timeline-item right">
+        <div class="timeline-marker">19</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2019</div>
+          <span class="timeline-tag">OUR FIRST RESTAURANT</span>
+          <p>We opened our first restaurant and welcomed our first guests.</p>
+        </div>
+      </div>
+
+      <!-- 2021 -->
+      <div class="timeline-item left">
+        <div class="timeline-marker">21</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2021</div>
+          <span class="timeline-tag">DIGITAL ORDERING</span>
+          <p>We introduced digital ordering to make the customer experience faster and easier.</p>
+        </div>
+      </div>
+
+      <!-- 2023 -->
+      <div class="timeline-item right">
+        <div class="timeline-marker">23</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2023</div>
+          <span class="timeline-tag">QR TABLE ORDERING</span>
+          <p>We introduced QR-based table ordering and instant table confirmation.</p>
+        </div>
+      </div>
+
+      <!-- 2024 -->
+      <div class="timeline-item left">
+        <div class="timeline-marker">24</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2024</div>
+          <span class="timeline-tag">GROWING COMMUNITY</span>
+          <p>Our customer community continued to grow with thousands of happy guests.</p>
+        </div>
+      </div>
+
+      <!-- 2025 -->
+      <div class="timeline-item right">
+        <div class="timeline-marker">25</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2025</div>
+          <span class="timeline-tag">SMART RESTAURANT EXPERIENCE</span>
+          <p>We connected booking, ordering, kitchen and staff operations through a smarter restaurant management system.</p>
+        </div>
+      </div>
+
+      <!-- 2026 -->
+      <div class="timeline-item left">
+        <div class="timeline-marker">26</div>
+        <div class="timeline-card">
+          <div class="timeline-year">2026</div>
+          <span class="timeline-tag">TABLESERVE TODAY</span>
+          <p>Today, TableServe combines great food, technology and warm hospitality to create a complete dining experience.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 3: OUR MISSION ================= -->
+<section class="section-pad pt-0" style="background:#fff;">
+  <div class="container">
+    <div class="mission-banner text-center">
+      <div class="mission-inner">
+        <span class="eyebrow" style="background:rgba(255,122,0,.2);color:#FFA53B;">OUR MISSION</span>
+        <h2>Making Every Table a Place Worth Remembering</h2>
+        <p>Our mission is to serve fresh vegetarian food, provide warm hospitality and use smart technology to make every restaurant visit simple, comfortable and memorable.</p>
+        <a href="{% url 'table_booking_view' %}" class="btn btn-primary">
+          <span>Book a Table</span><i class="fa-solid fa-calendar-check ms-1"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 4: WHAT WE BELIEVE IN ================= -->
+<section class="section-pad">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">OUR VALUES</span>
+      <h2 class="section-title">What We Believe In</h2>
+      <p class="section-sub">Four core principles that guide our kitchen, service and technology</p>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="belief-card">
+          <div class="b-icon"><i class="fa-solid fa-leaf"></i></div>
+          <h5>100% Pure Veg</h5>
+          <p>Fresh, flavorful and carefully prepared vegetarian food.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="belief-card">
+          <div class="b-icon"><i class="fa-solid fa-heart"></i></div>
+          <h5>Customer First</h5>
+          <p>Every decision starts with creating a better guest experience.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="belief-card">
+          <div class="b-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+          <h5>Smart Technology</h5>
+          <p>Technology that makes booking, ordering and dining simpler.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-3">
+        <div class="belief-card">
+          <div class="b-icon"><i class="fa-solid fa-shield-halved"></i></div>
+          <h5>Quality &amp; Freshness</h5>
+          <p>We care about ingredients, preparation and consistency.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 5: TABLESERVE TODAY (STATS) ================= -->
+<section class="section-pad" style="background:#fff;">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">BY THE NUMBERS</span>
+      <h2 class="section-title">TableServe Today</h2>
+      <p class="section-sub">Today, TableServe continues to grow with the same passion that started the journey — great food, happy guests and meaningful dining experiences.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      <div class="col-6 col-lg-3">
+        <div class="stat-box">
+          <div class="num">12K+</div>
+          <small>Happy Guests</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-box">
+          <div class="num">4.9★</div>
+          <small>Average Rating</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-box">
+          <div class="num">100%</div>
+          <small>Pure Veg</small>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <div class="stat-box">
+          <div class="num">Instant</div>
+          <small>Confirmation</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SECTION 6: OUR PEOPLE ================= -->
+<section class="section-pad">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">OUR TEAM</span>
+      <h2 class="section-title">People Behind the Table</h2>
+      <p class="section-sub">From our chefs and kitchen team to our service staff and management team, every member plays an important role in creating the TableServe experience.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="team-card">
+          <div class="img-wrap">
+            <img src="https://images.unsplash.com/photo-1577219491135-ce391730fb2c?w=600&q=80" alt="Our Chefs">
+          </div>
+          <div class="body">
+            <h5>Our Chefs</h5>
+            <p>Culinary Masters &amp; Recipe Creators</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="team-card">
+          <div class="img-wrap">
+            <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=600&q=80" alt="Service Team">
+          </div>
+          <div class="body">
+            <h5>Service Team</h5>
+            <p>Hospitality &amp; Guest Experience</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="team-card">
+          <div class="img-wrap">
+            <img src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=600&q=80" alt="Kitchen Team">
+          </div>
+          <div class="body">
+            <h5>Kitchen Team</h5>
+            <p>Fresh Prep &amp; Station Experts</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="team-card">
+          <div class="img-wrap">
+            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&q=80" alt="Management Team">
+          </div>
+          <div class="body">
+            <h5>Management Team</h5>
+            <p>Operations &amp; Hospitality Managers</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA BANNER ================= -->
+<section class="section-pad pt-0">
+  <div class="container">
+    <div class="cta-banner">
+      <div class="cta-inner row align-items-center g-4">
+        <div class="col-lg-7">
+          <h2 class="mb-2">Your Table Is Waiting</h2>
+          <p>Come experience the TableServe journey with great food, warm hospitality and a smarter dining experience.</p>
+        </div>
+        <div class="col-lg-5 text-lg-end">
+          <div class="d-flex flex-wrap gap-3 justify-content-lg-end">
+            <a href="{% url 'table_booking_view' %}" class="btn btn-primary">
+              <span>Book a Table</span><i class="fa-solid fa-calendar-check"></i>
+            </a>
+            <a href="{% url 'home' %}#menu" class="btn btn-ghost" style="background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2);">
+              <i class="fa-solid fa-utensils"></i> Explore Menu
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FOOTER ================= -->
+<footer>
+  <div class="container">
+    <div class="row g-4 g-lg-5">
+      <div class="col-lg-4">
+        <a class="brand mb-3" href="{% url 'home' %}">
+          <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+        </a>
+        <p style="max-width:320px;font-size:.9rem;">Book a table or order fresh vegetarian meals — TableServe brings the restaurant experience to you.</p>
+        <div class="d-flex gap-2 mt-3">
+          <a href="#" class="social" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
+          <a href="#" class="social" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="social" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" class="social" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">Explore</h6>
+        <ul class="footer-links">
+          <li><a href="{% url 'home' %}">Home</a></li>
+          <li><a href="{% url 'home' %}#services">Services</a></li>
+          <li><a href="{% url 'home' %}#menu">Menu</a></li>
+          <li><a href="{% url 'about' %}">About Us</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="footer-title">My Account</h6>
+        <ul class="footer-links">
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'my_bookings' %}">My Bookings</a></li>
+            <li><a href="{% url 'my_orders' %}">My Orders</a></li>
+            <li><a href="{% url 'customer_profile' %}">Profile</a></li>
+            <li><a href="{% url 'logout' %}">Logout</a></li>
+          {% else %}
+            <li><a href="{% url 'login' %}">Login</a></li>
+            <li><a href="{% url 'register' %}">Sign Up</a></li>
+            <li><a href="{% url 'home' %}#menu">Browse Menu</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      <div class="col-lg-4">
+        <h6 class="footer-title">Get in touch</h6>
+        <ul class="footer-links">
+          <li><a href="#"><i class="fa-solid fa-location-dot" style="color:var(--orange)"></i> 18 Kitchen St, Ahmedabad</a></li>
+          <li><a href="tel:+919876543210"><i class="fa-solid fa-phone" style="color:var(--orange)"></i> +91 98765 43210</a></li>
+          <li><a href="mailto:hello@tableserve.com"><i class="fa-solid fa-envelope" style="color:var(--orange)"></i> hello@tableserve.com</a></li>
+          <li><a href="#"><i class="fa-regular fa-clock" style="color:var(--orange)"></i> Mon–Sun · 7am – 11pm</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom d-flex flex-wrap justify-content-between gap-2">
+      <span>&copy; 2026 TableServe. All rights reserved.</span>
+      <span>Made with <i class="fa-solid fa-heart" style="color:var(--orange)"></i> for food lovers</span>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

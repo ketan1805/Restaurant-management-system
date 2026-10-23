@@ -1,0 +1,323 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Reservations Management{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Reservations Management</h1>
+    <p>Manage table bookings, lifecycle states and guests.</p>
+  </div>
+  {% if is_manager_or_oh %}
+  <button type="button" class="btn-p" onclick="openModal('addReservationModal')"><i class="fa-solid fa-plus"></i> Add Reservation</button>
+  {% endif %}
+</div>
+
+<div class="stat-row" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Total</div></div></div>
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-hourglass-half"></i></div><div class="stat-info"><div class="num">{{ pending_count }}</div><div class="lbl">Pending</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ confirmed_count }}</div><div class="lbl">Confirmed</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-person-walking"></i></div><div class="stat-info"><div class="num">{{ arrived_count }}</div><div class="lbl">Arrived</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-chair"></i></div><div class="stat-info"><div class="num">{{ seated_count }}</div><div class="lbl">Seated</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-flag-checkered"></i></div><div class="stat-info"><div class="num">{{ completed_count }}</div><div class="lbl">Completed</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-xmark"></i></div><div class="stat-info"><div class="num">{{ cancelled_count }}</div><div class="lbl">Cancelled</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-user-slash"></i></div><div class="stat-info"><div class="num">{{ no_show_count }}</div><div class="lbl">No Show</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Filters</h5></div>
+  <div class="card-body">
+    <form method="GET" action="{% url 'staff:table_reservations' %}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div>
+        <label class="f-label">Date</label>
+        <select name="date" class="f-input">
+          <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+          <option value="yesterday" {% if date_filter == 'yesterday' %}selected{% endif %}>Yesterday</option>
+          <option value="this_week" {% if date_filter == 'this_week' %}selected{% endif %}>This Week</option>
+          <option value="this_month" {% if date_filter == 'this_month' %}selected{% endif %}>This Month</option>
+          <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Status</label>
+        <select name="status" class="f-input">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+          <option value="arrived" {% if status_filter == 'arrived' %}selected{% endif %}>Arrived</option>
+          <option value="seated" {% if status_filter == 'seated' %}selected{% endif %}>Seated</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+          <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+          <option value="no_show" {% if status_filter == 'no_show' %}selected{% endif %}>No Show</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Table</label>
+        <select name="table" class="f-input">
+          <option value="all" {% if table_filter == 'all' %}selected{% endif %}>All Tables</option>
+          {% for t in all_tables %}<option value="{{ t.id }}" {% if table_filter == t.id|stringformat:"s" %}selected{% endif %}>Table {{ t.number }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Search</label>
+        <input type="text" name="search" value="{{ search_query }}" placeholder="Name / phone / ID" class="f-input">
+      </div>
+      <div style="display:flex;gap:.5rem;grid-column:1/-1;">
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Apply</button>
+        <a href="{% url 'staff:table_reservations' %}" class="btn-s"><i class="fa-solid fa-rotate"></i> Reset</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-list me-2" style="color:var(--orange);"></i>Reservations</h5>
+    <span class="sub">{{ reservations|length }} booking{{ reservations|length|pluralize }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Customer</th><th>Date &amp; Time</th><th>Guests</th><th>Table</th><th>Pre-Order</th><th>Waiter</th><th>Status</th>
+          {% if is_manager_or_oh %}<th style="text-align:right;">Actions</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in reservations %}
+        <tr>
+          <td>
+            <div style="font-weight:700;color:var(--ink);">{{ r.name }}</div>
+            <small style="color:var(--muted);">{{ r.phone|default:"—" }}</small>
+          </td>
+          <td>
+            <div><b>{{ r.date|date:"d M Y" }}</b></div>
+            <small style="color:var(--blue);font-weight:700;">{{ r.time|time:"g:i A" }}</small>
+          </td>
+          <td><span class="badge-status bs-blue">{{ r.guests }} guests</span></td>
+          <td>{% if r.table %}<span class="badge-status bs-orange">Table {{ r.table.number }}</span>{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+          <td>
+            {% if r.pre_order_selected %}
+              <span class="badge-status bs-green" style="font-size:.78rem;">Yes (₹{{ r.pre_order_amount }})</span>
+            {% else %}
+              <span class="badge-status" style="background:#e5e7eb;color:#374151;font-size:.78rem;">No</span>
+            {% endif %}
+          </td>
+          <td>{% if r.assigned_waiter %}{{ r.assigned_waiter.get_full_name|default:r.assigned_waiter.username }}{% else %}<span style="color:var(--muted);">Unassigned</span>{% endif %}</td>
+          <td>
+            <span class="badge-status {% if r.status == 'pending' %}bs-yellow{% elif r.status == 'confirmed' %}bs-green{% elif r.status == 'arrived' %}bs-purple{% elif r.status == 'seated' %}bs-orange{% elif r.status == 'completed' %}bs-blue{% else %}bs-red{% endif %}">
+              {{ r.get_status_display|default:r.status }}
+            </span>
+          </td>
+          {% if is_manager_or_oh %}
+          <td>
+            <div class="act" style="justify-content:flex-end;flex-wrap:wrap;">
+              <button type="button" class="act-btn" title="View" onclick="openViewModal('{{ r.id }}','{{ r.name|escapejs }}','{{ r.phone|escapejs }}','{{ r.email|escapejs }}','{{ r.date|date:"Y-m-d" }}','{{ r.time|time:"H:i" }}','{{ r.guests }}','{{ r.table.number|default:"—" }}','{% if r.assigned_waiter %}{{ r.assigned_waiter.get_full_name|default:r.assigned_waiter.username|escapejs }}{% else %}Unassigned{% endif %}','{{ r.status }}','{{ r.reservation_type }}','{{ r.cancellation_date|date:"d M Y, g:i A" }}','{{ r.cancellation_reason|escapejs }}','{{ r.refund_amount|floatformat:2 }}','{{ r.get_refund_status_display }}','{{ r.razorpay_refund_id|escapejs }}')"><i class="fa-solid fa-eye"></i></button>
+              <button type="button" class="act-btn" title="Edit" onclick="openEditModal('{{ r.id }}','{{ r.name|escapejs }}','{{ r.phone|escapejs }}','{{ r.email|escapejs }}','{{ r.date|date:"Y-m-d" }}','{{ r.time|time:"H:i" }}','{{ r.guests }}','{{ r.table.id|default:"" }}','{{ r.assigned_waiter.id|default:"" }}','{{ r.status }}','{{ r.reservation_type }}')"><i class="fa-solid fa-pen-to-square"></i></button>
+
+              {% if r.status == 'pending' %}
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="confirm"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn success" title="Confirm"><i class="fa-solid fa-check"></i></button></form>
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="reject"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn danger" title="Reject"><i class="fa-solid fa-xmark"></i></button></form>
+              {% elif r.status == 'confirmed' %}
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="mark_arrived"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn" title="Arrived"><i class="fa-solid fa-person-walking"></i></button></form>
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="seat_table"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn success" title="Seat"><i class="fa-solid fa-chair"></i></button></form>
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="no_show"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn danger" title="No Show"><i class="fa-solid fa-user-slash"></i></button></form>
+              {% elif r.status == 'arrived' %}
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="seat_table"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn success" title="Seat"><i class="fa-solid fa-chair"></i></button></form>
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="no_show"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn danger" title="No Show"><i class="fa-solid fa-user-slash"></i></button></form>
+              {% elif r.status == 'seated' %}
+                <form method="POST" style="display:inline;">{% csrf_token %}<input type="hidden" name="action" value="complete"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn success" title="Complete"><i class="fa-solid fa-flag-checkered"></i></button></form>
+              {% else %}
+                <form method="POST" style="display:inline;" onsubmit="return confirm('Delete reservation {{ r.name }}?');">{% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="reservation_id" value="{{ r.id }}"><button type="submit" class="act-btn danger" title="Delete"><i class="fa-solid fa-trash-can"></i></button></form>
+              {% endif %}
+            </div>
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-regular fa-calendar"></i><b>No Reservations Found</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if is_manager_or_oh %}
+<!-- Add -->
+<div class="modal-c" id="addReservationModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add">
+      <div class="modal-head"><h5><i class="fa-solid fa-plus me-2" style="color:var(--orange);"></i>Add Reservation</h5><button type="button" class="act-btn" onclick="closeModal('addReservationModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Name *</label><input type="text" name="name" class="f-input" required></div>
+          <div><label class="f-label">Phone *</label><input type="text" name="phone" class="f-input" required></div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Email</label><input type="email" name="email" class="f-input"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Date *</label><input type="date" name="date" value="{% now 'Y-m-d' %}" class="f-input" required></div>
+          <div><label class="f-label">Time *</label><input type="time" name="time" value="19:00" class="f-input" required></div>
+        </div>
+        <input type="hidden" name="reservation_type" value="table">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Guests *</label><input type="number" name="guests" value="2" min="1" max="20" class="f-input" required>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Assign Table</label>
+          <select name="table_id" class="f-input">
+            <option value="">-- Select Table --</option>
+            {% for t in all_tables %}<option value="{{ t.id }}">Table {{ t.number }} ({{ t.seats }} seats · {{ t.location }})</option>{% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Assign Waiter</label>
+          <select name="waiter_id" class="f-input">
+            <option value="">-- Select --</option>
+            {% for st in all_staff %}<option value="{{ st.id }}">{{ st.get_full_name|default:st.username }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="f-label">Initial Status</label>
+          <select name="status" class="f-input">
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addReservationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit -->
+<div class="modal-c" id="editReservationModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit">
+      <input type="hidden" name="reservation_id" id="editResId">
+      <div class="modal-head"><h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Reservation</h5><button type="button" class="act-btn" onclick="closeModal('editReservationModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Name *</label><input type="text" name="name" id="editResName" class="f-input" required></div>
+          <div><label class="f-label">Phone *</label><input type="text" name="phone" id="editResPhone" class="f-input" required></div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Email</label><input type="email" name="email" id="editResEmail" class="f-input"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Date *</label><input type="date" name="date" id="editResDate" class="f-input" required></div>
+          <div><label class="f-label">Time *</label><input type="time" name="time" id="editResTime" class="f-input" required></div>
+        </div>
+        <input type="hidden" name="reservation_type" id="editResType" value="table">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Guests *</label><input type="number" name="guests" id="editResGuests" class="f-input" required>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Assign Table</label>
+          <select name="table_id" id="editResTableId" class="f-input">
+            <option value="">-- None --</option>
+            {% for t in all_tables %}<option value="{{ t.id }}">Table {{ t.number }} ({{ t.seats }} seats · {{ t.location }})</option>{% endfor %}
+          </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Assign Waiter</label>
+          <select name="waiter_id" id="editResWaiterId" class="f-input">
+            <option value="">-- None --</option>
+            {% for st in all_staff %}<option value="{{ st.id }}">{{ st.get_full_name|default:st.username }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="f-label">Status</label>
+          <select name="status" id="editResStatus" class="f-input">
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="arrived">Arrived</option>
+            <option value="seated">Seated</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="no_show">No Show</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editReservationModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View -->
+<div class="modal-c" id="viewReservationModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-eye me-2" style="color:var(--orange);"></i>Reservation Details</h5><button type="button" class="act-btn" onclick="closeModal('viewReservationModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div style="background:var(--cream);border-radius:14px;padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.85rem;border:1px solid var(--line);">
+        <div><span class="f-label" style="margin:0;">Customer</span><b id="viewResName"></b></div>
+        <div><span class="f-label" style="margin:0;">Phone</span><b id="viewResPhone"></b></div>
+        <div><span class="f-label" style="margin:0;">Date</span><b id="viewResDate"></b></div>
+        <div><span class="f-label" style="margin:0;">Time</span><b id="viewResTime"></b></div>
+        <div><span class="f-label" style="margin:0;">Guests</span><b id="viewResGuests"></b></div>
+        <div><span class="f-label" style="margin:0;">Table</span><b id="viewResTable"></b></div>
+        <div><span class="f-label" style="margin:0;">Waiter</span><b id="viewResWaiter"></b></div>
+        <div><span class="f-label" style="margin:0;">Status</span><b id="viewResStatus"></b></div>
+        <div id="viewManagerRefundBox" style="display:none;grid-column:1/-1;"></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn-s" onclick="closeModal('viewReservationModal')">Close</button></div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function openEditModal(id,name,phone,email,date,time,guests,tableId,waiterId,status,resType){
+  document.getElementById('editResId').value=id;
+  document.getElementById('editResName').value=name;
+  document.getElementById('editResPhone').value=phone;
+  document.getElementById('editResEmail').value=email||'';
+  document.getElementById('editResDate').value=date;
+  document.getElementById('editResTime').value=time;
+  document.getElementById('editResGuests').value=guests;
+  document.getElementById('editResTableId').value=tableId||'';
+  document.getElementById('editResWaiterId').value=waiterId||'';
+  document.getElementById('editResStatus').value=status;
+  document.getElementById('editResType').value=resType||'table';
+  openModal('editReservationModal');
+}
+function openViewModal(id,name,phone,email,date,time,guests,tableNum,waiterName,status,resType,cancelDate,cancelReason,refundAmt,refundStatus,razorpayId){
+  document.getElementById('viewResName').innerText=name;
+  document.getElementById('viewResPhone').innerText=phone||'N/A';
+  document.getElementById('viewResDate').innerText=date;
+  document.getElementById('viewResTime').innerText=time;
+  document.getElementById('viewResGuests').innerText=guests;
+  document.getElementById('viewResTable').innerText=tableNum!=='—'?'Table '+tableNum:'Unassigned';
+  document.getElementById('viewResWaiter').innerText=waiterName||'Unassigned';
+  document.getElementById('viewResStatus').innerText=status.toUpperCase();
+
+  const refundBox = document.getElementById('viewManagerRefundBox');
+  if (refundBox) {
+    if (status === 'cancelled') {
+      refundBox.style.display = 'block';
+      refundBox.innerHTML = `
+        <div style="background:#FFF2E3;border:1px solid var(--orange);padding:.8rem;border-radius:10px;margin-top:.5rem;">
+          <div style="font-weight:700;color:var(--orange);margin-bottom:.4rem;"><i class="fa-solid fa-ban me-1"></i> Cancellation & Refund Details</div>
+          <div><strong>Cancellation Date:</strong> ${cancelDate || 'N/A'}</div>
+          ${cancelReason ? `<div><strong>Reason:</strong> ${cancelReason}</div>` : ''}
+          <div><strong>Refund Status:</strong> <span class="badge bg-info text-dark">${refundStatus || 'N/A'}</span></div>
+          <div><strong>Refund Amount:</strong> <span style="font-weight:700;color:var(--green);">₹${refundAmt || '0.00'}</span></div>
+          ${razorpayId ? `<div><strong>Razorpay Refund ID:</strong> <code>${razorpayId}</code></div>` : ''}
+        </div>
+      `;
+    } else {
+      refundBox.style.display = 'none';
+      refundBox.innerHTML = '';
+    }
+  }
+
+  openModal('viewReservationModal');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,295 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Bookings — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --red:#E5484D;
+  --red-soft:#FDECEC;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.booking-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:1.8rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+  transition:.25s ease;height:100%;display:flex;flex-direction:column;
+}
+.booking-card:hover{
+  border-color:var(--orange);transform:translateY(-4px);
+  box-shadow:0 15px 35px rgba(21,19,16,.08);
+}
+.status-pill{
+  display:inline-flex;align-items:center;gap:.4rem;
+  padding:.35rem .9rem;border-radius:50px;font-weight:700;
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;
+}
+.status-pending{background:#FFF4E0;color:#D97706;}
+.status-confirmed, .status-seated, .status-completed{background:var(--green-soft);color:var(--green);}
+.status-cancelled, .status-rejected{background:var(--red-soft);color:var(--red);}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.6rem 1.4rem;border-radius:50px;
+  font-weight:700;box-shadow:0 6px 16px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+
+/* MODAL STABILITY & HOVER FLICKER FIX FOR MY BOOKINGS */
+.modal,
+.modal-dialog,
+.modal-content {
+  transform: none !important;
+  transition: opacity 0.15s linear !important;
+}
+
+.modal-dialog-centered {
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 3.5rem) !important;
+}
+
+.modal-content {
+  border: none !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2) !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Modal children / buttons: visual hover only, NO transform/translate Y layout shift */
+.modal .btn,
+.modal .list-group-item {
+  transform: none !important;
+  margin: 0 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.modal .btn:hover,
+.modal .btn:focus,
+.modal .btn:active {
+  transform: none !important;
+}
+
+.modal .btn-secondary:hover {
+  background-color: #5a6268 !important;
+  color: #fff !important;
+}
+
+.modal .btn-outline-primary:hover {
+  background: var(--orange-soft) !important;
+  color: var(--orange) !important;
+  border-color: var(--orange) !important;
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <div class="d-flex align-items-center gap-3">
+      <a href="{% url 'table_booking_view' %}" class="btn btn-primary btn-sm px-3 rounded-pill fw-bold">
+        <i class="fa-solid fa-calendar-plus me-1"></i> Book a Table
+      </a>
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-house me-1"></i> Home
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:1150px;">
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div>
+      <h2><i class="fa-solid fa-calendar-check me-2" style="color:var(--orange)"></i>My Table Bookings</h2>
+      <p class="text-muted mb-0">View &amp; manage your table reservations and pre-orders.</p>
+    </div>
+    <a href="{% url 'table_booking_view' %}" class="btn btn-primary fw-bold">
+      <i class="fa-solid fa-plus me-1"></i> New Table Reservation
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if reservations %}
+    <div class="row g-4">
+      {% for res in reservations %}
+        <div class="col-md-6 col-lg-4">
+          <div class="booking-card">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <span class="fw-bold text-muted small">Booking #TB{{ res.id }}</span>
+              <span class="status-pill status-{{ res.status }}">
+                <i class="fa-solid fa-circle me-1" style="font-size:.5rem;"></i> {{ res.status|title }}
+              </span>
+            </div>
+
+            <div class="mb-3 flex-grow-1">
+              <h5 class="mb-2" style="font-weight:700;">
+                <i class="fa-solid fa-chair text-warning me-2"></i>Table #{{ res.table.number|default:"TBD" }}
+                <span class="text-muted small fw-normal">({{ res.table.location|default:"Indoor"|title }})</span>
+              </h5>
+              
+              <div class="small text-muted mb-1">
+                <i class="fa-solid fa-calendar me-2 text-warning"></i><strong>Date:</strong> {{ res.date|date:"D, d M Y" }}
+              </div>
+              <div class="small text-muted mb-1">
+                <i class="fa-solid fa-clock me-2 text-warning"></i><strong>Time:</strong> {{ res.time|time:"h:i A" }}
+              </div>
+              <div class="small text-muted mb-1">
+                <i class="fa-solid fa-users me-2 text-warning"></i><strong>Party Size:</strong> {{ res.guests }} Person(s)
+              </div>
+              
+              <div class="mt-3 p-2 bg-light rounded-3 small">
+                <div class="d-flex justify-content-between">
+                  <span>Booking Charge:</span>
+                  <strong>₹{{ res.booking_charge }}</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                  <span>Pre-Order Amount:</span>
+                  <strong>
+                    {% if res.pre_order_selected %}
+                      ₹{{ res.pre_order_amount }}
+                    {% else %}
+                      Not Selected
+                    {% endif %}
+                  </strong>
+                </div>
+                <div class="d-flex justify-content-between border-top pt-1 mt-1 fw-bold">
+                  <span>Total Paid:</span>
+                  <span style="color:var(--orange);">₹{{ res.total_amount }}</span>
+                </div>
+                {% if res.status == 'cancelled' %}
+                  <div class="d-flex justify-content-between mt-1 text-danger">
+                    <span>Refund Status:</span>
+                    <span class="badge {% if res.refund_status == 'refund_completed' %}bg-success{% elif res.refund_status == 'refund_initiated' %}bg-info text-dark{% elif res.refund_status == 'no_refund' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">
+                      {{ res.get_refund_status_display }}
+                    </span>
+                  </div>
+                  <div class="d-flex justify-content-between mt-1">
+                    <span>Refund Amount:</span>
+                    <strong class="text-success">₹{{ res.refund_amount|floatformat:2 }}</strong>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2 mt-auto">
+              <a href="{% url 'booking_confirmation_view' booking_id=res.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold">
+                View Receipt
+              </a>
+
+              {% if res.pre_order_selected and res.pre_orders.exists %}
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#preOrderModal{{ res.id }}">
+                  <i class="fa-solid fa-utensils me-1"></i> View Pre-Order
+                </button>
+              {% endif %}
+
+              {% if res.status == 'pending' or res.status == 'confirmed' %}
+                <a href="{% url 'table_booking_cancel_view' booking_id=res.id %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold">
+                  <i class="fa-solid fa-ban me-1"></i> Cancel Booking
+                </a>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if res.pre_order_selected and res.pre_orders.exists %}
+            <!-- PRE-ORDER ITEMS MODAL (Placed outside booking-card to prevent hover transform conflict) -->
+            <div class="modal fade" id="preOrderModal{{ res.id }}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 p-3 border-0 shadow-lg">
+                  <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" style="font-family:'Fredoka';">
+                      <i class="fa-solid fa-utensils text-orange me-2" style="color:var(--orange);"></i>
+                      Pre-Order Items for Table {{ res.table.number }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body text-start py-3">
+                    <p class="small text-muted mb-3">Booking Date: {{ res.date }} at {{ res.time }}</p>
+                    <div class="list-group list-group-flush">
+                      {% for po in res.pre_orders.first.items.all %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                          <div>
+                            <span class="fw-bold">{{ po.quantity }}x {{ po.menu_item.name }}</span>
+                            <div class="small text-muted">₹{{ po.price }} each</div>
+                          </div>
+                          <span class="fw-bold" style="color:var(--orange);">₹{{ po.line_total }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold pt-3 mt-2 border-top">
+                      <span>Pre-Order Food Total:</span>
+                      <span style="color:var(--orange);">₹{{ res.pre_order_amount }}</span>
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="booking-card text-center py-5">
+      <i class="fa-solid fa-calendar-xmark text-muted mb-3" style="font-size:3.5rem;"></i>
+      <h3>No Bookings Yet</h3>
+      <p class="text-muted mb-4">You haven't reserved any tables with us yet.</p>
+      <a href="{% url 'table_booking_view' %}" class="btn btn-primary px-4 py-2">
+        <i class="fa-solid fa-chair me-2"></i>Book a Table
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

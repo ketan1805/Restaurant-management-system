@@ -1,0 +1,48 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Customers — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Customers</h1>
+    <p>View all registered customers on your platform.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-user-circle"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Total Customers</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ active_count }}</div><div class="lbl">Active</div></div></div>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Customer</th><th>Email</th><th>Phone</th><th>Joined</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for c in customers %}
+        <tr>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ c.username|first|upper }}</div>
+              {{ c.get_full_name|default:c.username }}
+            </div>
+          </td>
+          <td>{{ c.email|default:"—" }}</td>
+          <td>{{ c.profile.mobile_no|default:"—" }}</td>
+          <td>{{ c.date_joined|date:"d M Y" }}</td>
+          <td>
+            <span class="badge-status {% if c.is_active %}bs-green{% else %}bs-red{% endif %}">
+              {% if c.is_active %}Active{% else %}Inactive{% endif %}
+            </span>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5"><div class="empty"><i class="fa-solid fa-user-slash"></i><b>No customers yet</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

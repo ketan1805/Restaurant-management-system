@@ -1,0 +1,77 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Tables — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Tables</h1>
+    <p>Add, edit, or delete tables and generate QR codes for ordering.</p>
+  </div>
+  <button class="btn-p" onclick="openModal('addTableModal')"><i class="fa-solid fa-plus"></i> Add Table</button>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-chair"></i></div><div class="stat-info"><div class="num">{{ total_tables }}</div><div class="lbl">Total Tables</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ available_count }}</div><div class="lbl">Available</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-user-group"></i></div><div class="stat-info"><div class="num">{{ occupied_count }}</div><div class="lbl">Occupied</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-qrcode"></i></div><div class="stat-info"><div class="num">{{ qr_count }}</div><div class="lbl">QR Codes</div></div></div>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>Table No.</th><th>Seats</th><th>Location</th><th>Status</th><th>QR Code</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for table in tables %}
+        <tr>
+          <td><b>Table #{{ table.number }}</b></td>
+          <td>{{ table.seats }} seat{{ table.seats|pluralize }}</td>
+          <td>{{ table.location }}</td>
+          <td><span class="badge-status {% if table.is_available %}bs-green{% else %}bs-red{% endif %}">{% if table.is_available %}Available{% else %}Occupied{% endif %}</span></td>
+          <td>
+            <a href="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=Table-{{ table.number }}" target="_blank" class="btn-s" style="padding:.4rem .9rem;font-size:.78rem;">
+              <i class="fa-solid fa-qrcode"></i> View QR
+            </a>
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <a href="?delete={{ table.id }}" class="act-btn danger" onclick="return confirm('Delete Table {{ table.number }}?');"><i class="fa-solid fa-trash-can"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-chair"></i><b>No tables yet</b><small>Click "Add Table" to create your first table.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-c" id="addTableModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <div class="modal-head">
+        <h5>Add New Table</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addTableModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div><label class="f-label">Table Number</label><input type="text" name="number" class="f-input" placeholder="e.g. T-101" required></div>
+          <div><label class="f-label">Seats</label><input type="number" name="seats" value="4" min="1" max="20" class="f-input" required></div>
+        </div>
+        <div style="margin-top:1rem;">
+          <label class="f-label">Location</label>
+          <select name="location" class="f-input">
+            <option>Indoor</option><option>Outdoor</option><option>Window</option><option>Rooftop</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addTableModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Table</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

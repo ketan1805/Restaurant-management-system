@@ -1,0 +1,185 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancellation Confirmed #TS{{ reservation.id }} — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:24px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:85px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);text-decoration:none;}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.confirm-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2.5rem 2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+
+.success-icon-wrap{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--green-soft);color:var(--green);
+  display:grid;place-items:center;font-size:2rem;
+  margin:0 auto 1.5rem;
+}
+
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem 0;border-bottom:1px dashed var(--line);
+}
+.detail-row:last-child{border-bottom:none;}
+
+.btn-primary-custom{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.8rem 2rem;border-radius:50px;
+  font-weight:700;text-decoration:none;display:inline-block;
+  box-shadow:0 4px 15px rgba(255,122,0,.25);transition:all .2s ease;
+}
+.btn-primary-custom:hover{
+  color:#fff;transform:translateY(-2px);
+}
+.btn-outline-custom{
+  border:2px solid var(--line);background:#fff;color:var(--ink);
+  padding:.8rem 2rem;border-radius:50px;font-weight:700;
+  text-decoration:none;display:inline-block;transition:all .2s ease;
+}
+.btn-outline-custom:hover{
+  background:var(--line);color:var(--ink);
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="{% url 'home' %}" class="brand">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span>
+      <span>TableServe</span>
+    </a>
+    <a href="{% url 'my_bookings' %}" class="btn btn-outline-dark rounded-pill fw-bold btn-sm px-3">
+      <i class="fa-solid fa-calendar-check me-1"></i> My Bookings
+    </a>
+  </div>
+</header>
+
+<main class="container my-4" style="max-width: 650px;">
+  <div class="confirm-card text-center">
+
+    <div class="success-icon-wrap">
+      <i class="fa-solid fa-check"></i>
+    </div>
+
+    <h2 class="fw-bold mb-1">Booking Cancelled</h2>
+    <p class="text-muted mb-4">Reservation Reference: <strong class="text-dark">#TS{{ reservation.id }}</strong></p>
+
+    <div class="alert alert-secondary py-3 px-4 rounded-4 text-start mb-4">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-circle-check text-success fs-3 flex-shrink-0"></i>
+        <div>
+          <strong class="d-block text-dark">Cancellation Confirmed</strong>
+          <span class="small text-muted">Your booking has been cancelled and Table T-{{ reservation.table.number|default:"N/A" }} has been released.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Details Card -->
+    <div class="card border-0 bg-light rounded-4 p-3 mb-4 text-start">
+      <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-file-lines text-primary me-2"></i>Cancellation Details</h6>
+      
+      <div class="detail-row">
+        <span class="text-muted">Table Number</span>
+        <span class="fw-bold">Table T-{{ reservation.table.number|default:"N/A" }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Original Date & Time</span>
+        <span class="fw-medium">{{ reservation.date|date:"D, d M Y" }} at {{ reservation.time|time:"h:i A" }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Cancellation Date</span>
+        <span class="fw-medium">{{ reservation.cancellation_date|date:"d M Y, h:i A" }}</span>
+      </div>
+
+      {% if reservation.cancellation_reason %}
+      <div class="detail-row">
+        <span class="text-muted">Reason</span>
+        <span class="fw-medium text-dark">{{ reservation.cancellation_reason }}</span>
+      </div>
+      {% endif %}
+
+      <div class="detail-row">
+        <span class="text-muted">Refund Amount</span>
+        <span class="fw-bold text-success fs-5">₹{{ reservation.refund_amount|floatformat:2 }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Refund Status</span>
+        <span>
+          {% if reservation.refund_status == 'refund_completed' %}
+            <span class="badge bg-success rounded-pill px-3 py-2"><i class="fa-solid fa-circle-check me-1"></i>Refund Completed</span>
+          {% elif reservation.refund_status == 'refund_initiated' %}
+            <span class="badge bg-info text-dark rounded-pill px-3 py-2"><i class="fa-solid fa-spinner fa-spin me-1"></i>Refund Initiated</span>
+          {% elif reservation.refund_status == 'no_refund' %}
+            <span class="badge bg-secondary rounded-pill px-3 py-2"><i class="fa-solid fa-ban me-1"></i>No Refund</span>
+          {% elif reservation.refund_status == 'refund_failed' %}
+            <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="fa-solid fa-clock me-1"></i>Refund Pending Admin Review</span>
+          {% else %}
+            <span class="badge bg-secondary rounded-pill px-3 py-2">{{ reservation.get_refund_status_display }}</span>
+          {% endif %}
+        </span>
+      </div>
+
+      {% if reservation.razorpay_refund_id %}
+      <div class="detail-row">
+        <span class="text-muted">Razorpay Refund ID</span>
+        <span class="font-monospace small fw-bold text-dark">{{ reservation.razorpay_refund_id }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4">
+      <a href="{% url 'my_bookings' %}" class="btn btn-primary-custom">
+        <i class="fa-solid fa-list-check me-2"></i>View My Bookings
+      </a>
+      <a href="{% url 'table_booking_view' %}" class="btn btn-outline-custom">
+        <i class="fa-solid fa-plus me-2"></i>Book Another Table
+      </a>
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>

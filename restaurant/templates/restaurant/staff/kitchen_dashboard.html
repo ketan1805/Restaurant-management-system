@@ -1,0 +1,549 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Kitchen Display System — Chef Panel{% endblock %}
+{% block content %}
+
+<style>
+.kds-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.kds-head h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.kds-head p {
+  color: var(--muted);
+  font-size: .88rem;
+  margin: .25rem 0 0;
+}
+.kds-actions {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.kds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: .3rem .75rem;
+  border-radius: 50px;
+  font-size: .75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
+.kb-orange { background: var(--orange-soft); color: var(--orange); }
+.kb-blue { background: #E0F2FE; color: #0284C7; }
+.kb-green { background: #E8F7EE; color: #2FAE60; }
+.kb-red { background: #FDECEC; color: #E5484D; }
+
+.kds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+@media(max-width: 992px) {
+  .kds-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kds-col {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(0,0,0,.03);
+}
+.kds-col-head {
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.kds-col-head.new-head { background: linear-gradient(135deg, #FFF9F0, #FFF2E3); border-top: 4px solid var(--orange); }
+.kds-col-head.prep-head { background: linear-gradient(135deg, #F0F9FF, #E0F2FE); border-top: 4px solid #0284C7; }
+.kds-col-head.ready-head { background: linear-gradient(135deg, #F0FDF4, #DCFCE7); border-top: 4px solid #2FAE60; }
+
+.kds-col-title {
+  font-weight: 700;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.kds-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 .45rem;
+  border-radius: 50px;
+  font-size: .8rem;
+  font-weight: 800;
+  color: #fff;
+}
+.bg-c-orange { background: var(--orange); }
+.bg-c-blue { background: #0284C7; }
+.bg-c-green { background: #2FAE60; }
+
+.kds-cards {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: calc(100vh - 270px);
+  overflow-y: auto;
+}
+
+.k-order-card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 1.15rem;
+  transition: all .2s ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,.02);
+}
+.k-order-card:hover {
+  border-color: var(--orange);
+  box-shadow: 0 8px 24px rgba(255,122,0,.08);
+}
+.k-order-card.rush {
+  border-color: #E5484D;
+  background: #FFFBFB;
+}
+
+.k-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: .85rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px dashed var(--border);
+}
+.k-id {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--ink);
+}
+.k-time {
+  font-size: .75rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: .15rem;
+}
+.k-badges {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .3rem;
+}
+
+.k-items {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-bottom: .9rem;
+}
+.k-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-size: .88rem;
+}
+.k-item-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+.k-item-qty {
+  font-weight: 800;
+  color: var(--orange);
+  background: var(--orange-soft);
+  padding: .1rem .45rem;
+  border-radius: 6px;
+  font-size: .8rem;
+  margin-right: .4rem;
+}
+.k-item-cust {
+  font-size: .75rem;
+  color: #B45309;
+  background: #FEF3C7;
+  padding: .2rem .5rem;
+  border-radius: 6px;
+  margin-top: .2rem;
+  display: inline-block;
+}
+
+.k-notes {
+  background: #FFFBEB;
+  border-left: 3px solid #F59E0B;
+  padding: .5rem .75rem;
+  border-radius: 6px;
+  font-size: .78rem;
+  color: #92400E;
+  margin-bottom: .9rem;
+}
+
+.k-card-foot {
+  padding-top: .75rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+}
+.k-btn-prep {
+  width: 100%;
+  background: linear-gradient(135deg, #FF7A00, #FFA53B);
+  color: #fff;
+  border: none;
+  padding: .6rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.k-btn-prep:hover {
+  transform: translateY(-1px);
+  color: #fff;
+}
+.k-btn-ready {
+  width: 100%;
+  background: linear-gradient(135deg, #0284C7, #38BDF8);
+  color: #fff;
+  border: none;
+  padding: .6rem 1rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  cursor: pointer;
+  transition: transform .15s ease;
+}
+.k-btn-ready:hover {
+  transform: translateY(-1px);
+  color: #fff;
+}
+.k-waiter-tag {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #15803D;
+  background: #DCFCE7;
+  padding: .45rem .8rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  width: 100%;
+  justify-content: center;
+}
+.k-waiter-await {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #B45309;
+  background: #FEF3C7;
+  padding: .45rem .8rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  width: 100%;
+  justify-content: center;
+}
+</style>
+
+<div class="kds-head">
+  <div>
+    <h1><i class="fa-solid fa-fire-burner" style="color:var(--orange);"></i> Kitchen Display System</h1>
+    <p>Real-time order queue &amp; food preparation management for Chefs &amp; Kitchen Staff.</p>
+  </div>
+  <div class="kds-actions">
+    <button type="button" class="btn-s" onclick="location.reload();" title="Manual Refresh">
+      <i class="fa-solid fa-rotate-right"></i> Refresh
+    </button>
+    <div style="font-size:.82rem;color:var(--muted);display:flex;align-items:center;gap:.4rem;">
+      <span class="dot" style="background:#2FAE60;width:8px;height:8px;border-radius:50%;display:inline-block;"></span>
+      Auto-refreshing (30s)
+    </div>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-bell"></i></div>
+    <div class="stat-info"><div class="num">{{ new_orders_count }}</div><div class="lbl">New Orders</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic b"><i class="fa-solid fa-fire-burner"></i></div>
+    <div class="stat-info"><div class="num">{{ preparing_count }}</div><div class="lbl">Preparing</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic g"><i class="fa-solid fa-bell-concierge"></i></div>
+    <div class="stat-info"><div class="num">{{ ready_count }}</div><div class="lbl">Ready for Serving</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-bolt"></i></div>
+    <div class="stat-info"><div class="num">{{ rush_count }}</div><div class="lbl">Rush Orders</div></div>
+  </div>
+</div>
+
+<div class="kds-grid">
+
+  <!-- 1. NEW ORDERS (ACCEPTED) -->
+  <div class="kds-col">
+    <div class="kds-col-head new-head">
+      <div class="kds-col-title" style="color:var(--orange);">
+        <i class="fa-solid fa-bell"></i> 1. New Orders
+      </div>
+      <span class="kds-count bg-c-orange">{{ new_orders_count }}</span>
+    </div>
+
+    <div class="kds-cards">
+      {% for o in accepted_orders %}
+      <div class="k-order-card {% if o.rush_flag or o.priority == 'high' %}rush{% endif %}">
+        <div class="k-card-top">
+          <div>
+            <div class="k-id">Order #{{ o.id }}</div>
+            <div class="k-time"><i class="fa-regular fa-clock"></i> {{ o.created_at|date:"h:i A" }} ({{ o.created_at|timesince }} ago)</div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">
+              Customer: <b>{{ o.user.get_full_name|default:o.user.username }}</b>
+            </div>
+          </div>
+          <div class="k-badges">
+            {% if o.rush_flag or o.priority == 'high' %}
+              <span class="kds-badge kb-red"><i class="fa-solid fa-bolt"></i> RUSH</span>
+            {% endif %}
+            {% if o.is_pre_order %}
+              <span class="kds-badge kb-blue"><i class="fa-solid fa-calendar-check"></i> Pre-Order</span>
+            {% endif %}
+            {% if o.table %}
+              <span class="kds-badge kb-orange">Table {{ o.table.number }}</span>
+            {% else %}
+              <span class="kds-badge kb-orange">Dine-in</span>
+            {% endif %}
+            <span class="kds-badge {% if o.payment_status == 'paid' or o.payment_status == 'success' %}kb-green{% else %}kb-orange{% endif %}">
+              <i class="fa-solid fa-receipt"></i> {{ o.payment_status|title }}
+            </span>
+          </div>
+        </div>
+
+        <div class="k-items">
+          {% for item in o.items.all %}
+          <div class="k-item-row">
+            <div>
+              <span class="k-item-qty">{{ item.quantity }}x</span>
+              <span class="k-item-name">{{ item.menu_item.name }}</span>
+              {% if item.customization_details %}
+                <div class="k-item-cust"><i class="fa-solid fa-sliders"></i> {{ item.customization_details }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div style="color:var(--muted);font-size:.8rem;">No items listed.</div>
+          {% endfor %}
+        </div>
+
+        {% if o.kitchen_notes %}
+        <div class="k-notes">
+          <i class="fa-solid fa-note-sticky me-1"></i> <b>Instructions:</b> {{ o.kitchen_notes }}
+        </div>
+        {% endif %}
+
+        <div class="k-card-foot">
+          <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="order_id" value="{{ o.id }}">
+            <button type="submit" name="action" value="start_preparing" class="k-btn-prep">
+              <i class="fa-solid fa-utensils"></i> Start Preparing
+            </button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fa-solid fa-circle-check" style="font-size:2rem;color:var(--muted);margin-bottom:.5rem;"></i>
+        <b>No new orders</b>
+        <small>Orders sent from Order Handler will appear here.</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 2. PREPARING ORDERS -->
+  <div class="kds-col">
+    <div class="kds-col-head prep-head">
+      <div class="kds-col-title" style="color:#0284C7;">
+        <i class="fa-solid fa-fire-burner"></i> 2. Preparing
+      </div>
+      <span class="kds-count bg-c-blue">{{ preparing_count }}</span>
+    </div>
+
+    <div class="kds-cards">
+      {% for o in preparing_orders %}
+      <div class="k-order-card {% if o.rush_flag or o.priority == 'high' %}rush{% endif %}" style="border-left:4px solid #0284C7;">
+        <div class="k-card-top">
+          <div>
+            <div class="k-id">Order #{{ o.id }}</div>
+            <div class="k-time">
+              <i class="fa-solid fa-stopwatch text-primary"></i>
+              Started: {{ o.prep_started_at|date:"h:i A"|default:o.updated_at|date:"h:i A" }} ({{ o.prep_started_at|default:o.updated_at|timesince }} ago)
+            </div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">
+              Customer: <b>{{ o.user.get_full_name|default:o.user.username }}</b>
+            </div>
+          </div>
+          <div class="k-badges">
+            {% if o.rush_flag or o.priority == 'high' %}
+              <span class="kds-badge kb-red"><i class="fa-solid fa-bolt"></i> RUSH</span>
+            {% endif %}
+            {% if o.table %}
+              <span class="kds-badge kb-orange">Table {{ o.table.number }}</span>
+            {% else %}
+              <span class="kds-badge kb-orange">Dine-in</span>
+            {% endif %}
+            <span class="kds-badge kb-green">
+              <i class="fa-solid fa-receipt"></i> {{ o.payment_status|title }}
+            </span>
+          </div>
+        </div>
+
+        <div class="k-items">
+          {% for item in o.items.all %}
+          <div class="k-item-row">
+            <div>
+              <span class="k-item-qty" style="background:#E0F2FE;color:#0284C7;">{{ item.quantity }}x</span>
+              <span class="k-item-name">{{ item.menu_item.name }}</span>
+              {% if item.customization_details %}
+                <div class="k-item-cust"><i class="fa-solid fa-sliders"></i> {{ item.customization_details }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if o.kitchen_notes %}
+        <div class="k-notes">
+          <i class="fa-solid fa-note-sticky me-1"></i> <b>Instructions:</b> {{ o.kitchen_notes }}
+        </div>
+        {% endif %}
+
+        <div class="k-card-foot">
+          <form method="post" style="width:100%;">
+            {% csrf_token %}
+            <input type="hidden" name="order_id" value="{{ o.id }}">
+            <button type="submit" name="action" value="mark_ready" class="k-btn-ready">
+              <i class="fa-solid fa-circle-check"></i> Mark as Ready
+            </button>
+          </form>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fa-solid fa-fire" style="font-size:2rem;color:var(--muted);margin-bottom:.5rem;"></i>
+        <b>No orders in preparation</b>
+        <small>Click "Start Preparing" on a new order to begin cooking.</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 3. READY ORDERS (FOOD READY FOR SERVING / PICKUP) -->
+  <div class="kds-col">
+    <div class="kds-col-head ready-head">
+      <div class="kds-col-title" style="color:#2FAE60;">
+        <i class="fa-solid fa-bell-concierge"></i> 3. Ready Orders
+      </div>
+      <span class="kds-count bg-c-green">{{ ready_count }}</span>
+    </div>
+
+    <div class="kds-cards">
+      {% for o in ready_orders %}
+      <div class="k-order-card {% if o.rush_flag or o.priority == 'high' %}rush{% endif %}" style="border-left:4px solid #2FAE60;">
+        <div class="k-card-top">
+          <div>
+            <div class="k-id">Order #{{ o.id }}</div>
+            <div class="k-time">
+              <i class="fa-solid fa-bell text-success"></i>
+              Ready: {{ o.ready_at|date:"h:i A"|default:o.updated_at|date:"h:i A" }} ({{ o.ready_at|default:o.updated_at|timesince }} ago)
+            </div>
+            {% if o.prep_duration != '—' %}
+            <div style="font-size:.75rem;color:var(--muted);margin-top:.15rem;">
+              <i class="fa-solid fa-clock-rotate-left"></i> Prep time: <b>{{ o.prep_duration }}</b>
+            </div>
+            {% endif %}
+            <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">
+              Customer: <b>{{ o.user.get_full_name|default:o.user.username }}</b>
+            </div>
+          </div>
+          <div class="k-badges">
+            {% if o.rush_flag or o.priority == 'high' %}
+              <span class="kds-badge kb-red"><i class="fa-solid fa-bolt"></i> RUSH</span>
+            {% endif %}
+            {% if o.table %}
+              <span class="kds-badge kb-orange">Table {{ o.table.number }}</span>
+            {% else %}
+              <span class="kds-badge kb-orange">Dine-in</span>
+            {% endif %}
+            <span class="kds-badge kb-green">Food Ready</span>
+          </div>
+        </div>
+
+        <div class="k-items">
+          {% for item in o.items.all %}
+          <div class="k-item-row">
+            <div>
+              <span class="k-item-qty" style="background:#DCFCE7;color:#16A34A;">{{ item.quantity }}x</span>
+              <span class="k-item-name">{{ item.menu_item.name }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <div class="k-card-foot">
+          <div class="k-waiter-tag" style="background:#ECFDF5;color:#059669;border-color:#A7F3D0;">
+            <i class="fa-solid fa-bell-concierge"></i> Ready for Service
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="empty" style="padding:2.5rem 1rem;">
+        <i class="fa-solid fa-bell-slash" style="font-size:2rem;color:var(--muted);margin-bottom:.5rem;"></i>
+        <b>No ready orders</b>
+        <small>Orders marked as ready will appear here for pickup.</small>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Auto-refresh KDS every 30 seconds
+setTimeout(function() {
+  location.reload();
+}, 30000);
+</script>
+
+{% endblock %}

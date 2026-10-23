@@ -1,0 +1,25 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Access Denied{% endblock %}
+{% block content %}
+
+<div style="max-width:520px;margin:4rem auto;">
+  <div class="card" style="text-align:center;padding:3rem 2rem;border-top:4px solid var(--red);">
+    <div style="width:76px;height:76px;border-radius:50%;background:var(--red-soft);color:var(--red);display:grid;place-items:center;margin:0 auto 1.2rem;font-size:1.9rem;">
+      <i class="fa-solid fa-ban"></i>
+    </div>
+    <h2 style="font-size:1.5rem;margin-bottom:.6rem;">Access Denied</h2>
+    <p style="font-size:.92rem;margin-bottom:1.2rem;">You don't have permission to open this page.</p>
+    <div style="background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:.85rem 1rem;font-size:.85rem;color:var(--muted);margin-bottom:1.6rem;">
+      Your role:
+      <b style="color:var(--orange);">
+        {% for g in request.user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}No Role Assigned{% endfor %}
+      </b>
+    </div>
+    <div style="display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap;">
+      <a href="{% url 'staff:profile' %}" class="btn-p"><i class="fa-solid fa-user"></i> Go to Profile</a>
+      <a href="{% url 'logout' %}" class="btn-s"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

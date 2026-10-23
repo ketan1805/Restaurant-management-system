@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-Order Food — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.preorder-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:1.5rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+.menu-item-card{
+  background:#fff;border:1px solid var(--line);
+  border-radius:18px;padding:1rem;transition:.3s ease;
+}
+.menu-item-card:hover{border-color:var(--orange);transform:translateY(-3px);}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;box-shadow:0 8px 20px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <a href="{% url 'table_booking_view' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold text-decoration-none">
+      <i class="fa-solid fa-arrow-left me-1"></i> Back to Table Selection
+    </a>
+  </div>
+</header>
+
+<div class="container py-4" style="max-width:1150px;">
+
+  <!-- PRE-ORDER HEADER BANNER -->
+  <div class="alert alert-warning rounded-4 shadow-sm p-4 mb-4 border-0" style="background:var(--orange-soft);color:var(--ink);">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h4 class="mb-1 text-orange fw-bold" style="color:var(--orange);">
+          <i class="fa-solid fa-utensils me-2"></i>Pre-Ordering Food for Table {{ table.number }}
+        </h4>
+        <p class="mb-0 text-muted">
+          <i class="fa-solid fa-calendar me-1"></i>{{ pending.date }} &nbsp;|&nbsp;
+          <i class="fa-solid fa-clock me-1"></i>{{ pending.time }} &nbsp;|&nbsp;
+          <i class="fa-solid fa-users me-1"></i>{{ pending.guests }} Guests
+        </p>
+      </div>
+      <div>
+        <a href="{% url 'table_booking_summary_view' %}" class="btn btn-primary rounded-pill px-4 fw-bold">
+          <i class="fa-solid fa-arrow-right me-2"></i>Proceed to Checkout
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 mb-4" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- FOOD MENU SELECTION (LEFT SIDE) -->
+    <div class="col-lg-8">
+      <div class="preorder-card mb-4">
+        <h4 class="mb-3"><i class="fa-solid fa-book-open me-2" style="color:var(--orange);"></i>Select Food Items to Pre-Order</h4>
+
+        <div class="row g-3">
+          {% for item in menu_items %}
+            <div class="col-md-6">
+              <div class="menu-item-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-bold mb-0">{{ item.name }}</h6>
+                    <span class="fw-bold text-orange" style="color:var(--orange);">₹{{ item.get_final_price }}</span>
+                  </div>
+                  <p class="small text-muted mb-2">{{ item.description|truncatewords:10 }}</p>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                  <span class="badge bg-light text-dark border">{{ item.category.name }}</span>
+                  <button type="button" onclick="updatePreOrderCart('{{ item.id }}', 'add', 1)" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold">
+                    <i class="fa-solid fa-plus me-1"></i> Add Item
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- PRE-ORDER CART SUMMARY (RIGHT SIDE) -->
+    <div class="col-lg-4">
+      <div class="preorder-card position-sticky" style="top:95px;">
+        <h4 class="mb-3"><i class="fa-solid fa-cart-shopping me-2" style="color:var(--orange);"></i>Pre-Order Summary</h4>
+
+        <div id="cartItemsList" class="mb-3" style="max-height:280px;overflow-y:auto;">
+          {% if cart_items %}
+            {% for ci in cart_items %}
+              <div class="py-2 border-bottom d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold small">{{ ci.item.name }}</div>
+                  <div class="small text-muted">₹{{ ci.price }} x {{ ci.quantity }}</div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="fw-bold small" style="color:var(--orange);">₹{{ ci.subtotal }}</span>
+                  <button type="button" onclick="updatePreOrderCart('{{ ci.item.id }}', 'remove', 1)" class="btn btn-sm btn-link text-danger p-0 border-0">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-muted text-center py-4 mb-0 small">No food items added yet. Click "+ Add Item" on any menu item.</p>
+          {% endif %}
+        </div>
+
+        <div class="py-2 border-top border-bottom mb-3">
+          <div class="d-flex justify-content-between small mb-2">
+            <span class="text-muted">Table Booking Charge</span>
+            <span class="fw-bold">₹200.00</span>
+          </div>
+          <div class="d-flex justify-content-between small mb-2">
+            <span class="text-muted">Pre-Order Food Subtotal</span>
+            <span class="fw-bold" id="foodSubtotalLabel">₹{{ food_subtotal }}</span>
+          </div>
+          <hr class="my-2">
+          <div class="d-flex justify-content-between fw-bold fs-5">
+            <span>Total Prepaid Amount</span>
+            <span style="color:var(--orange);font-family:'Fredoka';" id="totalPrepaidLabel">₹{{ total_prepaid }}</span>
+          </div>
+        </div>
+
+        <a href="{% url 'table_booking_summary_view' %}" class="btn btn-primary w-100 py-3 fw-bold text-center">
+          <i class="fa-solid fa-shield-halved me-2"></i>Proceed to Prepaid Checkout
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+async function updatePreOrderCart(itemId, action, qty) {
+  try {
+    const res = await fetch("{% url 'api_update_pre_order_cart' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify({
+        item_id: itemId,
+        action: action,
+        quantity: qty
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.reload();
+    } else {
+      alert(data.error || "Failed to update cart.");
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Network error. Please try again.");
+  }
+}
+</script>
+</body>
+</html>

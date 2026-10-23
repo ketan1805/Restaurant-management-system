@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Panel — {% block title %}Dashboard{% endblock %}</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --orange:#FF7A00; --orange-2:#FFA53B; --orange-soft:#FFF2E3;
+  --green:#2FAE60;  --green-soft:#E8F7EE;
+  --red:#E5484D;    --red-soft:#FDECEC;
+  --blue:#3B82F6;   --blue-soft:#EAF2FE;
+  --yellow:#F59E0B; --yellow-soft:#FEF3C7;
+  --purple:#8B5CF6; --purple-soft:#EDE9FE;
+  --ink:#151310;    --ink-soft:#2C2721; --muted:#7C756B;
+  --cream:#FFFBF6;  --line:#EFE9E0;
+
+  --radius:20px; --radius-lg:28px; --radius-xl:36px;
+  --shadow-xs:0 4px 14px rgba(21,19,16,.05);
+  --shadow-sm:0 10px 30px rgba(21,19,16,.07);
+  --shadow-md:0 20px 50px rgba(21,19,16,.10);
+  --shadow-orange:0 14px 34px rgba(255,122,0,.28);
+  --ease:cubic-bezier(.22,.9,.28,1);
+
+  /* Sidebar */
+  --sb-w:260px;
+  --sb-mini:72px;
+  --sb-bg:#1A1815;
+  --sb-bg-2:#221F1A;
+  --sb-line:rgba(255,255,255,.07);
+  --sb-text:rgba(255,255,255,.68);
+  --sb-text-hi:#FFFFFF;
+  --sb-text-lo:rgba(255,255,255,.42);
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+h1,h2,h3,h4,h5,.display{font-family:'Fredoka',sans-serif;font-weight:600;letter-spacing:-.01em;}
+p{color:var(--muted);line-height:1.7;margin:0;}
+a{text-decoration:none;color:inherit;}
+button{font-family:inherit;}
+::selection{background:var(--orange);color:#fff;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:#F6F1EA;}
+::-webkit-scrollbar-thumb{background:#E2D9CC;border-radius:20px;border:2px solid #F6F1EA;}
+::-webkit-scrollbar-thumb:hover{background:var(--orange-2);}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sb{
+  position:fixed; left:0; top:0; bottom:0;
+  width:var(--sb-w);
+  z-index:1030;
+  display:flex; flex-direction:column;
+  background:var(--sb-bg);
+  border-right:1px solid var(--sb-line);
+  transition:width .3s var(--ease);
+  overflow:hidden;
+}
+
+/* ---------- Brand ---------- */
+.sb-brand{
+  display:flex; align-items:center; gap:.7rem;
+  padding:1.15rem 1.15rem;
+  border-bottom:1px solid var(--sb-line);
+  flex-shrink:0;
+  min-height:64px;
+}
+.sb-logo{
+  width:36px; height:36px; border-radius:10px;
+  display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--orange),var(--orange-2));
+  color:#fff;
+  font-size:.95rem;
+  flex-shrink:0;
+  box-shadow:0 6px 14px rgba(255,122,0,.28);
+}
+.sb-brand-txt{
+  flex:1; min-width:0; overflow:hidden; white-space:nowrap;
+  transition:opacity .2s var(--ease);
+}
+.sb-brand-txt b{
+  display:block;
+  font-family:'Fredoka',sans-serif;
+  font-size:1rem; font-weight:700;
+  color:#fff; line-height:1.1;
+  letter-spacing:-.01em;
+}
+.sb-brand-txt small{
+  display:block;
+  font-size:.62rem; font-weight:700;
+  color:var(--sb-text-lo);
+  letter-spacing:.14em; text-transform:uppercase;
+  margin-top:3px;
+}
+.sb-toggle{
+  width:28px; height:28px; border-radius:8px;
+  display:grid; place-items:center; flex-shrink:0;
+  background:transparent;
+  border:1px solid var(--sb-line);
+  color:var(--sb-text-lo);
+  cursor:pointer;
+  font-size:.65rem;
+  transition:.2s var(--ease);
+}
+.sb-toggle:hover{
+  background:rgba(255,255,255,.06);
+  color:var(--sb-text-hi);
+  border-color:rgba(255,255,255,.14);
+}
+
+/* ---------- User block ---------- */
+.sb-user{
+  display:flex; align-items:center; gap:.65rem;
+  padding:.85rem 1.15rem;
+  border-bottom:1px solid var(--sb-line);
+  flex-shrink:0;
+  cursor:pointer;
+  transition:.2s var(--ease);
+  position:relative;
+}
+.sb-user:hover{ background:rgba(255,255,255,.03); }
+.sb-avatar{
+  width:34px; height:34px; border-radius:9px;
+  display:grid; place-items:center;
+  background:linear-gradient(135deg,var(--orange),var(--orange-2));
+  color:#fff;
+  font-weight:700; font-size:.8rem;
+  flex-shrink:0;
+  position:relative;
+}
+.sb-avatar::after{
+  content:""; position:absolute;
+  bottom:-2px; right:-2px;
+  width:9px; height:9px; border-radius:50%;
+  background:#4ADE80;
+  border:2px solid var(--sb-bg);
+}
+.sb-user-info{ flex:1; min-width:0; overflow:hidden; }
+.sb-user-info .nm{
+  display:block;
+  font-size:.82rem; font-weight:600;
+  color:var(--sb-text-hi);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sb-user-info .rl{
+  display:block;
+  font-size:.68rem; font-weight:600;
+  color:var(--sb-text-lo);
+  margin-top:1px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sb-user-chev{
+  color:var(--sb-text-lo);
+  font-size:.6rem;
+  flex-shrink:0;
+  transition:.2s var(--ease);
+}
+.sb-user.open .sb-user-chev{ transform:rotate(180deg); }
+
+/* ---------- Search ---------- */
+.sb-search{
+  padding:.85rem 1.15rem .35rem;
+  flex-shrink:0;
+}
+.sb-search-inner{
+  display:flex; align-items:center; gap:.55rem;
+  padding:.52rem .75rem;
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+  border:1px solid transparent;
+  transition:.2s var(--ease);
+}
+.sb-search-inner:focus-within{
+  background:rgba(255,255,255,.08);
+  border-color:rgba(255,122,0,.4);
+}
+.sb-search-inner i{
+  font-size:.72rem;
+  color:var(--sb-text-lo);
+  flex-shrink:0;
+}
+.sb-search-inner input{
+  flex:1; min-width:0;
+  background:transparent; border:none; outline:none;
+  color:var(--sb-text-hi);
+  font-family:inherit; font-size:.8rem;
+  font-weight:500;
+}
+.sb-search-inner input::placeholder{ color:var(--sb-text-lo); }
+.sb-search-inner kbd{
+  font-family:inherit;
+  font-size:.6rem; font-weight:700;
+  padding:.1rem .35rem;
+  border-radius:4px;
+  background:rgba(255,255,255,.08);
+  color:var(--sb-text-lo);
+  border:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+}
+
+/* ---------- Nav (NO SCROLLBAR) ---------- */
+.sb-nav{
+  flex:1;
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:.65rem .75rem 1rem;
+  /* Firefox */
+  scrollbar-width:none;
+  /* IE / Edge legacy */
+  -ms-overflow-style:none;
+}
+/* Chrome / Safari / Opera / Brave */
+.sb-nav::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
+  background:transparent;
+}
+
+.sb-group{ margin-bottom:.15rem; }
+
+.sb-group-label{
+  width:100%;
+  display:flex; align-items:center; gap:.5rem;
+  padding:.7rem .55rem .35rem;
+  background:none; border:none; cursor:pointer;
+  font-family:inherit;
+  font-size:.62rem; font-weight:800;
+  letter-spacing:.14em; text-transform:uppercase;
+  color:var(--sb-text-lo);
+  text-align:left;
+  transition:.15s var(--ease);
+}
+.sb-group-label:hover{ color:var(--sb-text); }
+.sb-group-label span:first-child{ flex:1; white-space:nowrap; }
+.sb-group-label i{
+  font-size:.55rem;
+  opacity:.7;
+  transition:transform .25s var(--ease);
+}
+.sb-group.open .sb-group-label i{ transform:rotate(180deg); }
+
+.sb-group-body{
+  max-height:0; overflow:hidden;
+  transition:max-height .3s var(--ease);
+}
+.sb-group.open .sb-group-body{ max-height:900px; }
+
+/* ---------- Nav items ---------- */
+.sb-link{
+  display:flex; align-items:center; gap:.65rem;
+  padding:.55rem .7rem;
+  margin:1px 0;
+  border-radius:8px;
+  color:var(--sb-text);
+  font-size:.845rem; font-weight:500;
+  transition:.15s var(--ease);
+  position:relative;
+  white-space:nowrap;
+}
+.sb-link:hover{
+  background:rgba(255,255,255,.055);
+  color:var(--sb-text-hi);
+}
+.sb-link.active{
+  background:rgba(255,122,0,.14);
+  color:var(--sb-text-hi);
+  font-weight:600;
+}
+.sb-link.active::before{
+  content:""; position:absolute;
+  left:-.75rem; top:50%; transform:translateY(-50%);
+  width:3px; height:18px;
+  border-radius:0 3px 3px 0;
+  background:var(--orange);
+}
+.sb-ic{
+  width:20px; text-align:center;
+  font-size:.82rem;
+  color:var(--sb-text-lo);
+  flex-shrink:0;
+  transition:.15s var(--ease);
+}
+.sb-link:hover .sb-ic{ color:var(--sb-text); }
+.sb-link.active .sb-ic{ color:var(--orange-2); }
+.sb-link .lbl{
+  flex:1; min-width:0;
+  overflow:hidden; text-overflow:ellipsis;
+}
+.sb-link .mini{
+  font-size:.58rem; font-weight:700;
+  color:var(--sb-text-lo);
+  letter-spacing:.06em; text-transform:uppercase;
+  flex-shrink:0;
+}
+.sb-link .count{
+  font-size:.62rem; font-weight:800;
+  padding:.1rem .4rem;
+  border-radius:20px;
+  background:var(--orange);
+  color:#fff;
+  flex-shrink:0;
+}
+
+/* No results */
+.sb-nores{
+  display:none;
+  padding:2rem 1rem;
+  text-align:center;
+  color:var(--sb-text-lo);
+  font-size:.78rem;
+  font-weight:500;
+}
+.sb-nores i{
+  display:block;
+  font-size:1.4rem;
+  margin-bottom:.5rem;
+  opacity:.4;
+}
+.sb-nav.searching .sb-group-body{ max-height:1400px !important; }
+
+/* ---------- Footer ---------- */
+.sb-foot{
+  padding:.65rem .75rem .85rem;
+  border-top:1px solid var(--sb-line);
+  flex-shrink:0;
+}
+.sb-status{
+  display:flex; align-items:center; gap:.5rem;
+  padding:.4rem .7rem .55rem;
+  font-size:.7rem; font-weight:600;
+  color:var(--sb-text-lo);
+}
+.sb-status .dot{
+  width:6px; height:6px; border-radius:50%;
+  background:#4ADE80;
+  flex-shrink:0;
+  box-shadow:0 0 6px rgba(74,222,128,.6);
+}
+
+/* ============================================================
+   COLLAPSED
+   ============================================================ */
+@media (min-width:992px){
+  body.sb-collapsed .sb{ width:var(--sb-mini); }
+  body.sb-collapsed .main{ margin-left:var(--sb-mini); }
+
+  body.sb-collapsed .sb-brand{
+    padding:1.15rem 0;
+    justify-content:center;
+    gap:0;
+  }
+  body.sb-collapsed .sb-brand-txt{ display:none; }
+  body.sb-collapsed .sb-toggle{
+    position:absolute; right:-13px; top:22px;
+    width:24px; height:24px; border-radius:50%;
+    background:var(--sb-bg-2);
+    border:1px solid var(--sb-line);
+    z-index:10;
+  }
+  body.sb-collapsed .sb-toggle i{ transform:rotate(180deg); }
+
+  body.sb-collapsed .sb-user{
+    justify-content:center;
+    padding:.85rem 0;
+  }
+  body.sb-collapsed .sb-user-info,
+  body.sb-collapsed .sb-user-chev{ display:none; }
+
+  body.sb-collapsed .sb-search{ display:none; }
+
+  body.sb-collapsed .sb-nav{ padding:.65rem .65rem 1rem; }
+
+  body.sb-collapsed .sb-group-label{ display:none; }
+  body.sb-collapsed .sb-group-body{
+    max-height:900px !important;
+  }
+
+  body.sb-collapsed .sb-link{
+    justify-content:center;
+    padding:.6rem 0;
+    gap:0;
+  }
+  body.sb-collapsed .sb-link .lbl,
+  body.sb-collapsed .sb-link .mini,
+  body.sb-collapsed .sb-link .count{ display:none; }
+  body.sb-collapsed .sb-link.active::before{
+    left:-.65rem;
+  }
+
+  body.sb-collapsed .sb-status{
+    justify-content:center;
+    padding:.4rem 0 .55rem;
+  }
+  body.sb-collapsed .sb-status-txt{ display:none; }
+
+  body.sb-collapsed .sb-foot .sb-link{
+    justify-content:center;
+    padding:.6rem 0;
+  }
+}
+
+/* ============================================================
+   MAIN LAYOUT
+   ============================================================ */
+.main{
+  margin-left:var(--sb-w);
+  min-height:100vh;
+  display:flex; flex-direction:column;
+  transition:margin-left .3s var(--ease);
+}
+.burger-fixed{
+  display:none; position:fixed; top:16px; left:16px; z-index:1025;
+  width:42px; height:42px; border-radius:10px;
+  background:#fff;
+  border:1px solid var(--line);
+  place-items:center; cursor:pointer;
+  color:var(--ink);
+  box-shadow:var(--shadow-xs);
+  transition:.2s var(--ease);
+}
+.burger-fixed:hover{ border-color:var(--orange); color:var(--orange); }
+.content{ flex:1; padding:2rem 1.75rem 3.5rem; }
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+.pg-head{display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-end;justify-content:space-between;margin-bottom:1.75rem;}
+.pg-head h1{font-size:clamp(1.4rem,2.4vw,1.85rem);font-weight:700;margin:0 0 .35rem;color:var(--ink);}
+.pg-head p{font-size:.88rem;max-width:560px;}
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+.btn-p,.btn-s,.btn-dark{
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  border-radius:50px;font-weight:700;font-size:.85rem;cursor:pointer;
+  transition:.3s var(--ease);border:none;padding:.72rem 1.45rem;
+  white-space:nowrap;font-family:inherit;
+}
+.btn-p{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;box-shadow:var(--shadow-orange);
+}
+.btn-p:hover{transform:translateY(-3px);box-shadow:0 20px 44px rgba(255,122,0,.42);color:#fff;}
+.btn-s{background:#fff;color:var(--ink);border:1.5px solid var(--line);box-shadow:var(--shadow-xs);}
+.btn-s:hover{border-color:var(--orange);color:var(--orange);transform:translateY(-2px);}
+.btn-dark{background:var(--ink);color:#fff;}
+.btn-dark:hover{background:var(--orange);color:#fff;transform:translateY(-3px);}
+.btn-s.danger{color:var(--red);border-color:#FBD5D5;}
+.btn-s.danger:hover{background:var(--red);color:#fff;border-color:var(--red);}
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card{
+  background:#fff;border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-xs);border:1px solid var(--line);
+  overflow:hidden;margin-bottom:1.5rem;
+}
+.card-head{
+  padding:1.1rem 1.4rem;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;flex-wrap:wrap;
+}
+.card-head h5{font-size:1rem;font-weight:700;margin:0;}
+.card-head .sub{font-size:.78rem;color:var(--muted);font-weight:600;}
+.card-body{padding:1.4rem;}
+
+/* ============================================================
+   STAT TILES
+   ============================================================ */
+.stat-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1rem;margin-bottom:1.75rem;
+}
+.stat{
+  background:#fff;border-radius:var(--radius);padding:1.25rem;
+  box-shadow:var(--shadow-xs);border:1px solid var(--line);
+  display:flex;align-items:center;gap:1rem;transition:.3s var(--ease);
+}
+.stat:hover{transform:translateY(-4px);box-shadow:var(--shadow-sm);border-color:rgba(255,122,0,.22);}
+.stat-ic{
+  width:52px;height:52px;border-radius:15px;display:grid;place-items:center;
+  font-size:1.25rem;flex-shrink:0;
+}
+.stat-ic.o{background:var(--orange-soft);color:var(--orange);}
+.stat-ic.g{background:var(--green-soft);color:var(--green);}
+.stat-ic.b{background:var(--blue-soft);color:var(--blue);}
+.stat-ic.p{background:var(--purple-soft);color:var(--purple);}
+.stat-ic.y{background:var(--yellow-soft);color:#B45309;}
+.stat-ic.r{background:var(--red-soft);color:var(--red);}
+.stat-info{min-width:0;}
+.stat-info .num{
+  font-family:'Fredoka',sans-serif;font-size:1.55rem;font-weight:700;
+  line-height:1;color:var(--ink);
+}
+.stat-info .lbl{font-size:.78rem;color:var(--muted);font-weight:600;margin-top:.35rem;}
+.stat-info .trend{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:700;margin-top:.4rem;}
+.trend.up{color:var(--green);}
+.trend.down{color:var(--orange);}
+
+/* ============================================================
+   TABLES
+   ============================================================ */
+.tbl-wrap{overflow-x:auto;}
+table.data{width:100%;border-collapse:collapse;font-size:.88rem;}
+table.data thead th{
+  background:var(--cream);color:var(--muted);
+  font-weight:700;font-size:.72rem;letter-spacing:.08em;
+  text-transform:uppercase;text-align:left;
+  padding:.95rem 1.1rem;border-bottom:1px solid var(--line);
+  white-space:nowrap;
+}
+table.data tbody td{
+  padding:.95rem 1.1rem;border-bottom:1px solid var(--line);
+  vertical-align:middle;color:var(--ink-soft);
+}
+table.data tbody tr:last-child td{border-bottom:none;}
+table.data tbody tr:hover{background:rgba(255,122,0,.03);}
+.td-name{display:flex;align-items:center;gap:.75rem;}
+.td-avatar{
+  width:38px;height:38px;border-radius:12px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-2));
+  color:#fff;display:grid;place-items:center;
+  font-weight:700;font-size:.82rem;flex-shrink:0;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge-status{
+  display:inline-flex;align-items:center;gap:.35rem;
+  padding:.32rem .75rem;border-radius:50px;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  white-space:nowrap;
+}
+.badge-status::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.bs-green{background:var(--green-soft);color:var(--green);}
+.bs-orange{background:var(--orange-soft);color:var(--orange);}
+.bs-red{background:var(--red-soft);color:var(--red);}
+.bs-blue{background:var(--blue-soft);color:var(--blue);}
+.bs-yellow{background:var(--yellow-soft);color:#B45309;}
+.bs-gray{background:#F1F0ED;color:var(--muted);}
+.bs-purple{background:var(--purple-soft);color:var(--purple);}
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+.act{display:inline-flex;gap:.35rem;align-items:center;}
+.act-btn{
+  width:34px;height:34px;border-radius:11px;border:none;
+  background:var(--cream);color:var(--muted);display:grid;place-items:center;
+  cursor:pointer;transition:.25s var(--ease);font-size:.8rem;
+  text-decoration:none;flex-shrink:0;
+}
+.act-btn:hover{background:var(--orange-soft);color:var(--orange);transform:translateY(-1px);}
+.act-btn.danger{background:var(--red-soft);color:var(--red);}
+.act-btn.danger:hover{background:var(--red);color:#fff;}
+.act-btn.success{background:var(--green-soft);color:var(--green);}
+.act-btn.success:hover{background:var(--green);color:#fff;}
+.act-btn.warning{background:var(--yellow-soft);color:#B45309;}
+.act-btn.warning:hover{background:var(--yellow);color:#fff;}
+
+/* ============================================================
+   FILTER CHIPS
+   ============================================================ */
+.filters{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.35rem;align-items:center;}
+.chip{
+  padding:.55rem 1.15rem;border-radius:50px;
+  font-size:.82rem;font-weight:600;background:#fff;
+  border:1.5px solid var(--line);color:var(--muted);
+  cursor:pointer;transition:.25s var(--ease);
+  display:inline-flex;align-items:center;
+}
+.chip:hover{border-color:var(--orange);color:var(--orange);}
+.chip.active{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 20px rgba(255,122,0,.28);
+}
+
+/* ============================================================
+   FORM CONTROLS
+   ============================================================ */
+.f-label{
+  display:block;font-size:.8rem;font-weight:700;
+  color:var(--ink-soft);margin-bottom:.45rem;letter-spacing:.02em;
+}
+.f-input{
+  width:100%;padding:.72rem 1rem;
+  border:1.5px solid var(--line);border-radius:14px;
+  font-family:inherit;font-size:.88rem;
+  color:var(--ink);background:#fff;outline:none;
+  transition:.25s var(--ease);
+}
+.f-input:focus{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft);}
+.f-input::placeholder{color:#B5AEA3;}
+textarea.f-input{resize:vertical;min-height:64px;}
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.empty i{font-size:2.4rem;color:#E6DCCF;margin-bottom:1rem;display:block;}
+.empty b{font-family:'Fredoka',sans-serif;color:var(--ink-soft);display:block;margin-bottom:.3rem;font-size:1rem;}
+.empty small{font-size:.85rem;}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.modal-c{
+  position:fixed;inset:0;background:rgba(21,19,16,.55);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:3000;display:none;align-items:center;justify-content:center;
+  padding:1.25rem;overflow-y:auto;
+}
+.modal-c.show,.modal-c.open,.modal-c.active{display:flex;}
+.modal-b{
+  background:#fff;border-radius:var(--radius-lg);
+  max-width:540px;width:100%;max-height:92vh;overflow-y:auto;
+  box-shadow:0 30px 70px rgba(21,19,16,.25);
+  animation:modalIn .35s var(--ease);
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(18px) scale(.97);}to{opacity:1;transform:none;}}
+.modal-head{
+  padding:1.35rem 1.5rem;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+}
+.modal-head h5{font-size:1.1rem;font-weight:700;margin:0;}
+.modal-body{padding:1.5rem;}
+.modal-foot{
+  padding:1.1rem 1.5rem;border-top:1px solid var(--line);
+  display:flex;gap:.6rem;justify-content:flex-end;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+.toast-pop{
+  position:fixed;bottom:28px;left:50%;transform:translate(-50%,140%);
+  background:var(--ink);color:#fff;padding:.85rem 1.35rem;border-radius:50px;
+  display:flex;align-items:center;gap:.65rem;font-size:.88rem;font-weight:600;
+  box-shadow:0 20px 45px rgba(0,0,0,.3);z-index:3000;
+  transition:transform .45s var(--ease);
+}
+.toast-pop.show{transform:translate(-50%,0);}
+.toast-pop i{color:#4ADE80;}
+.toast-pop.error{background:var(--red);}
+.toast-pop.error i{color:#FECACA;}
+
+.sb-backdrop{
+  display:none;position:fixed;inset:0;
+  background:rgba(21,19,16,.5);
+  z-index:1025;
+  backdrop-filter:blur(2px);
+}
+
+/* ============================================================
+   TOOLTIP (collapsed)
+   ============================================================ */
+.sb-tip{
+  position:fixed;
+  padding:.45rem .7rem;
+  border-radius:8px;
+  font-size:.75rem; font-weight:600;
+  white-space:nowrap;
+  pointer-events:none;
+  opacity:0;
+  z-index:4000;
+  background:#2A2520;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 10px 24px rgba(0,0,0,.35);
+  transition:opacity .15s var(--ease);
+  transform:translateY(-50%);
+}
+.sb-tip.show{ opacity:1; }
+
+/* ============================================================
+   USER DROPDOWN
+   ============================================================ */
+.sb-menu{
+  position:fixed;
+  width:230px;
+  background:#fff;
+  border-radius:14px;
+  border:1px solid var(--line);
+  box-shadow:0 20px 50px rgba(21,19,16,.25);
+  padding:.4rem;
+  z-index:4001;
+  opacity:0;
+  transform:translateY(-6px);
+  pointer-events:none;
+  transition:.2s var(--ease);
+}
+.sb-menu.show{
+  opacity:1;
+  transform:none;
+  pointer-events:auto;
+}
+.sb-menu-head{
+  padding:.75rem .8rem .7rem;
+  border-bottom:1px solid var(--line);
+  margin-bottom:.35rem;
+}
+.sb-menu-head .n{
+  display:block;
+  font-family:'Fredoka',sans-serif;
+  font-size:.92rem; font-weight:700; color:var(--ink);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sb-menu-head .e{
+  display:block;
+  font-size:.7rem; color:var(--muted);
+  margin-top:.15rem;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.sb-menu-head .r{
+  display:inline-block;
+  margin-top:.5rem;
+  padding:.2rem .55rem;
+  border-radius:20px;
+  background:var(--orange-soft);
+  color:var(--orange);
+  font-size:.62rem; font-weight:700;
+  letter-spacing:.05em; text-transform:uppercase;
+}
+.sb-menu a{
+  display:flex; align-items:center; gap:.65rem;
+  padding:.55rem .7rem;
+  border-radius:8px;
+  font-size:.84rem; font-weight:500;
+  color:var(--ink-soft);
+  transition:.15s var(--ease);
+}
+.sb-menu a:hover{
+  background:var(--cream);
+  color:var(--orange);
+}
+.sb-menu a i{
+  width:18px; text-align:center;
+  font-size:.78rem;
+  color:var(--muted);
+}
+.sb-menu a:hover i{ color:var(--orange); }
+.sb-menu a.danger:hover{ background:var(--red-soft); color:var(--red); }
+.sb-menu a.danger:hover i{ color:var(--red); }
+.sb-menu hr{ border:none; border-top:1px solid var(--line); margin:.35rem .4rem; }
+
+/* ============================================================
+   FLOOR MAP
+   ============================================================ */
+.floor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem;}
+.floor-card{
+  background:#fff;border-radius:var(--radius);padding:1.2rem;
+  border:1px solid var(--line);box-shadow:var(--shadow-xs);
+  display:flex;flex-direction:column;gap:.65rem;
+  transition:.3s var(--ease);position:relative;overflow:hidden;
+}
+.floor-card::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--muted);opacity:.5;
+}
+.floor-card.free::before{background:var(--green);}
+.floor-card.occupied::before{background:var(--red);}
+.floor-card.reserved::before{background:var(--yellow);}
+.floor-card.cleaning::before{background:var(--blue);}
+.floor-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-sm);border-color:rgba(255,122,0,.25);}
+.floor-card .fc-num{font-family:'Fredoka',sans-serif;font-size:1.15rem;font-weight:700;color:var(--ink);}
+.floor-card .fc-meta{font-size:.78rem;color:var(--muted);font-weight:600;}
+.floor-card .fc-sub{font-size:.78rem;color:var(--ink-soft);}
+.floor-card .fc-actions{margin-top:auto;display:flex;gap:.35rem;flex-wrap:wrap;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:991px){
+  .sb{ transform:translateX(-100%); width:280px; }
+  .sb.open{ transform:translateX(0); }
+  .main{ margin-left:0; }
+  .burger-fixed{ display:grid; }
+  .content{ padding:4.5rem 1.1rem 3rem; }
+  .pg-head{ align-items:flex-start; }
+  .sb-toggle{ display:none; }
+}
+@media (max-width:480px){
+  .sb{ width:min(85vw,300px); }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== SIDEBAR ==================== -->
+<aside class="sb" id="sidebar">
+
+  <!-- Brand -->
+  <div class="sb-brand">
+    {% for g in request.user.groups.all %}
+      {% if g.name == 'Manager' %}
+        <div class="sb-logo"><i class="fa-solid fa-user-tie"></i></div>
+        <div class="sb-brand-txt"><b>FoodVerse</b><small>Manager Panel</small></div>
+      {% elif g.name == 'Chef' or g.name == 'Kitchen Staff' %}
+        <div class="sb-logo"><i class="fa-solid fa-fire-burner"></i></div>
+        <div class="sb-brand-txt"><b>FoodVerse</b><small>Kitchen Panel</small></div>
+      {% elif g.name == 'OrderHandler' %}
+        <div class="sb-logo"><i class="fa-solid fa-clipboard-list"></i></div>
+        <div class="sb-brand-txt"><b>FoodVerse</b><small>Order Handler</small></div>
+      {% elif g.name == 'Waiter' %}
+        <div class="sb-logo"><i class="fa-solid fa-bell-concierge"></i></div>
+        <div class="sb-brand-txt"><b>FoodVerse</b><small>Waiter Panel</small></div>
+      {% endif %}
+    {% empty %}
+      <div class="sb-logo"><i class="fa-solid fa-user"></i></div>
+      <div class="sb-brand-txt"><b>FoodVerse</b><small>Staff Panel</small></div>
+    {% endfor %}
+    <button type="button" class="sb-toggle" id="sbToggle" title="Collapse (Ctrl+B)">
+      <i class="fa-solid fa-angles-left"></i>
+    </button>
+  </div>
+
+  <!-- User -->
+  <div class="sb-user" id="sbUser" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+    <div class="sb-avatar">
+      {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+    </div>
+    <div class="sb-user-info">
+      <span class="nm">{{ request.user.get_full_name|default:request.user.username }}</span>
+      <span class="rl">
+        {% for g in request.user.groups.all %}{{ g.name }}{% if not forloop.last %} · {% endif %}{% empty %}Staff{% endfor %}
+      </span>
+    </div>
+    <i class="fa-solid fa-chevron-down sb-user-chev"></i>
+  </div>
+
+  <!-- Search -->
+  <div class="sb-search">
+    <div class="sb-search-inner">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="sbSearch" placeholder="Search…" autocomplete="off" spellcheck="false" aria-label="Search navigation">
+      <kbd>/</kbd>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <nav class="sb-nav" id="sbNav">
+
+    {# ==================== MANAGER ==================== #}
+    {% for g in request.user.groups.all %}{% if g.name == 'Manager' %}
+
+      <div class="sb-group open" data-group="m-main">
+        <button type="button" class="sb-group-label">
+          <span>Main</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:manager_dashboard' %}" data-tip="Dashboard" class="sb-link {% if request.resolver_match.url_name == 'manager_dashboard' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-gauge-high"></i></span>
+            <span class="lbl">Dashboard</span>
+          </a>
+          <a href="{% url 'staff:kitchen_dashboard' %}" data-tip="Kitchen Display" class="sb-link {% if request.resolver_match.url_name == 'kitchen_dashboard' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-fire-burner"></i></span>
+            <span class="lbl">Kitchen Display</span>
+          </a>
+          <a href="{% url 'staff:orders' %}" data-tip="Orders" class="sb-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-bell-concierge"></i></span>
+            <span class="lbl">Orders</span>
+          </a>
+          <a href="{% url 'staff:tables' %}" data-tip="Tables" class="sb-link {% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-chair"></i></span>
+            <span class="lbl">Tables</span>
+          </a>
+          <a href="{% url 'staff:table_reservations' %}" data-tip="Reservations" class="sb-link {% if request.resolver_match.url_name == 'table_reservations' or request.resolver_match.url_name == 'event_reservations' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-calendar-check"></i></span>
+            <span class="lbl">Reservations</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="m-manage">
+        <button type="button" class="sb-group-label">
+          <span>Manage</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:menu_items' %}" data-tip="Menu Items" class="sb-link {% if request.resolver_match.url_name == 'menu_items' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-utensils"></i></span>
+            <span class="lbl">Menu Items</span>
+          </a>
+          <a href="{% url 'staff:inventory' %}" data-tip="Inventory" class="sb-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-boxes-stacked"></i></span>
+            <span class="lbl">Inventory</span>
+          </a>
+          <a href="{% url 'staff:staff_list' %}" data-tip="Staff" class="sb-link {% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-users"></i></span>
+            <span class="lbl">Staff</span>
+          </a>
+          <a href="{% url 'staff:billing' %}" data-tip="Billing" class="sb-link {% if request.resolver_match.url_name == 'billing' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-receipt"></i></span>
+            <span class="lbl">Billing</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="m-cust">
+        <button type="button" class="sb-group-label">
+          <span>Customers</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:customers' %}" data-tip="Customers" class="sb-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-user-circle"></i></span>
+            <span class="lbl">Customers</span>
+          </a>
+          <a href="{% url 'staff:ngos' %}" data-tip="NGOs & Donations" class="sb-link {% if request.resolver_match.url_name == 'ngos' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-hand-holding-heart"></i></span>
+            <span class="lbl">NGOs &amp; Donations</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="m-analytics">
+        <button type="button" class="sb-group-label">
+          <span>Analytics</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:reports' %}" data-tip="Reports" class="sb-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-chart-line"></i></span>
+            <span class="lbl">Reports</span>
+          </a>
+        </div>
+      </div>
+
+    {% endif %}{% endfor %}
+
+    {# ==================== ORDER HANDLER ==================== #}
+    {% for g in request.user.groups.all %}{% if g.name == 'OrderHandler' %}
+
+      <div class="sb-group open" data-group="oh-main">
+        <button type="button" class="sb-group-label">
+          <span>Main</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:order_handler_dashboard' %}" data-tip="Dashboard" class="sb-link {% if request.resolver_match.url_name == 'order_handler_dashboard' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-gauge-high"></i></span>
+            <span class="lbl">Dashboard</span>
+          </a>
+          <a href="{% url 'staff:orders' %}" data-tip="Orders" class="sb-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-bell-concierge"></i></span>
+            <span class="lbl">Orders</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="oh-book">
+        <button type="button" class="sb-group-label">
+          <span>Bookings</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:tables' %}" data-tip="Tables" class="sb-link {% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-chair"></i></span>
+            <span class="lbl">Tables</span>
+            <span class="mini">View</span>
+          </a>
+          <a href="{% url 'staff:table_reservations' %}" data-tip="Table Bookings" class="sb-link {% if request.resolver_match.url_name == 'table_reservations' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-calendar-check"></i></span>
+            <span class="lbl">Table Bookings</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="oh-people">
+        <button type="button" class="sb-group-label">
+          <span>People</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:customers' %}" data-tip="Customers" class="sb-link {% if request.resolver_match.url_name == 'customers' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-user-circle"></i></span>
+            <span class="lbl">Customers</span>
+            <span class="mini">View</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="sb-group open" data-group="oh-updates">
+        <button type="button" class="sb-group-label">
+          <span>Updates</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:notifications' %}" data-tip="Notifications" class="sb-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-bell"></i></span>
+            <span class="lbl">Notifications</span>
+          </a>
+        </div>
+      </div>
+
+    {% endif %}{% endfor %}
+
+    {# ==================== WAITER ==================== #}
+    {% for g in request.user.groups.all %}{% if g.name == 'Waiter' %}
+
+      <div class="sb-group open" data-group="w-main">
+        <button type="button" class="sb-group-label">
+          <span>Main</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:waiter_dashboard' %}" data-tip="Dashboard" class="sb-link {% if request.resolver_match.url_name == 'waiter_dashboard' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-gauge-high"></i></span>
+            <span class="lbl">Dashboard</span>
+          </a>
+          <a href="{% url 'staff:orders' %}" data-tip="Orders" class="sb-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-bell-concierge"></i></span>
+            <span class="lbl">Orders</span>
+          </a>
+          <a href="{% url 'staff:tables' %}" data-tip="Tables" class="sb-link {% if request.resolver_match.url_name == 'tables' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-chair"></i></span>
+            <span class="lbl">Tables</span>
+          </a>
+          <a href="{% url 'staff:table_reservations' %}" data-tip="Table Bookings" class="sb-link {% if request.resolver_match.url_name == 'table_reservations' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-calendar-check"></i></span>
+            <span class="lbl">Table Bookings</span>
+          </a>
+        </div>
+      </div>
+
+    {% endif %}{% endfor %}
+
+    {# ==================== CHEF / KITCHEN ==================== #}
+    {% for g in request.user.groups.all %}{% if g.name == 'Chef' or g.name == 'Kitchen Staff' %}
+
+      <div class="sb-group open" data-group="k-main">
+        <button type="button" class="sb-group-label">
+          <span>Kitchen Panel</span>
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
+        <div class="sb-group-body">
+          <a href="{% url 'staff:kitchen_dashboard' %}" data-tip="Kitchen Display" class="sb-link {% if request.resolver_match.url_name == 'kitchen_dashboard' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-fire-burner"></i></span>
+            <span class="lbl">Kitchen Display</span>
+          </a>
+          <a href="{% url 'staff:orders' %}" data-tip="All Orders" class="sb-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-utensils"></i></span>
+            <span class="lbl">All Orders</span>
+          </a>
+          <a href="{% url 'staff:notifications' %}" data-tip="Notifications" class="sb-link {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+            <span class="sb-ic"><i class="fa-solid fa-bell"></i></span>
+            <span class="lbl">Notifications</span>
+          </a>
+        </div>
+      </div>
+
+    {% endif %}{% endfor %}
+
+    {# ==================== ACCOUNT ==================== #}
+    <div class="sb-group open" data-group="account">
+      <button type="button" class="sb-group-label">
+        <span>Account</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <div class="sb-group-body">
+        <a href="{% url 'staff:profile' %}" data-tip="Profile" class="sb-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+          <span class="sb-ic"><i class="fa-solid fa-user"></i></span>
+          <span class="lbl">Profile</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="sb-nores" id="sbNoRes">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      No results found
+    </div>
+
+  </nav>
+
+  <!-- Footer -->
+  <div class="sb-foot">
+    <div class="sb-status">
+      <span class="dot"></span>
+      <span class="sb-status-txt">Live · Kitchen open</span>
+    </div>
+    <a href="{% url 'logout' %}" data-tip="Logout" class="sb-link">
+      <span class="sb-ic"><i class="fa-solid fa-right-from-bracket"></i></span>
+      <span class="lbl">Logout</span>
+    </a>
+  </div>
+</aside>
+
+<div class="sb-backdrop" id="sbBackdrop"></div>
+
+<!-- User dropdown -->
+<div class="sb-menu" id="sbMenu">
+  <div class="sb-menu-head">
+    <span class="n">{{ request.user.get_full_name|default:request.user.username }}</span>
+    <span class="e">{{ request.user.email }}</span>
+    <span class="r">
+      {% for g in request.user.groups.all %}{{ g.name }}{% if not forloop.last %} · {% endif %}{% empty %}Staff{% endfor %}
+    </span>
+  </div>
+  <a href="{% url 'staff:profile' %}"><i class="fa-solid fa-user"></i> My Profile</a>
+  {% for g in request.user.groups.all %}{% if g.name == 'Manager' %}
+    <a href="{% url 'staff:staff_list' %}"><i class="fa-solid fa-users-gear"></i> Manage Staff</a>
+    <a href="{% url 'staff:reports' %}"><i class="fa-solid fa-chart-line"></i> Reports</a>
+  {% endif %}{% endfor %}
+  {% for g in request.user.groups.all %}{% if g.name == 'OrderHandler' %}
+    <a href="{% url 'staff:notifications' %}"><i class="fa-solid fa-bell"></i> Notifications</a>
+  {% endif %}{% endfor %}
+  <hr>
+  <a href="{% url 'logout' %}" class="danger"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+</div>
+
+<!-- ==================== MAIN ==================== -->
+<div class="main">
+  <button class="burger-fixed" id="burger" aria-label="Open menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  <main class="content">
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="card" style="margin-bottom:1rem;border-left:4px solid {% if msg.tags == 'error' %}var(--red){% elif msg.tags == 'success' %}var(--green){% else %}var(--blue){% endif %};padding:1rem 1.25rem;border-radius:var(--radius);">
+          <div style="display:flex;align-items:center;gap:.75rem;font-weight:600;color:var(--ink-soft);">
+            <i class="fa-solid {% if msg.tags == 'error' %}fa-circle-exclamation{% elif msg.tags == 'success' %}fa-circle-check{% else %}fa-circle-info{% endif %}"
+               style="color:{% if msg.tags == 'error' %}var(--red){% elif msg.tags == 'success' %}var(--green){% else %}var(--blue){% endif %};"></i>
+            {{ msg }}
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<div class="toast-pop" id="toast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg"></span></div>
+
+<script>
+/* ============================================================
+   SIDEBAR SCRIPT
+   ============================================================ */
+(function () {
+  const body     = document.body;
+  const sidebar  = document.getElementById('sidebar');
+  const nav      = document.getElementById('sbNav');
+  const burger   = document.getElementById('burger');
+  const backdrop = document.getElementById('sbBackdrop');
+  const toggle   = document.getElementById('sbToggle');
+  const search   = document.getElementById('sbSearch');
+  const noRes    = document.getElementById('sbNoRes');
+  const user     = document.getElementById('sbUser');
+  const menu     = document.getElementById('sbMenu');
+
+  const LS_COLLAPSE = 'sb.collapsed';
+  const LS_GROUPS   = 'sb.groups';
+
+  /* Mobile drawer */
+  function openDrawer(){
+    sidebar.classList.add('open');
+    backdrop.style.display = 'block';
+    body.style.overflow = 'hidden';
+  }
+  function closeDrawer(){
+    sidebar.classList.remove('open');
+    backdrop.style.display = 'none';
+    body.style.overflow = '';
+  }
+  if (burger) burger.addEventListener('click', () =>
+    sidebar.classList.contains('open') ? closeDrawer() : openDrawer()
+  );
+  if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+  /* Desktop collapse */
+  function applyCollapse(collapsed){
+    body.classList.toggle('sb-collapsed', collapsed);
+    try { localStorage.setItem(LS_COLLAPSE, collapsed ? '1' : '0'); } catch(e){}
+    if (toggle) toggle.title = collapsed ? 'Expand (Ctrl+B)' : 'Collapse (Ctrl+B)';
+  }
+  let startCollapsed = false;
+  try { startCollapsed = localStorage.getItem(LS_COLLAPSE) === '1'; } catch(e){}
+  applyCollapse(startCollapsed);
+
+  if (toggle) toggle.addEventListener('click', () =>
+    applyCollapse(!body.classList.contains('sb-collapsed'))
+  );
+
+  /* Groups */
+  const groups = document.querySelectorAll('#sbNav .sb-group');
+
+  function saveGroupState(){
+    const state = {};
+    groups.forEach(g => { state[g.dataset.group] = g.classList.contains('open'); });
+    try { localStorage.setItem(LS_GROUPS, JSON.stringify(state)); } catch(e){}
+  }
+  function loadGroupState(){
+    let state = null;
+    try { state = JSON.parse(localStorage.getItem(LS_GROUPS) || 'null'); } catch(e){}
+    if (!state) return;
+    groups.forEach(g => {
+      const key = g.dataset.group;
+      if (key in state) g.classList.toggle('open', !!state[key]);
+    });
+  }
+  loadGroupState();
+
+  groups.forEach(g => {
+    const label = g.querySelector('.sb-group-label');
+    if (!label) return;
+    label.addEventListener('click', () => {
+      g.classList.toggle('open');
+      saveGroupState();
+    });
+  });
+
+  /* Open active group */
+  const activeLink = document.querySelector('#sbNav .sb-link.active');
+  if (activeLink){
+    const grp = activeLink.closest('.sb-group');
+    if (grp) grp.classList.add('open');
+    setTimeout(() => {
+      try { activeLink.scrollIntoView({ block:'nearest', behavior:'smooth' }); } catch(e){}
+    }, 250);
+  }
+
+  /* Search */
+  if (search){
+    search.addEventListener('input', () => {
+      const q = search.value.trim().toLowerCase();
+      let count = 0;
+      nav.classList.toggle('searching', q.length > 0);
+
+      groups.forEach(g => {
+        let shown = 0;
+        g.querySelectorAll('.sb-link').forEach(a => {
+          const hay = ((a.dataset.tip || '') + ' ' + (a.textContent || '')).toLowerCase();
+          const m = !q || hay.includes(q);
+          a.style.display = m ? '' : 'none';
+          if (m) shown++;
+        });
+        g.style.display = shown ? '' : 'none';
+        if (shown) count++;
+      });
+      if (noRes) noRes.style.display = count ? 'none' : 'block';
+    });
+
+    search.addEventListener('keydown', e => {
+      if (e.key === 'Escape'){
+        search.value = '';
+        search.dispatchEvent(new Event('input'));
+        search.blur();
+      }
+    });
+  }
+
+  /* Tooltip */
+  const tip = document.createElement('div');
+  tip.className = 'sb-tip';
+  document.body.appendChild(tip);
+
+  function isCollapsed(){
+    return body.classList.contains('sb-collapsed') &&
+           window.matchMedia('(min-width:992px)').matches;
+  }
+
+  document.querySelectorAll('.sb-link[data-tip]').forEach(link => {
+    link.addEventListener('mouseenter', () => {
+      if (!isCollapsed()) return;
+      tip.textContent = link.dataset.tip;
+      tip.classList.add('show');
+      const r = link.getBoundingClientRect();
+      tip.style.top  = (r.top + r.height / 2) + 'px';
+      tip.style.left = (r.right + 12) + 'px';
+    });
+    link.addEventListener('mouseleave', () => tip.classList.remove('show'));
+    link.addEventListener('click',    () => tip.classList.remove('show'));
+  });
+
+  /* User menu */
+  function closeMenu(){
+    menu.classList.remove('show');
+    user.classList.remove('open');
+    user.setAttribute('aria-expanded', 'false');
+  }
+  function openMenu(){
+    const r = user.getBoundingClientRect();
+    menu.style.top  = (r.bottom + 8) + 'px';
+    const left = Math.max(12, Math.min(r.left, window.innerWidth - 242));
+    menu.style.left = left + 'px';
+    menu.classList.add('show');
+    user.classList.add('open');
+    user.setAttribute('aria-expanded', 'true');
+  }
+  if (user && menu){
+    user.addEventListener('click', e => {
+      e.stopPropagation();
+      menu.classList.contains('show') ? closeMenu() : openMenu();
+    });
+    user.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        menu.classList.contains('show') ? closeMenu() : openMenu();
+      }
+      if (e.key === 'Escape') closeMenu();
+    });
+    document.addEventListener('click', e => {
+      if (!menu.contains(e.target) && !user.contains(e.target)) closeMenu();
+    });
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+  }
+
+  /* Shortcuts */
+  document.addEventListener('keydown', e => {
+    const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b'){
+      e.preventDefault();
+      applyCollapse(!body.classList.contains('sb-collapsed'));
+      return;
+    }
+    if (e.key === '/' && !typing && search && window.matchMedia('(min-width:992px)').matches){
+      e.preventDefault();
+      if (!isCollapsed()) search.focus();
+    }
+    if (e.key === 'Escape' && sidebar.classList.contains('open')){
+      closeDrawer();
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth >= 992 && sidebar.classList.contains('open')) closeDrawer();
+  });
+
+  window.sbToggleCollapse = () => applyCollapse(!body.classList.contains('sb-collapsed'));
+})();
+
+/* ============================================================
+   TOAST + MODAL HELPERS
+   ============================================================ */
+const toast = document.getElementById('toast'), msgEl = document.getElementById('toastMsg');
+let tt;
+function showToast(m, e){
+  if (!toast) return;
+  msgEl.textContent = m; toast.classList.toggle('error', !!e);
+  toast.querySelector('i').className = e ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-check';
+  toast.classList.add('show'); clearTimeout(tt);
+  tt = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+if (toast) toast.addEventListener('click', () => toast.classList.remove('show'));
+window.showToast = showToast;
+
+function openModal(id){ document.getElementById(id)?.classList.add('show'); }
+function closeModal(id){ document.getElementById(id)?.classList.remove('show'); }
+window.openModal = openModal; window.closeModal = closeModal;
+
+document.querySelectorAll('.modal-c').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('show'); });
+});
+
+{% if messages %}{% for message in messages %}showToast("{{ message|escapejs }}", {% if message.tags == 'error' %}true{% else %}false{% endif %});{% endfor %}{% endif %}
+
+// Auto-reload on back-forward navigation (bfcache) to keep CSRF tokens in sync
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted || (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+    window.location.reload();
+  }
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,238 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cancel Booking #TS{{ reservation.id }} — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --red:#E74C3C;
+  --red-soft:#FDEDEC;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:24px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:85px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);text-decoration:none;}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.cancel-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2.5rem 2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+
+.warning-box{
+  background:var(--red-soft);border:1.5px solid rgba(231,76,60,.2);
+  border-radius:16px;padding:1.2rem 1.5rem;color:var(--red);
+  font-weight:600;display:flex;align-items:center;gap:1rem;
+}
+
+.detail-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:.75rem 0;border-bottom:1px dashed var(--line);
+}
+.detail-row:last-child{border-bottom:none;}
+
+.refund-box{
+  background:#F9F7F2;border:1.5px solid var(--line);
+  border-radius:18px;padding:1.5rem;
+}
+
+.btn-confirm-cancel{
+  background:linear-gradient(135deg,#E74C3C,#C0392B);
+  color:#fff;border:none;padding:.8rem 2rem;border-radius:50px;
+  font-weight:700;box-shadow:0 4px 15px rgba(231,76,60,.3);
+  transition:all .2s ease;
+}
+.btn-confirm-cancel:hover{
+  background:linear-gradient(135deg,#C0392B,#A93226);
+  color:#fff;transform:translateY(-2px);
+}
+.btn-keep{
+  border:2px solid var(--line);background:#fff;color:var(--ink);
+  padding:.8rem 2rem;border-radius:50px;font-weight:700;
+  text-decoration:none;display:inline-block;transition:all .2s ease;
+}
+.btn-keep:hover{
+  background:var(--line);color:var(--ink);
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex justify-content-between align-items-center">
+    <a href="{% url 'home' %}" class="brand">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span>
+      <span>TableServe</span>
+    </a>
+    <a href="{% url 'my_bookings' %}" class="btn btn-outline-dark rounded-pill fw-bold btn-sm px-3">
+      <i class="fa-solid fa-calendar-check me-1"></i> My Bookings
+    </a>
+  </div>
+</header>
+
+<main class="container my-4" style="max-width: 680px;">
+  <div class="cancel-card">
+    
+    <div class="text-center mb-4">
+      <span class="badge bg-danger-subtle text-danger fs-6 px-3 py-2 rounded-pill fw-bold mb-2">
+        <i class="fa-solid fa-triangle-exclamation me-1"></i> Cancellation Request
+      </span>
+      <h2 class="fw-bold mb-1">Cancel Table Booking</h2>
+      <p class="text-muted">Booking Reference: <strong class="text-dark">#TS{{ reservation.id }}</strong></p>
+    </div>
+
+    <div class="warning-box mb-4">
+      <i class="fa-solid fa-circle-exclamation fs-3 flex-shrink-0"></i>
+      <div>
+        <div class="fw-bold fs-6">Are you sure you want to cancel this booking?</div>
+        <div class="small text-danger opacity-75">Once confirmed, your reserved table will be immediately released for other guests.</div>
+      </div>
+    </div>
+
+    <!-- Booking Information -->
+    <div class="card border-0 bg-light rounded-4 p-3 mb-4">
+      <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-circle-info text-primary me-2"></i>Booking Details</h6>
+      <div class="detail-row">
+        <span class="text-muted">Table Number</span>
+        <span class="fw-bold">Table T-{{ reservation.table.number|default:"N/A" }} ({{ reservation.table.seats|default:"2" }} Seats)</span>
+      </div>
+      <div class="detail-row">
+        <span class="text-muted">Date & Time</span>
+        <span class="fw-bold">{{ reservation.date|date:"D, d M Y" }} at {{ reservation.time|time:"h:i A" }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="text-muted">Guest Count</span>
+        <span class="fw-bold">{{ reservation.guests }} Guests</span>
+      </div>
+      <div class="detail-row">
+        <span class="text-muted">Guest Name</span>
+        <span class="fw-bold">{{ reservation.name }}</span>
+      </div>
+    </div>
+
+    <!-- Payment & Refund Summary -->
+    <div class="refund-box mb-4">
+      <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-calculator text-success me-2"></i>Cancellation Policy & Refund Summary</h6>
+
+      <div class="detail-row">
+        <span class="text-muted">Time Remaining</span>
+        <span class="fw-semibold text-dark"><i class="fa-regular fa-clock me-1 text-primary"></i>{{ refund_data.hours_until_booking }} hours before reservation</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Refund Policy Applied</span>
+        <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1 rounded-pill">{{ refund_data.policy_name }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Table Booking Charge</span>
+        <span class="fw-medium">₹{{ refund_data.table_charge|floatformat:2 }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Refundable Table Charge ({{ refund_data.policy_percent }}%)</span>
+        <span class="fw-semibold text-dark">₹{{ refund_data.table_charge_refund|floatformat:2 }}</span>
+      </div>
+
+      <div class="detail-row">
+        <span class="text-muted">Pre-Order Food Amount</span>
+        <span class="fw-medium">
+          {% if refund_data.pre_order_amount > 0 %}
+            ₹{{ refund_data.pre_order_amount|floatformat:2 }}
+          {% else %}
+            <span class="text-muted">No Pre-Order</span>
+          {% endif %}
+        </span>
+      </div>
+
+      {% if refund_data.pre_order_amount > 0 %}
+        {% if refund_data.food_prep_started %}
+          <div class="alert alert-warning py-2 px-3 my-2 small rounded-3 border-0">
+            <i class="fa-solid fa-fire-burner me-1"></i>
+            Food preparation has already started (Status: <strong>{{ refund_data.food_status_display }}</strong>), so the pre-order amount is non-refundable.
+          </div>
+          <div class="detail-row">
+            <span class="text-muted">Refundable Pre-Order Amount (0%)</span>
+            <span class="fw-semibold text-danger">₹0.00</span>
+          </div>
+        {% else %}
+          <div class="detail-row">
+            <span class="text-muted">Refundable Pre-Order Amount ({{ refund_data.policy_percent }}%)</span>
+            <span class="fw-semibold text-dark">₹{{ refund_data.pre_order_refund|floatformat:2 }}</span>
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <hr class="my-3" style="border-style: dashed;">
+
+      <div class="d-flex justify-content-between align-items-center pt-1">
+        <div>
+          <span class="fw-bold fs-6 d-block">Total Amount Paid</span>
+          <small class="text-muted">Via Razorpay Online Payment</small>
+        </div>
+        <span class="fw-bold fs-5 text-dark">₹{{ refund_data.total_paid|floatformat:2 }}</span>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-2 p-3 bg-success-subtle rounded-3">
+        <div>
+          <span class="fw-bold text-success fs-6 d-block">Total Refund Amount</span>
+          <small class="text-success opacity-75">Will be credited back to your original payment method</small>
+        </div>
+        <span class="fw-bold fs-4 text-success">₹{{ refund_data.total_refund|floatformat:2 }}</span>
+      </div>
+    </div>
+
+    <!-- Confirmation Form -->
+    <form action="{% url 'api_confirm_table_booking_cancellation' reservation.id %}" method="POST">
+      {% csrf_token %}
+
+      <div class="mb-4">
+        <label for="cancellation_reason" class="form-label fw-bold small text-muted">Reason for Cancellation (Optional)</label>
+        <textarea name="cancellation_reason" id="cancellation_reason" class="form-control rounded-3 p-3" rows="2" placeholder="Please let us know why you are cancelling (e.g. Plan changed, Emergency)"></textarea>
+      </div>
+
+      <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center mt-4">
+        <button type="submit" class="btn btn-confirm-cancel">
+          <i class="fa-solid fa-trash-can me-2"></i>Confirm Cancellation
+        </button>
+        <a href="{% url 'my_bookings' %}" class="btn btn-keep text-center">
+          <i class="fa-solid fa-arrow-left me-2"></i>Keep Booking
+        </a>
+      </div>
+    </form>
+
+  </div>
+</main>
+
+</body>
+</html>

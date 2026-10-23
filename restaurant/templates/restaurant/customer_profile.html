@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Account &amp; Profile — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.account-header-card{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  color:#fff;border-radius:var(--radius-lg);padding:2.2rem;
+  margin-bottom:2rem;box-shadow:0 10px 30px rgba(21,19,16,.08);
+}
+.user-avatar-lg{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+  font-family:'Fredoka',sans-serif;font-weight:700;font-size:1.8rem;
+  box-shadow:0 6px 18px rgba(255,122,0,.35);
+}
+
+.profile-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+.form-control{
+  border:1.5px solid var(--line);border-radius:14px;
+  padding:.75rem 1rem;font-size:.92rem;
+}
+.form-control:focus{border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft);}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;box-shadow:0 6px 16px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+
+.action-tile{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:20px;padding:1.3rem 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  transition:.25s ease;color:var(--ink);
+}
+.action-tile:hover{
+  border-color:var(--orange);background:var(--orange-soft);
+  transform:translateY(-3px);box-shadow:0 8px 20px rgba(21,19,16,.06);
+}
+.tile-icon{
+  width:44px;height:44px;border-radius:14px;
+  background:var(--orange-soft);color:var(--orange);
+  display:grid;place-items:center;font-size:1.1rem;
+}
+.action-tile:hover .tile-icon{
+  background:var(--orange);color:#fff;
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'my_bookings' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-calendar-check me-1"></i> My Bookings
+      </a>
+      <a href="{% url 'my_orders' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-bag-shopping me-1"></i> My Orders
+      </a>
+      <a href="{% url 'home' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-house me-1"></i> Home
+      </a>
+    </div>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:950px;">
+
+  <!-- ACCOUNT HEADER CARD -->
+  <div class="account-header-card d-flex align-items-center justify-content-between flex-wrap gap-3">
+    <div class="d-flex align-items-center gap-3">
+      <div class="user-avatar-lg">
+        {% if user.first_name %}{{ user.first_name|first|upper }}{% else %}{{ user.username|first|upper }}{% endif %}
+      </div>
+      <div>
+        <h3 class="mb-1 text-white">{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}</h3>
+        <p class="mb-0 text-white-50 small"><i class="fa-solid fa-envelope me-1"></i> {{ user.email|default:"No email added" }}</p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-success px-3 py-2 rounded-pill"><i class="fa-solid fa-shield-check me-1"></i> Verified Account</span>
+      <a href="{% url 'logout' %}" class="btn btn-outline-light rounded-pill px-3 py-1 fw-bold" style="font-size:.85rem;">
+        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- PROFILE EDIT FORM -->
+    <div class="col-lg-7">
+      <div class="profile-card">
+        <h4 class="mb-4"><i class="fa-solid fa-user-pen me-2" style="color:var(--orange)"></i>Personal Details</h4>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-sm-6">
+              <label class="form-label fw-bold">First Name</label>
+              <input type="text" name="first_name" class="form-control" value="{{ request.user.first_name|default:'' }}" placeholder="Enter first name">
+            </div>
+
+            <div class="col-sm-6">
+              <label class="form-label fw-bold">Last Name</label>
+              <input type="text" name="last_name" class="form-control" value="{{ request.user.last_name|default:'' }}" placeholder="Enter last name">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold">Email Address</label>
+              <input type="email" name="email" class="form-control" value="{{ request.user.email|default:'' }}" placeholder="name@example.com">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold">Mobile Phone Number</label>
+              <input type="tel" name="mobile_no" class="form-control" value="{{ request.user.profile.mobile_no|default:'' }}" placeholder="Enter 10-digit mobile number">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-bold">Address / Location</label>
+              <textarea name="address" class="form-control" rows="3" placeholder="Enter house no, street name, city & pincode">{{ request.user.profile.address|default:'' }}</textarea>
+            </div>
+          </div>
+
+          <div class="mt-4 text-end">
+            <button type="submit" class="btn btn-primary fw-bold">
+              <i class="fa-solid fa-floppy-disk me-2"></i> Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- QUICK ACTIONS & NAVIGATION -->
+    <div class="col-lg-5">
+      <h4 class="mb-3"><i class="fa-solid fa-bolt me-2" style="color:var(--orange)"></i>Quick Actions</h4>
+
+      <div class="d-flex flex-column gap-3">
+        <a href="{% url 'my_orders' %}" class="action-tile">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tile-icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div>
+              <h6 class="mb-0 fw-bold">My Food Orders</h6>
+              <small class="text-muted">Track order status &amp; food history</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-muted"></i>
+        </a>
+
+        <a href="{% url 'my_bookings' %}" class="action-tile">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tile-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div>
+              <h6 class="mb-0 fw-bold">My Table Bookings</h6>
+              <small class="text-muted">View &amp; manage table reservations</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-muted"></i>
+        </a>
+
+        <a href="{% url 'cart_view' %}" class="action-tile">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tile-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+            <div>
+              <h6 class="mb-0 fw-bold">View Cart</h6>
+              <small class="text-muted">Items waiting for checkout</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-muted"></i>
+        </a>
+
+        <a href="{% url 'password_change' %}" class="action-tile">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tile-icon"><i class="fa-solid fa-lock"></i></div>
+            <div>
+              <h6 class="mb-0 fw-bold">Change Password</h6>
+              <small class="text-muted">Update account security password</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-muted"></i>
+        </a>
+
+        <a href="{% url 'logout' %}" class="action-tile" style="border-color:rgba(229,72,77,.3);">
+          <div class="d-flex align-items-center gap-3">
+            <div class="tile-icon" style="background:#FDECEC;color:#E5484D;"><i class="fa-solid fa-right-from-bracket"></i></div>
+            <div>
+              <h6 class="mb-0 fw-bold text-danger">Logout</h6>
+              <small class="text-muted">Sign out of your customer account</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-danger"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

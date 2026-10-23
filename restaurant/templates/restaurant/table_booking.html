@@ -1,0 +1,432 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Table Booking &amp; Reservation — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+.nav-links{list-style:none;display:flex;align-items:center;gap:.25rem;margin:0 auto;padding:0;}
+.nav-links > li > a{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.5rem .85rem;border-radius:50px;
+  font-weight:700;font-size:.92rem;color:var(--ink);
+}
+.nav-links > li > a:hover{background:var(--orange-soft);color:var(--orange);}
+.nav-links > li > a.active{background:var(--ink);color:#fff;}
+
+.services-dropdown{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(21,19,16,.14);
+  border:1px solid var(--line);padding:.5rem;min-width:200px;
+  opacity:0;visibility:hidden;transition:all .3s ease;z-index:1050;
+}
+.has-dropdown:hover .services-dropdown{opacity:1;visibility:visible;}
+.services-dropdown a{
+  display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;
+  border-radius:12px;font-size:.88rem;font-weight:600;color:var(--ink);
+}
+
+.page-hero{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  color:#fff;padding:3.5rem 0 3rem;border-radius:0 0 var(--radius-lg) var(--radius-lg);
+  margin-bottom:2.5rem;
+}
+.page-hero h1{color:#fff;font-size:2.4rem;margin-bottom:.5rem;}
+
+.booking-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+
+.table-card{
+  background:#fff;border:2px solid var(--line);
+  border-radius:20px;padding:1.5rem;text-align:center;
+  transition:.3s ease;cursor:pointer;position:relative;
+}
+.table-card:hover{
+  border-color:var(--orange);transform:translateY(-4px);
+  box-shadow:0 12px 28px rgba(255,122,0,.15);
+}
+.table-card.selected{
+  border-color:var(--orange);background:var(--orange-soft);
+}
+.table-badge-available{
+  background:var(--green-soft);color:var(--green);
+  font-size:.72rem;font-weight:700;padding:.25rem .75rem;border-radius:50px;
+}
+
+.form-control, .form-select{
+  border:1.5px solid var(--line);border-radius:14px;
+  padding:.7rem 1rem;font-size:.92rem;
+}
+.form-control:focus, .form-select:focus{
+  border-color:var(--orange);box-shadow:0 0 0 4px var(--orange-soft);
+}
+
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;box-shadow:0 8px 20px rgba(255,122,0,.25);
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+
+/* MODAL STABILITY & HOVER FLICKER FIX */
+.modal,
+.modal-dialog,
+.modal-content {
+  transform: none !important;
+  transition: opacity 0.15s linear !important;
+}
+
+.modal-dialog-centered {
+  display: flex !important;
+  align-items: center !important;
+  min-height: calc(100% - 3.5rem) !important;
+}
+
+.modal-content {
+  border: none !important;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.2) !important;
+  position: relative !important;
+  top: 0 !important;
+  left: 0 !important;
+}
+
+/* Modal buttons: visual hover only, NO transform/translate Y layout shift */
+.modal .btn {
+  transform: none !important;
+  margin: 0 !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.modal .btn:hover,
+.modal .btn:focus,
+.modal .btn:active {
+  transform: none !important;
+}
+
+.modal .btn-primary:hover {
+  background: linear-gradient(135deg, #FF9A2E, var(--orange)) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 18px rgba(255,122,0,.35) !important;
+}
+
+.modal .btn-outline-primary:hover {
+  background: var(--orange-soft) !important;
+  color: var(--orange) !important;
+  border-color: var(--orange) !important;
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+
+    <ul class="nav-links d-none d-lg-flex">
+      <li><a href="{% url 'home' %}"><i class="fa-solid fa-house nav-ic"></i> Home</a></li>
+      <li><a href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-circle-user nav-ic"></i> Account</a></li>
+      <li class="has-dropdown position-relative">
+        <a class="active" href="javascript:void(0)"><i class="fa-solid fa-bell-concierge nav-ic"></i> Services</a>
+        <div class="services-dropdown">
+          <a href="{% url 'food_order_view' %}"><i class="fa-solid fa-utensils"></i> Food Order</a>
+          <a href="{% url 'table_booking_view' %}"><i class="fa-solid fa-chair"></i> Table Booking</a>
+        </div>
+      </li>
+      <li><a href="{% if user.is_authenticated %}{% url 'customer_orders' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-clipboard-list nav-ic"></i> My Orders</a></li>
+      <li><a href="{% if user.is_authenticated %}{% url 'customer_reservations' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-calendar-check nav-ic"></i> My Bookings</a></li>
+      <li><a href="{% url 'about' %}"><i class="fa-solid fa-circle-info nav-ic"></i> About</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="btn btn-ghost" style="padding:.5rem 1rem;font-size:.85rem;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem;"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<section class="page-hero text-center">
+  <div class="container">
+    <h1><i class="fa-solid fa-chair me-2" style="color:var(--orange);"></i>Table Booking &amp; Instant Reservations</h1>
+    <p>Select your date, time &amp; party size to view available tables &amp; reserve your spot</p>
+  </div>
+</section>
+
+<div class="container pb-5" style="max-width:1100px;">
+
+  {% if messages %}
+    <div class="mb-4">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- SEARCH / FILTER FORM -->
+  <div class="booking-card mb-5">
+    <h4 class="mb-3"><i class="fa-solid fa-sliders me-2" style="color:var(--orange);"></i>Step 1: Choose Booking Criteria</h4>
+    <form method="GET" action="{% url 'table_booking_view' %}">
+      <input type="hidden" name="search" value="1">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label fw-bold small">Booking Date</label>
+          <input type="date" name="date" class="form-control" value="{{ date_val }}" min="{{ today_str }}" required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-bold small">Time Slot</label>
+          <select name="time" class="form-select" required>
+            <option value="08:00" {% if time_val == '08:00' %}selected{% endif %}>08:00 AM (Breakfast)</option>
+            <option value="08:30" {% if time_val == '08:30' %}selected{% endif %}>08:30 AM (Breakfast)</option>
+            <option value="09:00" {% if time_val == '09:00' %}selected{% endif %}>09:00 AM (Breakfast)</option>
+            <option value="09:30" {% if time_val == '09:30' %}selected{% endif %}>09:30 AM (Breakfast)</option>
+            <option value="10:00" {% if time_val == '10:00' %}selected{% endif %}>10:00 AM (Brunch)</option>
+            <option value="10:30" {% if time_val == '10:30' %}selected{% endif %}>10:30 AM (Brunch)</option>
+            <option value="11:00" {% if time_val == '11:00' %}selected{% endif %}>11:00 AM (Brunch)</option>
+            <option value="11:30" {% if time_val == '11:30' %}selected{% endif %}>11:30 AM (Brunch)</option>
+            <option value="12:00" {% if time_val == '12:00' %}selected{% endif %}>12:00 PM (Lunch)</option>
+            <option value="12:30" {% if time_val == '12:30' %}selected{% endif %}>12:30 PM (Lunch)</option>
+            <option value="13:00" {% if time_val == '13:00' %}selected{% endif %}>01:00 PM (Lunch)</option>
+            <option value="13:30" {% if time_val == '13:30' %}selected{% endif %}>01:30 PM (Lunch)</option>
+            <option value="14:00" {% if time_val == '14:00' %}selected{% endif %}>02:00 PM (Lunch)</option>
+            <option value="14:30" {% if time_val == '14:30' %}selected{% endif %}>02:30 PM (Lunch)</option>
+            <option value="15:00" {% if time_val == '15:00' %}selected{% endif %}>03:00 PM (Tea/Snacks)</option>
+            <option value="15:30" {% if time_val == '15:30' %}selected{% endif %}>03:30 PM (Tea/Snacks)</option>
+            <option value="16:00" {% if time_val == '16:00' %}selected{% endif %}>04:00 PM (Tea/Snacks)</option>
+            <option value="16:30" {% if time_val == '16:30' %}selected{% endif %}>04:30 PM (Tea/Snacks)</option>
+            <option value="17:00" {% if time_val == '17:00' %}selected{% endif %}>05:00 PM (Evening)</option>
+            <option value="17:30" {% if time_val == '17:30' %}selected{% endif %}>05:30 PM (Evening)</option>
+            <option value="18:00" {% if time_val == '18:00' %}selected{% endif %}>06:00 PM (Dinner)</option>
+            <option value="18:30" {% if time_val == '18:30' %}selected{% endif %}>06:30 PM (Dinner)</option>
+            <option value="19:00" {% if time_val == '19:00' %}selected{% endif %}>07:00 PM (Dinner)</option>
+            <option value="19:30" {% if time_val == '19:30' %}selected{% endif %}>07:30 PM (Dinner)</option>
+            <option value="20:00" {% if time_val == '20:00' %}selected{% endif %}>08:00 PM (Dinner)</option>
+            <option value="20:30" {% if time_val == '20:30' %}selected{% endif %}>08:30 PM (Dinner)</option>
+            <option value="21:00" {% if time_val == '21:00' %}selected{% endif %}>09:00 PM (Dinner)</option>
+            <option value="21:30" {% if time_val == '21:30' %}selected{% endif %}>09:30 PM (Dinner)</option>
+            <option value="22:00" {% if time_val == '22:00' %}selected{% endif %}>10:00 PM (Late Dinner)</option>
+            <option value="22:30" {% if time_val == '22:30' %}selected{% endif %}>10:30 PM (Late Dinner)</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-bold small">Guests / Party Size</label>
+          <select name="guests" class="form-select" required>
+            <option value="1" {% if guests_val == '1' %}selected{% endif %}>1 Person</option>
+            <option value="2" {% if guests_val == '2' %}selected{% endif %}>2 People</option>
+            <option value="3" {% if guests_val == '3' %}selected{% endif %}>3 People</option>
+            <option value="4" {% if guests_val == '4' %}selected{% endif %}>4 People</option>
+            <option value="5" {% if guests_val == '5' %}selected{% endif %}>5 People</option>
+            <option value="6" {% if guests_val == '6' %}selected{% endif %}>6+ People</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label fw-bold small">Seating Preference</label>
+          <select name="location" class="form-select">
+            {% for loc in locations %}
+              <option value="{{ loc }}" {% if location_val == loc %}selected{% endif %}>{{ loc }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="mt-4 text-end">
+        <button type="submit" class="btn btn-primary px-4">
+          <i class="fa-solid fa-magnifying-glass me-2"></i>Check Available Tables
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- STEP 2: AVAILABLE TABLES GRID & BOOKING FORM -->
+  {% if searched or available_tables %}
+    <div class="booking-card mb-5">
+      <h4 class="mb-3"><i class="fa-solid fa-chair me-2" style="color:var(--orange);"></i>Step 2: Select Available Table</h4>
+
+      {% if error_message %}
+        <div class="alert alert-warning rounded-4 shadow-sm p-4 text-center my-3" role="alert">
+          <i class="fa-solid fa-circle-exclamation me-2 fs-4" style="color:var(--orange);"></i>
+          <span class="fw-bold fs-5">{{ error_message }}</span>
+          <p class="text-muted mt-2 mb-0">Please try choosing a different time slot, seating area, or party size.</p>
+        </div>
+      {% endif %}
+
+      {% if available_tables %}
+        <p class="text-muted mb-4">Click on an available table below to select it for your booking:</p>
+
+        <form method="POST" action="{% url 'table_booking_view' %}" id="bookingConfirmForm">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="confirm_booking">
+          <input type="hidden" name="date" value="{{ date_val }}">
+          <input type="hidden" name="time" value="{{ time_val }}">
+          <input type="hidden" name="guests" value="{{ guests_val }}">
+
+          <!-- AVAILABLE TABLES GRID -->
+          <div class="row g-3 mb-4">
+            {% for t in available_tables %}
+              <div class="col-sm-6 col-md-4 col-lg-3">
+                <div class="table-card" onclick="selectTable('{{ t.id }}', 'Table {{ t.number }} ({{ t.seats }} Seats - {{ t.location }})', this)">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="fw-bold fs-5" style="font-family:'Fredoka';">Table {{ t.number }}</span>
+                    <span class="table-badge-available">Available</span>
+                  </div>
+                  <div class="small text-muted mb-1"><i class="fa-solid fa-users me-1"></i>Capacity: <strong>{{ t.seats }} Seats</strong></div>
+                  <div class="small text-muted"><i class="fa-solid fa-compass me-1"></i>Location: <strong>{{ t.location }}</strong></div>
+                  <input type="radio" name="table_id" value="{{ t.id }}" class="d-none" id="radio_table_{{ t.id }}" required>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+          <!-- CUSTOMER DETAILS FORM (Shown after table selection) -->
+          <div id="customerDetailsSection" class="p-4 rounded-4" style="background:var(--cream);border:1.5px solid var(--line);display:none;">
+            <h5 class="mb-3 text-orange" style="color:var(--orange);"><i class="fa-solid fa-user-check me-2"></i>Step 3: Enter Details &amp; Confirm</h5>
+            <p class="fw-bold text-muted mb-3" id="selectedTableLabel">Selected Table: None</p>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Customer Name <span class="text-danger">*</span></label>
+                <input type="text" name="name" class="form-control" value="{% if user.is_authenticated %}{% if user.first_name %}{{ user.first_name }} {{ user.last_name }}{% else %}{{ user.username }}{% endif %}{% endif %}" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Phone Number <span class="text-danger">*</span></label>
+                <input type="tel" name="phone" class="form-control" placeholder="10-digit phone" value="{% if user_profile.mobile_no %}{{ user_profile.mobile_no }}{% endif %}" required>
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label fw-bold small">Email Address</label>
+                <input type="email" name="email" class="form-control" value="{% if user.is_authenticated %}{{ user.email }}{% endif %}">
+              </div>
+
+              <div class="col-12">
+                <label class="form-label fw-bold small">Special Requests (Optional)</label>
+                <input type="text" name="special_request" class="form-control" placeholder="e.g. Birthday setup, high chair needed, anniversary cake...">
+              </div>
+            </div>
+
+            <div class="mt-4 text-end">
+              <button type="button" class="btn btn-primary px-5 py-3 fw-bold" onclick="handleBookTableClick()">
+                <i class="fa-solid fa-calendar-check me-2"></i>Book Table
+              </button>
+            </div>
+
+            <!-- PRE-ORDER CHOICE MODAL -->
+            <div class="modal fade" id="preOrderModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content rounded-4 p-3 border-0 shadow-lg">
+                  <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" style="font-family:'Fredoka';">
+                      <i class="fa-solid fa-utensils text-orange me-2" style="color:var(--orange);"></i>
+                      Would you like to pre-order food for your table?
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  </div>
+                  <div class="modal-body text-center py-4">
+                    <p class="text-muted mb-4 fs-6">Pre-ordering allows your food to be prepared in advance so it arrives fresh when you take your table!</p>
+                    
+                    <div class="d-grid gap-3">
+                      <button type="submit" name="pre_order_choice" value="yes" class="btn btn-outline-primary btn-lg rounded-pill fw-bold py-3">
+                        <i class="fa-solid fa-cart-plus me-2"></i>1. Yes, Pre-Order Food
+                      </button>
+
+                      <button type="submit" name="pre_order_choice" value="no" class="btn btn-primary btn-lg rounded-pill fw-bold py-3">
+                        <i class="fa-solid fa-chair me-2"></i>2. No, Only Book Table
+                      </button>
+                    </div>
+                  </div>
+                  <div class="modal-footer border-0 pt-0 text-center justify-content-center">
+                    <small class="text-muted"><i class="fa-solid fa-shield-halved me-1"></i>Table Charge: ₹200.00 (Prepaid Online Payment)</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script>
+function selectTable(tableId, label, element) {
+  document.querySelectorAll('.table-card').forEach(c => c.classList.remove('selected'));
+  element.classList.add('selected');
+
+  const radio = document.getElementById('radio_table_' + tableId);
+  if (radio) radio.checked = true;
+
+  const section = document.getElementById('customerDetailsSection');
+  const labelEl = document.getElementById('selectedTableLabel');
+  if (section && labelEl) {
+    labelEl.innerHTML = '<i class="fa-solid fa-circle-check me-2 text-success"></i>Selected: <strong>' + label + '</strong>';
+    section.style.display = 'block';
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+function handleBookTableClick() {
+  const form = document.getElementById('bookingConfirmForm');
+  if (form && form.checkValidity()) {
+    const modalEl = document.getElementById('preOrderModal');
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+  } else if (form) {
+    form.reportValidity();
+  }
+}
+</script>
+</body>
+</html>

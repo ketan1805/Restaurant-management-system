@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Food Cart — TableServe</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --red:#E5484D;
+  --ink:#151310;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius-lg:28px;
+}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;}
+a{text-decoration:none;}
+
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;color:var(--ink);}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;
+}
+
+.cart-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);padding:2rem;
+  box-shadow:0 10px 30px rgba(21,19,16,.05);
+}
+.cart-item-row{
+  display:flex;align-items:flex-start;gap:1.2rem;padding:1.4rem 0;
+  border-bottom:1px solid var(--line);
+}
+.cart-item-row:last-child{border-bottom:none;}
+.cart-item-img{
+  width:85px;height:85px;border-radius:16px;object-fit:cover;
+  background:#F6F1EA;flex-shrink:0;
+}
+.qty-btn{
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--cream);color:var(--ink);font-weight:700;
+  display:grid;place-items:center;cursor:pointer;
+}
+.qty-btn:hover{background:var(--orange);color:#fff;}
+.btn-primary{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.75rem 1.8rem;border-radius:50px;
+  font-weight:700;
+}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);}
+.option-badge{
+  display:inline-block;background:var(--orange-soft);color:var(--orange);
+  font-size:.75rem;font-weight:700;padding:.2rem .6rem;border-radius:50px;
+  margin-right:.3rem;margin-top:.2rem;
+}
+</style>
+</head>
+<body>
+
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+    <a href="{% url 'food_order_view' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 fw-bold">
+      <i class="fa-solid fa-arrow-left me-1"></i> Back to Menu
+    </a>
+  </div>
+</header>
+
+<div class="container py-5" style="max-width:950px;">
+  <div class="mb-4">
+    <h2><i class="fa-solid fa-bag-shopping me-2" style="color:var(--orange)"></i>Your Food Order Cart</h2>
+    <p class="text-muted">Review your selected items &amp; customizations before proceeding to checkout.</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if cart_items %}
+    <div class="row g-4">
+      <div class="col-lg-8">
+        <div class="cart-card">
+          {% for ci in cart_items %}
+            <div class="cart-item-row">
+              {% if ci.item.image %}
+                <img src="{{ ci.item.image.url }}" alt="{{ ci.item.name }}" class="cart-item-img">
+              {% else %}
+                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80" alt="{{ ci.item.name }}" class="cart-item-img">
+              {% endif %}
+
+              <div class="flex-grow-1">
+                <h5 class="mb-1" style="font-size:1.05rem;font-weight:700;">{{ ci.item.name }}</h5>
+                <div class="text-muted small mb-1">
+                  Base Price: ₹{{ ci.item.get_final_price }}
+                </div>
+
+                {% if ci.options %}
+                  <div class="mb-1">
+                    {% for opt in ci.options %}
+                      <span class="option-badge">+ {{ opt.name }} (₹{{ opt.price }})</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+
+                {% if ci.special_instructions %}
+                  <div class="text-muted small mt-1">
+                    <i class="fa-solid fa-comment-dots text-warning me-1"></i> <strong>Note:</strong> "{{ ci.special_instructions }}"
+                  </div>
+                {% endif %}
+              </div>
+
+              <!-- Quantity Selector Form -->
+              <div class="text-center">
+                <form method="POST" action="{% url 'add_to_cart_view' %}" class="d-flex align-items-center gap-2 mb-1">
+                  {% csrf_token %}
+                  <input type="hidden" name="item_id" value="{{ ci.item.id }}">
+                  <input type="hidden" name="cart_key" value="{{ ci.cart_key }}">
+                  <input type="hidden" name="action" value="set">
+                  <button type="submit" name="quantity" value="{{ ci.quantity|add:'-1' }}" class="qty-btn">-</button>
+                  <span class="fw-bold px-2">{{ ci.quantity }}</span>
+                  <button type="submit" name="quantity" value="{{ ci.quantity|add:'1' }}" class="qty-btn">+</button>
+                </form>
+
+                <form method="POST" action="{% url 'add_to_cart_view' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="item_id" value="{{ ci.item.id }}">
+                  <input type="hidden" name="cart_key" value="{{ ci.cart_key }}">
+                  <input type="hidden" name="action" value="remove">
+                  <button type="submit" class="btn btn-link text-danger p-0 border-0 text-decoration-none small" style="font-size:.78rem;">
+                    <i class="fa-solid fa-trash-can me-1"></i>Remove
+                  </button>
+                </form>
+              </div>
+
+              <div class="text-end ms-2" style="min-width:90px;">
+                <div class="fw-bold text-orange" style="font-family:'Fredoka';font-size:1.2rem;color:var(--orange);">₹{{ ci.subtotal }}</div>
+                <small class="text-muted">₹{{ ci.unit_price }} each</small>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- SUMMARY SIDEBAR -->
+      <div class="col-lg-4">
+        <div class="cart-card">
+          <h4 class="mb-3">Order Summary</h4>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Total Items</span>
+            <span class="fw-bold">{{ total_items }}</span>
+          </div>
+          <div class="d-flex justify-content-between mb-3">
+            <span class="text-muted">Subtotal</span>
+            <span class="fw-bold">₹{{ total_amount }}</span>
+          </div>
+          <hr style="border-color:var(--line);">
+          <div class="d-flex justify-content-between mb-4">
+            <span class="fw-bold fs-5">Total Amount</span>
+            <span class="fw-bold fs-4" style="color:var(--orange);font-family:'Fredoka';">₹{{ total_amount }}</span>
+          </div>
+
+          <a href="{% url 'checkout_view' %}" class="btn btn-primary w-100 py-3 text-center">
+            <span>Proceed to Checkout</span><i class="fa-solid fa-arrow-right ms-2"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="cart-card text-center py-5">
+      <i class="fa-solid fa-bag-shopping text-muted mb-3" style="font-size:3.5rem;"></i>
+      <h3>Your Cart is Empty</h3>
+      <p class="text-muted mb-4">You haven't added any food items to your cart yet.</p>
+      <a href="{% url 'food_order_view' %}" class="btn btn-primary px-4 py-2">
+        <i class="fa-solid fa-utensils me-2"></i>Browse Menu
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

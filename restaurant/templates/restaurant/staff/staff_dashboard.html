@@ -1,0 +1,67 @@
+{% extends 'restaurant/staff/staff_base.html' %}
+{% block title %}Dashboard — Staff{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Staff Dashboard</h1>
+    <p>Today's overview of orders and reservations.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-receipt"></i></div><div class="stat-info"><div class="num">{{ today_orders }}</div><div class="lbl">Today's Orders</div></div></div>
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-clock"></i></div><div class="stat-info"><div class="num">{{ pending_orders }}</div><div class="lbl">Pending</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-fire"></i></div><div class="stat-info"><div class="num">{{ preparing_orders }}</div><div class="lbl">Preparing</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-calendar-check"></i></div><div class="stat-info"><div class="num">{{ today_reservations }}</div><div class="lbl">Reservations</div></div></div>
+</div>
+
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:1.25rem;" class="dash-grid">
+  <div class="card">
+    <div class="card-head">
+      <h5>Recent Orders</h5>
+      <a href="{% url 'staff:orders' %}" class="btn-s" style="padding:.4rem .9rem;font-size:.78rem;">View all <i class="fa-solid fa-arrow-right"></i></a>
+    </div>
+    <div class="tbl-wrap">
+      <table class="data">
+        <thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for order in recent_orders %}
+          <tr>
+            <td><b>#TS{{ order.id }}</b></td>
+            <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+            <td><b>₹{{ order.total|floatformat:0 }}</b></td>
+            <td>
+              <span class="badge-status {% if order.status == 'delivered' %}bs-green{% elif order.status == 'preparing' %}bs-blue{% elif order.status == 'out_for_delivery' %}bs-orange{% else %}bs-yellow{% endif %}">
+                {{ order.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="empty"><i class="fa-solid fa-receipt"></i><b>No orders yet</b></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h5>Today's Reservations</h5></div>
+    <div class="card-body">
+      {% for res in today_res_list %}
+      <div style="padding:.75rem 0;border-bottom:1px solid var(--line);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <b style="color:var(--ink);">{{ res.name }}</b>
+          <span class="badge-status bs-blue">{{ res.time|time:"g:i A" }}</span>
+        </div>
+        <small style="color:var(--muted);font-weight:600;">{{ res.guests }} guests</small>
+      </div>
+      {% empty %}
+      <div class="empty" style="padding:2rem 1rem;"><i class="fa-regular fa-calendar"></i><b>No reservations today</b></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<style>@media (max-width:900px){.dash-grid{grid-template-columns:1fr !important;}}</style>
+{% endblock %}

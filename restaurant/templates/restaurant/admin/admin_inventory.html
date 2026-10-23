@@ -1,0 +1,356 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Inventory — Admin{% endblock %}
+{% block page_title %}Inventory{% endblock %}
+{% block page_sub %}Track kitchen stock items{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Inventory</h1>
+    <p>Monitor stock levels, low-stock alerts and total inventory value.</p>
+  </div>
+  <button class="btn-p" onclick="openModal('addItemModal')">
+    <i class="fa-solid fa-plus"></i> Add Item
+  </button>
+</div>
+
+<!-- ============ STAT CARDS ============ -->
+<div class="stat-row" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));">
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-boxes-stacked"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ total_items }}</div>
+      <div class="lbl">Total Items</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-triangle-exclamation"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ low_stock_count }}</div>
+      <div class="lbl">Low Stock</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic b"><i class="fa-solid fa-layer-group"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ categories_count }}</div>
+      <div class="lbl">Categories</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic y"><i class="fa-solid fa-clock"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ expiring_count }}</div>
+      <div class="lbl">Expiring Soon</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ FILTERS ============ -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-head">
+    <h5>Filters</h5>
+  </div>
+  <div class="card-body">
+    <form method="get" action="{% url 'admin_inventory' %}"
+          style="display:grid;grid-template-columns:1fr 1fr 1fr 2fr auto;gap:1rem;align-items:end;">
+
+      <div>
+        <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Category</label>
+        <select name="category" style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          <option value="all">All</option>
+          {% for code, label in categories %}
+            <option value="{{ code }}" {% if active_filter == code %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Stock Level</label>
+        <select name="stock" style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          <option value="all" {% if stock_filter == 'all' %}selected{% endif %}>All</option>
+          <option value="low" {% if stock_filter == 'low' %}selected{% endif %}>Low Stock</option>
+          <option value="normal" {% if stock_filter == 'normal' %}selected{% endif %}>Normal</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Status</label>
+        <select name="status" style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Search by Name</label>
+        <input type="text" name="q" value="{{ query }}"
+               placeholder="Enter name..."
+               style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+      </div>
+
+      <div style="display:flex;gap:.5rem;">
+        <button type="submit" class="btn-p">
+          <i class="fa-solid fa-magnifying-glass"></i> Search
+        </button>
+        <a href="{% url 'admin_inventory' %}" class="btn-s">Reset</a>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- ============ INVENTORY TABLE ============ -->
+<div class="card">
+  <div class="card-head">
+    <h5>Inventory List</h5>
+    <span class="sub">{{ items|length }} item{{ items|length|pluralize }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th style="width:60px;">ID</th>
+          <th>Item</th>
+          <th>Category</th>
+          <th>Stock</th>
+          <th>Expiry</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th style="text-align:center;width:140px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td><b>{{ item.id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ item.name|first|upper }}</div>
+              <div>
+                <b>{{ item.name }}</b>
+                {% if item.supplier %}
+                  <div style="font-size:.72rem;color:var(--muted);margin-top:2px;">
+                    Supplier: {{ item.supplier }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+          <td>
+            <span style="background:#fff0e9;color:#e85a28;font-size:.72rem;font-weight:700;padding:.25rem .7rem;border-radius:50px;border:1px solid #ffc4a8;">
+              {{ item.get_category_display }}
+            </span>
+          </td>
+          <td>
+            <b style="{% if item.is_low_stock %}color:var(--red);{% else %}color:var(--green);{% endif %}">
+              {{ item.quantity|floatformat:0 }} {{ item.unit }}
+            </b>
+            {% if item.is_low_stock %}
+              <span class="badge-status bs-red" style="font-size:.6rem;margin-left:.3rem;">LOW</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.expiry_date %}
+              <span {% if item.is_expiring_soon %}style="color:#F59E0B;font-weight:700;"{% endif %}>
+                {{ item.expiry_date|date:"M d, Y" }}
+              </span>
+            {% else %}
+              <span style="color:var(--muted);">N/A</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if item.status == 'active' %}
+              <span class="badge-status bs-green">Active</span>
+            {% else %}
+              <span class="badge-status bs-red">Inactive</span>
+            {% endif %}
+          </td>
+          <td>{{ item.created_at|date:"M d, Y" }}</td>
+          <td>
+            <div class="act" style="justify-content:center;">
+
+              <!-- Toggle Status -->
+              <form method="post" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle_status">
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" class="act-btn" title="Toggle Status">
+                  <i class="fa-solid fa-repeat"></i>
+                </button>
+              </form>
+
+              <!-- Edit Quantity -->
+              <button type="button" class="act-btn"
+                      title="Update Quantity"
+                      onclick="openEditModal({{ item.id }}, '{{ item.name|escapejs }}', '{{ item.quantity|floatformat:0 }}')">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+
+              <!-- Delete -->
+              <a href="?delete={{ item.id }}"
+                 class="act-btn danger"
+                 title="Delete Item"
+                 onclick="return confirm('Delete {{ item.name }}?');">
+                <i class="fa-solid fa-trash-can"></i>
+              </a>
+
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="8" style="text-align:center;padding:3rem;color:var(--muted);">
+            <i class="fa-solid fa-boxes-stacked" style="font-size:2rem;display:block;margin-bottom:.6rem;opacity:.4;"></i>
+            <b>No inventory items</b>
+            <div style="font-size:.85rem;margin-top:.3rem;">Click "Add Item" to add your first stock item.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- MODAL: ADD ITEM -->
+<!-- ================================================ -->
+<div class="modal-c" id="addItemModal">
+  <div class="modal-b">
+    <form method="post" action="{% url 'admin_inventory' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_item">
+
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-plus" style="color:var(--orange);"></i> Add Inventory Item</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+
+        <!-- Item Name -->
+        <div style="margin-bottom:1rem;">
+          <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">
+            Item Name <span style="color:var(--red);">*</span>
+          </label>
+          <input type="text" name="name" required
+                 style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+        </div>
+
+        <!-- Category + Unit -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Category</label>
+            <select name="category" style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+              {% for code, label in categories %}
+                <option value="{{ code }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Unit</label>
+            <input type="text" name="unit" value="kg"
+                   style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          </div>
+        </div>
+
+        <!-- Qty / Min / Price -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Qty</label>
+            <input type="number" name="quantity" step="0.01" value="0" required
+                   style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Min</label>
+            <input type="number" name="min_stock" step="0.01" value="5"
+                   style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Price</label>
+            <input type="number" name="price_per_unit" step="0.01" value="0"
+                   style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          </div>
+        </div>
+
+        <!-- Expiry + Status -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Expiry Date</label>
+            <input type="date" name="expiry_date"
+                   style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+          </div>
+          <div>
+            <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Status</label>
+            <select name="status" style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+              <option value="active" selected>Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Supplier -->
+        <div>
+          <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">Supplier</label>
+          <input type="text" name="supplier"
+                 style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+        </div>
+
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- MODAL: UPDATE QUANTITY -->
+<!-- ================================================ -->
+<div class="modal-c" id="editItemModal">
+  <div class="modal-b" style="max-width:440px;">
+    <form method="post" action="{% url 'admin_inventory' %}">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_qty">
+      <input type="hidden" name="item_id" id="editItemId">
+
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-pen-to-square" style="color:var(--orange);"></i> Update Quantity</h5>
+        <button type="button" class="act-btn" onclick="closeModal('editItemModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <div style="background:#fff8f4;border:1px solid #ffe4d6;border-radius:10px;padding:12px 16px;font-size:.88rem;margin-bottom:1rem;color:var(--muted);">
+          Item: <strong id="editItemName" style="color:var(--ink);">—</strong>
+        </div>
+        <div>
+          <label style="font-size:.8rem;font-weight:700;display:block;margin-bottom:.4rem;">New Quantity</label>
+          <input type="number" name="new_qty" id="editItemQty" step="0.01" required
+                 style="width:100%;padding:.7rem 1rem;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;outline:none;">
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editItemModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================================================ -->
+<!-- JAVASCRIPT -->
+<!-- ================================================ -->
+<script>
+function openEditModal(id, name, qty) {
+  document.getElementById('editItemId').value = id;
+  document.getElementById('editItemName').textContent = name;
+  document.getElementById('editItemQty').value = qty;
+  openModal('editItemModal');
+}
+</script>
+
+{% endblock %}

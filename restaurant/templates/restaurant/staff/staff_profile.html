@@ -1,0 +1,40 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div><h1>My Profile</h1><p>Update your personal information.</p></div>
+</div>
+
+<div style="max-width:640px;">
+  <div class="card" style="border-top:4px solid var(--orange);">
+    <div class="card-body" style="padding:2rem;">
+      <div style="display:flex;align-items:center;gap:1.2rem;padding-bottom:1.5rem;margin-bottom:1.5rem;border-bottom:1px solid var(--line);">
+        <div class="td-avatar" style="width:72px;height:72px;font-size:1.75rem;border-radius:50%;">
+          {{ request.user.first_name|first|upper|default:request.user.username|first|upper }}
+        </div>
+        <div>
+          <h2 style="font-size:1.35rem;margin:0 0 .35rem;">{{ request.user.get_full_name|default:request.user.username }}</h2>
+          <div style="font-size:.72rem;font-weight:700;color:var(--orange);letter-spacing:.1em;text-transform:uppercase;">
+            {% for g in request.user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <form method="post" style="display:flex;flex-direction:column;gap:1rem;">
+        {% csrf_token %}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div><label class="f-label">First Name</label><input type="text" name="first_name" value="{{ request.user.first_name }}" class="f-input"></div>
+          <div><label class="f-label">Last Name</label><input type="text" name="last_name" value="{{ request.user.last_name }}" class="f-input"></div>
+        </div>
+        <div><label class="f-label">Email</label><input type="email" name="email" value="{{ request.user.email }}" class="f-input"></div>
+        <div><label class="f-label">Mobile No</label><input type="text" name="mobile_no" value="{{ request.user.profile.mobile_no|default:'' }}" class="f-input"></div>
+        <div><label class="f-label">Username (read-only)</label><input type="text" value="{{ request.user.username }}" disabled class="f-input" style="background:var(--cream);color:var(--muted);"></div>
+        <div><label class="f-label">Role (read-only)</label><input type="text" value="{% for g in request.user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% endfor %}" disabled class="f-input" style="background:var(--cream);color:var(--muted);"></div>
+        <div><button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

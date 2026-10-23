@@ -1,0 +1,908 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% if is_pre_order_mode %}Pre-Order Food — TableServe{% else %}Food Menu — TableServe{% endif %}</title>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --orange:#FF7A00;
+  --orange-2:#FFA53B;
+  --orange-soft:#FFF2E3;
+  --green:#2FAE60;
+  --green-soft:#E8F7EE;
+  --red:#E5484D;
+  --red-soft:#FDECEC;
+  --ink:#151310;
+  --ink-soft:#2C2721;
+  --muted:#7C756B;
+  --cream:#FFFBF6;
+  --line:#EFE9E0;
+  --radius:20px;
+  --radius-lg:28px;
+  --shadow-xs:0 4px 14px rgba(21,19,16,.05);
+  --shadow-sm:0 10px 30px rgba(21,19,16,.07);
+  --shadow-md:0 20px 50px rgba(21,19,16,.10);
+  --ease:cubic-bezier(.22,.9,.28,1);
+}
+
+*{box-sizing:border-box;}
+body{
+  font-family:'Plus Jakarta Sans',system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  padding-top:76px;
+}
+h1,h2,h3,h4,h5,.brand{font-family:'Fredoka',sans-serif;font-weight:600;}
+a{text-decoration:none;color:inherit;}
+
+/* NAVBAR */
+.nav-wrap{
+  position:fixed;top:0;left:0;right:0;z-index:1040;
+  padding:.8rem 0;background:rgba(255,251,246,.95);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(21,19,16,.07);
+  border-bottom:1px solid rgba(239,233,224,.8);
+}
+.brand{display:inline-flex;align-items:center;gap:.6rem;font-size:1.35rem;font-weight:700;}
+.brand-mark{
+  width:40px;height:40px;border-radius:13px;
+  background:linear-gradient(135deg,var(--orange),#FFA53B);
+  color:#fff;display:grid;place-items:center;font-size:1.05rem;
+}
+.nav-links{list-style:none;display:flex;align-items:center;gap:.25rem;margin:0 auto;padding:0;}
+.nav-links > li > a{
+  display:inline-flex;align-items:center;gap:.45rem;
+  padding:.5rem .85rem;border-radius:50px;
+  font-weight:700;font-size:.92rem;color:var(--ink-soft);
+  transition:.25s var(--ease);
+}
+.nav-links > li > a:hover{background:var(--orange-soft);color:var(--orange);}
+.nav-links > li > a.active{background:var(--ink);color:#fff;}
+
+.nav-links .has-dropdown{position:relative;}
+.nav-links .has-dropdown > a::after{
+  content:"\f078";font-family:"Font Awesome 6 Free";font-weight:900;
+  font-size:.6rem;margin-left:.15rem;
+}
+.services-dropdown{
+  position:absolute;top:100%;left:50%;transform:translateX(-50%);
+  background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(21,19,16,.14);
+  border:1px solid var(--line);padding:.5rem;min-width:200px;
+  opacity:0;visibility:hidden;transition:all .3s var(--ease);z-index:1050;
+}
+.nav-links .has-dropdown:hover .services-dropdown{opacity:1;visibility:visible;}
+.services-dropdown a{
+  display:flex;align-items:center;gap:.75rem;padding:.65rem .85rem;
+  border-radius:12px;font-size:.88rem;font-weight:600;color:var(--ink-soft);
+}
+.services-dropdown a:hover{background:var(--orange-soft);color:var(--orange);}
+
+.cart-link-btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.5rem 1.1rem;border-radius:50px;
+  background:#fff;border:1.5px solid var(--orange);
+  color:var(--orange);font-weight:700;font-size:.9rem;
+  transition:.25s var(--ease);text-decoration:none;
+}
+.cart-link-btn:hover{background:var(--orange);color:#fff;}
+
+/* HERO BANNER */
+.page-hero{
+  background:linear-gradient(135deg,var(--ink) 0%,#2E261D 100%);
+  color:#fff;padding:3.2rem 0 2.5rem;border-radius:0 0 var(--radius-lg) var(--radius-lg);
+  margin-bottom:2.2rem;
+}
+.page-hero h1{color:#fff;font-size:2.4rem;margin-bottom:.5rem;}
+.page-hero p{color:rgba(255,255,255,.75);font-size:1.02rem;margin:0;}
+
+/* CATEGORIES BAR */
+.category-chip{
+  display:inline-flex;align-items:center;gap:.5rem;
+  padding:.55rem 1.25rem;border-radius:50px;
+  background:#fff;border:1.5px solid var(--line);
+  font-weight:700;font-size:.88rem;color:var(--ink-soft);
+  transition:.25s var(--ease);white-space:nowrap;cursor:pointer;
+  text-decoration:none;
+}
+.category-chip:hover, .category-chip.active{
+  background:var(--orange);color:#fff;border-color:var(--orange);
+}
+
+/* FOOD CARDS GRID */
+.food-card{
+  background:#fff;border:1.5px solid var(--line);
+  border-radius:var(--radius-lg);overflow:hidden;
+  height:100%;display:flex;flex-direction:column;
+  transition:.3s var(--ease);box-shadow:var(--shadow-xs);
+}
+.food-card:hover{
+  border-color:var(--orange);transform:translateY(-6px);
+  box-shadow:var(--shadow-sm);
+}
+.food-img-wrapper{
+  position:relative;width:100%;height:190px;background:#F6F1EA;
+  overflow:hidden;
+}
+.food-img{width:100%;height:100%;object-fit:cover;transition:.4s var(--ease);}
+.food-card:hover .food-img{transform:scale(1.06);}
+
+.food-badge{
+  position:absolute;top:12px;left:12px;
+  padding:.3rem .7rem;border-radius:50px;
+  font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  backdrop-filter:blur(6px);
+}
+.badge-veg{background:rgba(47,174,96,.92);color:#fff;}
+.badge-non-veg{background:rgba(229,72,77,.92);color:#fff;}
+
+.food-body{padding:1.3rem;display:flex;flex-direction:column;flex:1;}
+.food-title{font-size:1.15rem;font-weight:700;margin-bottom:.3rem;}
+.food-desc{font-size:.84rem;color:var(--muted);margin-bottom:1rem;flex:1;line-height:1.5;}
+.price-tag{font-family:'Fredoka',sans-serif;font-size:1.3rem;font-weight:700;color:var(--orange);}
+
+.add-cart-btn{
+  background:linear-gradient(135deg,var(--orange),#FF9A2E);
+  color:#fff;border:none;padding:.6rem 1.3rem;border-radius:50px;
+  font-weight:700;font-size:.88rem;display:inline-flex;align-items:center;gap:.45rem;
+  transition:.25s var(--ease);box-shadow:0 6px 16px rgba(255,122,0,.25);
+  cursor:pointer;
+}
+.add-cart-btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(255,122,0,.38);color:#fff;}
+
+/* STICKY CART BAR */
+.sticky-cart-bar{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;border-radius:50px;
+  padding:.8rem 1.8rem;display:flex;align-items:center;gap:1.5rem;
+  box-shadow:0 12px 35px rgba(0,0,0,.3);z-index:1030;
+  border:1px solid rgba(255,255,255,.15);
+}
+
+/* CUSTOMIZATION MODAL */
+.modal-content{
+  border-radius:var(--radius-lg);border:none;
+  box-shadow:0 25px 60px rgba(0,0,0,.2);overflow:hidden;
+}
+.modal-header{
+  background:linear-gradient(135deg,var(--ink),#2A241C);
+  color:#fff;border-bottom:none;padding:1.2rem 1.5rem;
+}
+.modal-header .btn-close{filter:invert(1);}
+.option-card{
+  border:1.5px solid var(--line);border-radius:14px;
+  padding:.65rem .9rem;cursor:pointer;transition:.2s var(--ease);
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:.5rem;background:#fff;
+}
+.option-card:hover{border-color:var(--orange);background:var(--orange-soft);}
+.option-card input:checked + label{font-weight:700;color:var(--orange);}
+
+.qty-pill-control{
+  display:inline-flex;align-items:center;background:var(--cream);
+  border:1.5px solid var(--line);border-radius:50px;padding:.2rem .4rem;
+}
+.qty-pill-btn{
+  width:32px;height:32px;border-radius:50%;border:none;
+  background:#fff;color:var(--ink);font-weight:700;display:grid;place-items:center;
+  cursor:pointer;transition:.2s;box-shadow:0 2px 6px rgba(0,0,0,.08);
+}
+.qty-pill-btn:hover{background:var(--orange);color:#fff;}
+.qty-pill-input{
+  width:38px;text-align:center;border:none;background:transparent;
+  font-weight:700;font-size:1rem;outline:none;
+}
+
+/* TOAST */
+.custom-toast{
+  position:fixed;top:90px;right:20px;z-index:1060;
+  background:var(--ink);color:#fff;padding:1rem 1.4rem;
+  border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2);
+  display:flex;align-items:center;gap:.75rem;font-weight:600;
+  transform:translateY(-20px);opacity:0;transition:all .3s var(--ease);
+}
+.custom-toast.show{transform:translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="nav-wrap">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark"><i class="fa-solid fa-utensils"></i></span> TableServe
+    </a>
+
+    <ul class="nav-links d-none d-lg-flex">
+      <li><a href="{% url 'home' %}"><i class="fa-solid fa-house nav-ic"></i> Home</a></li>
+      <li><a href="{% if user.is_authenticated %}{% url 'customer_profile' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-circle-user nav-ic"></i> Account</a></li>
+      <li class="has-dropdown">
+        <a class="active" href="javascript:void(0)"><i class="fa-solid fa-bell-concierge nav-ic"></i> Services</a>
+        <div class="services-dropdown">
+          <a href="{% url 'food_order_view' %}"><i class="fa-solid fa-utensils"></i> Food Order</a>
+          <a href="{% url 'table_booking_view' %}"><i class="fa-solid fa-chair"></i> Table Booking</a>
+        </div>
+      </li>
+      <li><a href="{% if user.is_authenticated %}{% url 'my_bookings' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-calendar-check nav-ic"></i> My Bookings</a></li>
+      <li><a href="{% if user.is_authenticated %}{% url 'my_orders' %}{% else %}{% url 'login' %}{% endif %}"><i class="fa-solid fa-clipboard-list nav-ic"></i> My Orders</a></li>
+      <li><a href="{% url 'about' %}"><i class="fa-solid fa-circle-info nav-ic"></i> About</a></li>
+    </ul>
+
+    <div class="d-flex align-items-center gap-3">
+      {% if is_pre_order_mode %}
+        <a href="{% url 'table_booking_summary_view' %}" class="cart-link-btn" title="View Pre-Order Summary">
+          🛍 Pre-Order (<span id="navCartBadge">{{ cart_item_count }}</span>)
+        </a>
+      {% else %}
+        <a href="{% url 'cart_view' %}" class="cart-link-btn" title="View Shopping Cart">
+          🛒 Cart (<span id="navCartBadge">{{ cart_item_count }}</span>)
+        </a>
+      {% endif %}
+
+      {% if user.is_authenticated %}
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary rounded-pill px-3 py-1 text-decoration-none fw-bold" style="font-size:.85rem;">Logout</a>
+      {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary px-3 py-1 rounded-pill fw-bold text-decoration-none" style="font-size:.85rem;">Login</a>
+      {% endif %}
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="page-hero text-center">
+  <div class="container">
+    {% if is_pre_order_mode %}
+      <h1>🍽 Table Pre-Order Food Menu</h1>
+      <p>Select food items to be prepared in advance for Table #{{ table.number }}</p>
+    {% else %}
+      <h1>🍽 TableServe Food Menu</h1>
+      <p>Browse our chef-crafted gourmet menu &amp; customize your delicious meal</p>
+    {% endif %}
+  </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<div class="container pb-5">
+
+  <div id="messagesContainer">
+    {% if messages %}
+      <div class="mb-4">
+        {% for message in messages %}
+          <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  {% if is_pre_order_mode and pending %}
+  <!-- PRE-ORDER MODE ACTIVE BANNER -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: linear-gradient(135deg, #FFF6ED, #FFEDE0); border: 2px solid var(--orange) !important;">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div>
+          <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2">
+            <i class="fa-solid fa-utensils me-1"></i> Pre-Ordering Food Active
+          </span>
+          <h3 class="fw-bold text-dark mb-1">Pre-Ordering for Table #{{ table.number }}</h3>
+          <p class="text-muted mb-0">
+            <i class="fa-solid fa-calendar text-warning me-1"></i> <strong>Date:</strong> {{ pending.date }} &nbsp;|&nbsp; 
+            <i class="fa-solid fa-clock text-warning me-1"></i> <strong>Time:</strong> {{ pending.time }} &nbsp;|&nbsp; 
+            <i class="fa-solid fa-users text-warning me-1"></i> <strong>Guests:</strong> {{ pending.guests }}
+          </p>
+          <small class="text-muted d-block mt-1">Select food items you would like to have ready for your table upon arrival.</small>
+        </div>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+          <a href="{% url 'table_booking_view' %}" class="btn btn-outline-secondary rounded-pill px-3 py-2 fw-bold text-decoration-none btn-sm">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Change Table / Time
+          </a>
+          <a href="{% url 'table_booking_summary_view' %}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-decoration-none btn-sm shadow-sm">
+            <span>Proceed to Prepaid Checkout</span> <i class="fa-solid fa-arrow-right ms-1"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRE-ORDER CART SUMMARY CARD -->
+  <div class="card border-0 shadow-sm rounded-4 mb-4" id="preOrderSummaryCard" style="background:#fff; border: 1.5px solid var(--line) !important;">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+        <h5 class="fw-bold m-0" style="font-family:'Fredoka'; color:var(--ink);">
+          <i class="fa-solid fa-cart-flatbed text-orange me-2" style="color:var(--orange);"></i> Your Pre-Order Food Items
+        </h5>
+        <span class="badge bg-light text-dark fw-bold border rounded-pill px-3 py-2 fs-6">
+          <span id="preOrderTotalQty">{{ cart_item_count }}</span> item(s) selected
+        </span>
+      </div>
+
+      <!-- PRE-ORDER ITEMS TABLE / LIST -->
+      <div id="preOrderItemsListContainer">
+        {% if cart_items %}
+          <div class="table-responsive mb-3">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr class="text-muted small">
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Subtotal</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody id="preOrderTableBody">
+                {% for ci in cart_items %}
+                  <tr id="preorder_row_{{ ci.item.id }}">
+                    <td class="fw-bold">{{ ci.item.name }}</td>
+                    <td>₹{{ ci.price }}</td>
+                    <td class="text-center">
+                      <div class="qty-pill-control d-inline-flex">
+                        <button type="button" class="qty-pill-btn" onclick="updatePreOrderCart({{ ci.item.id }}, 'update', {{ ci.quantity|add:-1 }})">-</button>
+                        <input type="number" class="qty-pill-input" value="{{ ci.quantity }}" readonly>
+                        <button type="button" class="qty-pill-btn" onclick="updatePreOrderCart({{ ci.item.id }}, 'update', {{ ci.quantity|add:1 }})">+</button>
+                      </div>
+                    </td>
+                    <td class="text-end fw-bold" style="color:var(--orange);">₹{{ ci.subtotal }}</td>
+                    <td class="text-center">
+                      <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="updatePreOrderCart({{ ci.item.id }}, 'remove', 0)" title="Remove item">
+                        <i class="fa-solid fa-trash-can"></i>
+                      </button>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4 text-muted" id="emptyPreOrderMsg">
+            <i class="fa-solid fa-basket-shopping fs-3 mb-2 text-warning d-block"></i>
+            <p class="mb-1 fw-bold">Your Pre-Order Cart is currently empty (0 items).</p>
+            <small>Browse the menu below and click <strong>"Add to Cart"</strong> on any item to add it to your pre-order.</small>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- PREPAID BREAKDOWN -->
+      <div class="p-3 rounded-4 bg-light d-flex align-items-center justify-content-between flex-wrap gap-3 mt-3">
+        <div>
+          <div class="small text-muted mb-1">
+            Food Subtotal: <strong class="text-dark" id="displayFoodSubtotal">₹{{ food_subtotal|floatformat:2 }}</strong> &nbsp;|&nbsp; 
+            Table Charge: <strong class="text-dark">₹200.00</strong>
+          </div>
+          <div class="fs-4 fw-bold text-dark">
+            Total Prepaid Amount: <span class="text-warning" id="displayTotalPrepaid">₹{{ total_prepaid|floatformat:2 }}</span>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <a href="{% url 'table_booking_summary_view' %}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold text-decoration-none shadow-sm">
+            <i class="fa-solid fa-credit-card me-2"></i>Proceed to Prepaid Checkout
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- CATEGORIES FILTER BAR -->
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-center gap-2 overflow-auto py-2" style="max-width:100%;">
+      <a href="{% if is_pre_order_mode %}{% url 'pre_order_menu_view' %}{% else %}{% url 'food_order_view' %}{% endif %}" class="category-chip {% if selected_category == 'all' %}active{% endif %}">
+        <i class="fa-solid fa-border-all me-1"></i> All Items
+      </a>
+      {% for cat in categories %}
+        <a href="{% if is_pre_order_mode %}{% url 'pre_order_menu_view' %}{% else %}{% url 'food_order_view' %}{% endif %}?category={{ cat.name|urlencode }}" class="category-chip {% if selected_category == cat.name %}active{% endif %}">
+          {{ cat.name }}
+        </a>
+      {% endfor %}
+    </div>
+
+    <!-- SEARCH FORM -->
+    <form method="GET" action="{% if is_pre_order_mode %}{% url 'pre_order_menu_view' %}{% else %}{% url 'food_order_view' %}{% endif %}" class="d-flex align-items-center" style="max-width:300px;width:100%;">
+      {% if selected_category != 'all' %}<input type="hidden" name="category" value="{{ selected_category }}">{% endif %}
+      <div class="input-group">
+        <input type="text" name="search" class="form-control rounded-pill-start border-end-0 px-3" placeholder="Search menu..." value="{{ search_query }}">
+        <button type="submit" class="btn btn-primary rounded-pill-end px-3"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+    </form>
+  </div>
+
+  <!-- MENU ITEMS GRID -->
+  <div class="row g-4">
+    {% for item in menu_items %}
+      <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div class="food-card">
+          <div class="food-img-wrapper">
+            {% if item.image %}
+              <img src="{{ item.image.url }}" alt="{{ item.name }}" class="food-img">
+            {% else %}
+              <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80" alt="{{ item.name }}" class="food-img">
+            {% endif %}
+            <span class="food-badge {% if item.food_type == 'veg' %}badge-veg{% else %}badge-non-veg{% endif %}">
+              {% if item.food_type == 'veg' %}🟢 Veg{% else %}🔴 Non-Veg{% endif %}
+            </span>
+          </div>
+
+          <div class="food-body">
+            <h5 class="food-title">{{ item.name }}</h5>
+            <p class="food-desc">{{ item.description|truncatewords:12|default:"Delicious freshly prepared item." }}</p>
+
+            <div class="d-flex align-items-center justify-content-between mt-auto">
+              <div>
+                <span class="price-tag">₹{{ item.get_final_price }}</span>
+                {% if item.discount_percentage > 0 %}
+                  <small class="text-muted text-decoration-line-through ms-1">₹{{ item.price }}</small>
+                {% endif %}
+              </div>
+
+              <button type="button" class="add-cart-btn" onclick="handleAddCartClick({{ item.id }})">
+                <i class="fa-solid fa-cart-plus me-1"></i> Add to Cart
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center py-5">
+        <i class="fa-solid fa-utensils text-muted mb-3" style="font-size:3rem;"></i>
+        <h4>No food items found</h4>
+        <p class="text-muted">Try selecting a different category or search query.</p>
+        <a href="{% if is_pre_order_mode %}{% url 'pre_order_menu_view' %}{% else %}{% url 'food_order_view' %}{% endif %}" class="btn btn-primary mt-2">View Full Menu</a>
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<!-- STICKY FLOATING CART BAR -->
+<div class="sticky-cart-bar" id="stickyCartBar" style="{% if cart_item_count == 0 %}display:none;{% endif %}">
+  <div>
+    {% if is_pre_order_mode %}
+      🛍 <span class="fw-bold" id="stickyCartCount">{{ cart_item_count }}</span> item(s) in pre-order cart
+    {% else %}
+      🛒 <span class="fw-bold" id="stickyCartCount">{{ cart_item_count }}</span> item(s) in cart
+    {% endif %}
+  </div>
+  <a href="{% if is_pre_order_mode %}{% url 'table_booking_summary_view' %}{% else %}{% url 'cart_view' %}{% endif %}" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold text-decoration-none">
+    <span>{% if is_pre_order_mode %}Prepaid Checkout{% else %}View Cart{% endif %}</span> <i class="fa-solid fa-arrow-right ms-1"></i>
+  </a>
+</div>
+
+<!-- FOOD CUSTOMIZATION MODAL -->
+<div class="modal fade" id="customizationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" id="modalItemTitle">Customize Item</h5>
+          <span class="badge bg-warning text-dark mt-1" id="modalItemCategory">Menu</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body p-4">
+        <div class="row align-items-center mb-3">
+          <div class="col-md-3 text-center mb-3 mb-md-0">
+            <img id="modalItemImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Food" class="img-fluid rounded-4 shadow-sm" style="max-height:130px;width:100%;object-fit:cover;">
+          </div>
+          <div class="col-md-9">
+            <p class="text-muted small mb-2" id="modalItemDesc">Item description</p>
+            <div class="d-flex align-items-center gap-3">
+              <span class="fs-4 fw-bold text-warning" id="modalBasePriceDisplay">₹0.00</span>
+              <span class="text-muted small">(Base Price)</span>
+            </div>
+          </div>
+        </div>
+
+        <hr style="border-color:var(--line);">
+
+        <!-- DYNAMIC CUSTOMIZATION GROUPS CONTAINER -->
+        <div id="customizationGroupsContainer" class="mb-4">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- SPECIAL INSTRUCTIONS -->
+        <div class="mb-4">
+          <label class="form-label fw-bold text-dark mb-1">
+            <i class="fa-solid fa-comment-dots text-warning me-1"></i> Special Instructions
+          </label>
+          <textarea id="modalSpecialInstructions" class="form-control rounded-3" rows="2" placeholder="Any specific requests? We'll try our best to accommodate."></textarea>
+        </div>
+
+        <!-- QUANTITY & LIVE PRICE BREAKDOWN -->
+        <div class="p-3 bg-light rounded-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <label class="form-label fw-bold small text-muted text-uppercase mb-1 d-block">Quantity</label>
+            <div class="qty-pill-control">
+              <button type="button" class="qty-pill-btn" onclick="adjustModalQty(-1)">-</button>
+              <input type="number" id="modalQtyInput" class="qty-pill-input" value="1" min="1" max="20" readonly>
+              <button type="button" class="qty-pill-btn" onclick="adjustModalQty(1)">+</button>
+            </div>
+          </div>
+
+          <div class="text-end">
+            <span class="d-block text-muted small">Total Amount</span>
+            <span class="fs-3 fw-bold text-warning" id="modalTotalPriceDisplay">₹0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-light border-0 px-4 py-3">
+        <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="modalAddToCartBtn" onclick="submitCustomizedCart()">
+          <i class="fa-solid fa-cart-plus me-2"></i> Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SUCCESS TOAST -->
+<div class="custom-toast" id="customToast">
+  <i class="fa-solid fa-circle-check text-success fs-5"></i>
+  <span id="toastMessage">Item added to cart successfully.</span>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container text-center">
+    <p class="mb-0 text-muted">&copy; 2026 TableServe Restaurant Management. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const USER_IS_LOGGED_IN = {% if user_is_logged_in %}true{% else %}false{% endif %};
+const IS_PRE_ORDER_MODE = {% if is_pre_order_mode %}true{% else %}false{% endif %};
+let currentModalItem = null;
+let customizationModalInstance = null;
+
+function getCsrfToken() {
+  const input = document.querySelector("input[name='csrfmiddlewaretoken']");
+  if (input && input.value) return input.value;
+  const cookieMatch = document.cookie.match(/csrftoken=([^;]+)/);
+  if (cookieMatch) return decodeURIComponent(cookieMatch[1]);
+  return "{{ csrf_token }}";
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const modalEl = document.getElementById('customizationModal');
+  if (modalEl) {
+    customizationModalInstance = new bootstrap.Modal(modalEl);
+  }
+});
+
+function showToast(message) {
+  const toast = document.getElementById('customToast');
+  document.getElementById('toastMessage').textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3500);
+}
+
+function handleAddCartClick(itemId) {
+  if (IS_PRE_ORDER_MODE) {
+    updatePreOrderCart(itemId, 'add', 1);
+  } else {
+    openFoodCustomization(itemId);
+  }
+}
+
+function updatePreOrderCart(itemId, action, quantity) {
+  const csrfToken = getCsrfToken();
+  fetch("{% url 'api_update_pre_order_cart' %}", {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrfToken,
+      'X-Requested-With': 'XMLHttpRequest'
+    },
+    body: JSON.stringify({
+      item_id: itemId,
+      action: action,
+      quantity: quantity
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert(data.error || 'Failed to update pre-order cart.');
+      return;
+    }
+
+    const totalQty = data.total_items;
+    const foodSubtotal = parseFloat(data.food_subtotal).toFixed(2);
+    const totalPrepaid = parseFloat(data.total_prepaid).toFixed(2);
+
+    const navCartBadge = document.getElementById('navCartBadge');
+    if (navCartBadge) navCartBadge.textContent = totalQty;
+
+    const stickyCartCount = document.getElementById('stickyCartCount');
+    if (stickyCartCount) stickyCartCount.textContent = totalQty;
+
+    const preOrderTotalQty = document.getElementById('preOrderTotalQty');
+    if (preOrderTotalQty) preOrderTotalQty.textContent = totalQty;
+
+    const displayFoodSubtotal = document.getElementById('displayFoodSubtotal');
+    if (displayFoodSubtotal) displayFoodSubtotal.textContent = '₹' + foodSubtotal;
+
+    const displayTotalPrepaid = document.getElementById('displayTotalPrepaid');
+    if (displayTotalPrepaid) displayTotalPrepaid.textContent = '₹' + totalPrepaid;
+
+    const stickyCartBar = document.getElementById('stickyCartBar');
+    if (stickyCartBar) {
+      stickyCartBar.style.display = totalQty > 0 ? 'flex' : 'none';
+    }
+
+    const container = document.getElementById('preOrderItemsListContainer');
+    if (container) {
+      if (data.cart_items && data.cart_items.length > 0) {
+        let rowsHtml = '';
+        data.cart_items.forEach(ci => {
+          rowsHtml += `
+            <tr id="preorder_row_${ci.id}">
+              <td class="fw-bold">${ci.name}</td>
+              <td>₹${ci.price.toFixed(2)}</td>
+              <td class="text-center">
+                <div class="qty-pill-control d-inline-flex">
+                  <button type="button" class="qty-pill-btn" onclick="updatePreOrderCart(${ci.id}, 'update', ${ci.quantity - 1})">-</button>
+                  <input type="number" class="qty-pill-input" value="${ci.quantity}" readonly>
+                  <button type="button" class="qty-pill-btn" onclick="updatePreOrderCart(${ci.id}, 'update', ${ci.quantity + 1})">+</button>
+                </div>
+              </td>
+              <td class="text-end fw-bold" style="color:var(--orange);">₹${ci.subtotal.toFixed(2)}</td>
+              <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0 rounded-circle" onclick="updatePreOrderCart(${ci.id}, 'remove', 0)" title="Remove item">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        });
+        container.innerHTML = `
+          <div class="table-responsive mb-3">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr class="text-muted small">
+                  <th>Item</th>
+                  <th>Price</th>
+                  <th class="text-center">Qty</th>
+                  <th class="text-end">Subtotal</th>
+                  <th class="text-center">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rowsHtml}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else {
+        container.innerHTML = `
+          <div class="text-center py-4 text-muted" id="emptyPreOrderMsg">
+            <i class="fa-solid fa-basket-shopping fs-3 mb-2 text-warning d-block"></i>
+            <p class="mb-1 fw-bold">Your Pre-Order Cart is currently empty (0 items).</p>
+            <small>Browse the menu below and click <strong>"Add to Cart"</strong> on any item to add it to your pre-order.</small>
+          </div>
+        `;
+      }
+    }
+
+    showToast('Pre-Order cart updated successfully!');
+  })
+  .catch(err => {
+    console.error('Error updating pre-order cart:', err);
+    alert('Something went wrong while updating pre-order cart.');
+  });
+}
+
+function openFoodCustomization(itemId) {
+  if (!USER_IS_LOGGED_IN) {
+    alert("Please login to add items to your cart.");
+    window.location.href = "{% url 'login' %}?next={% url 'food_order_view' %}";
+    return;
+  }
+
+  fetch(`/food-order/item-details/${itemId}/`, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (!data.success) {
+      alert("Unable to load item details.");
+      return;
+    }
+
+    currentModalItem = data.item;
+    renderCustomizationModal(data.item);
+    if (customizationModalInstance) {
+      customizationModalInstance.show();
+    }
+  })
+  .catch(err => {
+    console.error("Error fetching item details:", err);
+    alert("Something went wrong while opening food customization.");
+  });
+}
+
+function renderCustomizationModal(item) {
+  document.getElementById('modalItemTitle').textContent = item.name;
+  document.getElementById('modalItemDesc').textContent = item.description;
+  document.getElementById('modalBasePriceDisplay').textContent = '₹' + item.base_price.toFixed(2);
+  document.getElementById('modalQtyInput').value = 1;
+  document.getElementById('modalSpecialInstructions').value = '';
+
+  const imgEl = document.getElementById('modalItemImage');
+  if (item.image_url) {
+    imgEl.src = item.image_url;
+    imgEl.style.display = 'block';
+  } else {
+    imgEl.src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80';
+    imgEl.style.display = 'block';
+  }
+
+  const container = document.getElementById('customizationGroupsContainer');
+  container.innerHTML = '';
+
+  if (item.customization_groups && item.customization_groups.length > 0) {
+    item.customization_groups.forEach((group, gIdx) => {
+      const groupDiv = document.createElement('div');
+      groupDiv.className = 'mb-3';
+
+      const title = document.createElement('h6');
+      title.className = 'fw-bold text-dark mb-2';
+      title.textContent = group.name;
+      groupDiv.appendChild(title);
+
+      group.options.forEach((opt, oIdx) => {
+        const inputId = `opt_${gIdx}_${oIdx}`;
+        const inputType = group.type === 'radio' ? 'radio' : 'checkbox';
+        const inputName = `group_${gIdx}`;
+
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerHTML = `
+          <div class="form-check m-0">
+            <input class="form-check-input customization-opt-input" type="${inputType}" name="${inputName}" id="${inputId}" data-name="${opt.name}" data-price="${opt.price}" onchange="recalculateModalTotal()">
+            <label class="form-check-label ms-2" for="${inputId}">
+              ${opt.name}
+            </label>
+          </div>
+          <span class="badge bg-light text-dark fw-bold border">+₹${opt.price.toFixed(2)}</span>
+        `;
+        groupDiv.appendChild(card);
+      });
+
+      container.appendChild(groupDiv);
+    });
+  } else {
+    container.innerHTML = `
+      <div class="text-center py-4 text-muted">
+        <i class="fa-solid fa-circle-info text-warning fs-3 mb-2 d-block"></i>
+        <p class="mb-0 fw-bold text-dark">No customization available</p>
+        <small class="text-muted">This item is served standard without extra options.</small>
+      </div>
+    `;
+  }
+
+  recalculateModalTotal();
+}
+
+function adjustModalQty(delta) {
+  const qtyInput = document.getElementById('modalQtyInput');
+  let val = parseInt(qtyInput.value) || 1;
+  val = Math.min(Math.max(1, val + delta), 20);
+  qtyInput.value = val;
+  recalculateModalTotal();
+}
+
+function recalculateModalTotal() {
+  if (!currentModalItem) return;
+
+  const basePrice = parseFloat(currentModalItem.base_price) || 0;
+  let optionsSum = 0;
+
+  const selectedInputs = document.querySelectorAll('#customizationGroupsContainer input:checked');
+  selectedInputs.forEach(input => {
+    optionsSum += parseFloat(input.dataset.price || 0);
+  });
+
+  const qty = parseInt(document.getElementById('modalQtyInput').value) || 1;
+  const grandTotal = (basePrice + optionsSum) * qty;
+
+  document.getElementById('modalTotalPriceDisplay').textContent = '₹' + grandTotal.toFixed(2);
+}
+
+function submitCustomizedCart() {
+  if (!currentModalItem) return;
+
+  if (IS_PRE_ORDER_MODE) {
+    const qty = parseInt(document.getElementById('modalQtyInput').value) || 1;
+    updatePreOrderCart(currentModalItem.id, 'add', qty);
+    if (customizationModalInstance) customizationModalInstance.hide();
+    return;
+  }
+
+  const selectedOptions = [];
+  const selectedInputs = document.querySelectorAll('#customizationGroupsContainer input:checked');
+  selectedInputs.forEach(input => {
+    selectedOptions.push({
+      name: input.dataset.name,
+      price: parseFloat(input.dataset.price || 0)
+    });
+  });
+
+  const qty = parseInt(document.getElementById('modalQtyInput').value) || 1;
+  const specialInstructions = document.getElementById('modalSpecialInstructions').value.trim();
+
+  const formData = new FormData();
+  formData.append('csrfmiddlewaretoken', getCsrfToken());
+  formData.append('item_id', currentModalItem.id);
+  formData.append('quantity', qty);
+  formData.append('action', 'add');
+  formData.append('selected_options', JSON.stringify(selectedOptions));
+  formData.append('special_instructions', specialInstructions);
+
+  const btn = document.getElementById('modalAddToCartBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Adding...';
+
+  fetch("{% url 'add_to_cart_view' %}", {
+    method: 'POST',
+    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-cart-plus me-2"></i> Add to Cart';
+
+    if (!data.success) {
+      if (data.logged_in === false) {
+        alert(data.error || "Please login to add items to your cart.");
+        window.location.href = data.redirect_url || "{% url 'login' %}?next={% url 'food_order_view' %}";
+      } else {
+        alert(data.error || "Error adding item to cart.");
+      }
+      return;
+    }
+
+    document.getElementById('navCartBadge').textContent = data.cart_count;
+    document.getElementById('stickyCartCount').textContent = data.cart_count;
+    document.getElementById('stickyCartBar').style.display = 'flex';
+
+    if (customizationModalInstance) {
+      customizationModalInstance.hide();
+    }
+
+    showToast(data.message || `${currentModalItem.name} added to cart successfully.`);
+  })
+  .catch(err => {
+    console.error("Cart submit error:", err);
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-cart-plus me-2"></i> Add to Cart';
+    alert("Something went wrong while adding to cart.");
+  });
+}
+
+// Auto-reload on back-forward navigation (bfcache) to keep CSRF tokens in sync
+window.addEventListener('pageshow', function (event) {
+  if (event.persisted || (window.performance && window.performance.getEntriesByType && window.performance.getEntriesByType('navigation')[0]?.type === 'back_forward')) {
+    window.location.reload();
+  }
+});
+</script>
+
+</body>
+</html>

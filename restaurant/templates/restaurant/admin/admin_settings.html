@@ -1,0 +1,67 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Settings — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Settings</h1>
+    <p>Update your profile, change password, and manage account preferences.</p>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;" class="st-grid">
+  <div class="card">
+    <div class="card-head"><h5>Admin Profile</h5></div>
+    <div class="card-body">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="form_type" value="profile">
+        <div style="text-align:center;margin-bottom:1.5rem;">
+          <div class="td-avatar" style="width:80px;height:80px;font-size:1.8rem;border-radius:50%;margin:0 auto;">
+            {{ request.user.username|first|upper }}
+          </div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Username</label>
+          <input type="text" value="{{ request.user.username }}" disabled class="f-input" style="background:var(--cream);color:var(--muted);">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name</label><input type="text" name="first_name" value="{{ request.user.first_name }}" class="f-input"></div>
+          <div><label class="f-label">Last Name</label><input type="text" name="last_name" value="{{ request.user.last_name }}" class="f-input"></div>
+        </div>
+        <div style="margin-bottom:1rem;"><label class="f-label">Email</label><input type="email" name="email" value="{{ request.user.email }}" class="f-input"></div>
+        <div style="margin-bottom:1.25rem;"><label class="f-label">Mobile</label><input type="text" name="mobile_no" value="{{ request.user.profile.mobile_no }}" class="f-input"></div>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-head"><h5>Change Password</h5></div>
+      <div class="card-body">
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="form_type" value="password">
+          <div style="margin-bottom:1rem;"><label class="f-label">Current Password</label><input type="password" name="old_password" class="f-input" placeholder="••••••••" required></div>
+          <div style="margin-bottom:1rem;"><label class="f-label">New Password</label><input type="password" name="new_password" class="f-input" placeholder="••••••••" required minlength="8"></div>
+          <div style="margin-bottom:1.25rem;"><label class="f-label">Confirm Password</label><input type="password" name="confirm_password" class="f-input" placeholder="••••••••" required minlength="8"></div>
+          <button type="submit" class="btn-p"><i class="fa-solid fa-lock"></i> Update Password</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h5>Danger Zone</h5></div>
+      <div class="card-body">
+        <p style="font-size:.85rem;margin-bottom:1rem;">Logout from your admin account on this device.</p>
+        <a href="{% url 'admin_logout' %}" class="btn-s" style="color:var(--red);border-color:#FBD5D5;">
+          <i class="fa-solid fa-right-from-bracket"></i> Logout Now
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>@media (max-width:900px){.st-grid{grid-template-columns:1fr !important;}}</style>
+{% endblock %}

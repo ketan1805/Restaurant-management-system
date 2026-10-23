@@ -1,0 +1,42 @@
+{% extends 'restaurant/base_auth.html' %}
+{% block title %}FoodVerse · Verify OTP{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="logo-container">
+        <div class="logo-icon"><i class="fas fa-shield-alt"></i></div>
+        <span class="logo-text">FoodVerse</span>
+    </div>
+
+    <div class="form-header">
+        <h2>Enter OTP</h2>
+        <p>We sent a 6-digit code to <strong>{{ email }}</strong></p>
+    </div>
+
+    <form method="post" action="{% url 'verify_forgot_otp' user.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="input-group-custom">
+                <i class="fas fa-key input-icon"></i>
+                <input type="text" name="otp" placeholder="Enter 6-digit OTP"
+                       maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                       style="letter-spacing: 6px; text-align: center; font-size: 1.1rem; font-weight: 700;"
+                       required autofocus />
+            </div>
+            <small class="input-hint">OTP valid for 10 minutes</small>
+        </div>
+
+        <button type="submit" class="btn-primary-custom">
+            <span class="loader"></span>
+            <span class="btn-text">Verify OTP</span>
+            <i class="fas fa-check"></i>
+        </button>
+
+        <div class="form-footer">
+            <a href="{% url 'forgot_password' %}" class="back-link">
+                <i class="fas fa-redo"></i> Resend OTP
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

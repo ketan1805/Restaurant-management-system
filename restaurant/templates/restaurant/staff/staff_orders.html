@@ -1,0 +1,656 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}All Orders &amp; Order Tracking — TableServe{% endblock %}
+{% block content %}
+
+<style>
+.tracking-tbl th {
+  white-space: nowrap;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.tracking-tbl td {
+  vertical-align: middle;
+  font-size: .84rem;
+}
+.timeline-strip {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+  padding: .6rem .8rem;
+  background: var(--surface);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-top: .4rem;
+}
+.tl-step {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .75rem;
+  font-weight: 600;
+  padding: .25rem .55rem;
+  border-radius: 6px;
+  color: var(--muted);
+  background: #f1f5f9;
+}
+.tl-step.done {
+  background: #ECFDF5;
+  color: #059669;
+}
+.tl-step.active {
+  background: #FFF7ED;
+  color: #EA580C;
+  font-weight: 700;
+  border: 1px solid #FDBA74;
+}
+.tl-step.cancelled {
+  background: #FEF2F2;
+  color: #DC2626;
+  font-weight: 700;
+}
+.tl-arrow {
+  color: var(--muted);
+  font-size: .65rem;
+}
+.tl-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: .6rem;
+  padding: .75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-top: .5rem;
+  font-size: .76rem;
+}
+.tl-detail-item {
+  display: flex;
+  flex-direction: column;
+}
+.tl-detail-item .lbl {
+  color: var(--muted);
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.tl-detail-item .val {
+  color: var(--ink);
+  font-weight: 700;
+  margin-top: .15rem;
+}
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+.page-links {
+  display: flex;
+  gap: .35rem;
+  align-items: center;
+}
+.page-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 .5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font-size: .8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all .15s ease;
+}
+.page-link-btn:hover {
+  background: var(--orange-soft);
+  border-color: var(--orange);
+  color: var(--orange);
+}
+.page-link-btn.active {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #fff;
+}
+.page-link-btn.disabled {
+  opacity: .5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+</style>
+
+<div class="pg-head">
+  <div>
+    <h1><i class="fa-solid fa-utensils me-2" style="color:var(--orange);"></i>All Orders &amp; Order Tracking</h1>
+    <p>
+      {% if is_chef %}
+        <span class="badge-status bs-blue">Kitchen / Chef</span> — Complete order history, kitchen timestamps, and preparation tracking.
+      {% elif is_waiter %}
+        <span class="badge-status bs-orange">Waiter</span> — View restaurant order pipeline and serve ready dishes.
+      {% elif is_handler %}
+        <span class="badge-status bs-purple">Order Handler</span> — Track verification, kitchen dispatch, and order completion.
+      {% else %}
+        <span class="badge-status bs-green">Manager</span> — Full restaurant order tracking, analytics, and lifecycle history.
+      {% endif %}
+    </p>
+  </div>
+  <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+    <a href="{% url 'staff:orders' %}" class="btn-s"><i class="fa-solid fa-rotate"></i> Refresh</a>
+    <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=csv" class="btn-p"><i class="fa-solid fa-download"></i> Export CSV</a>
+  </div>
+</div>
+
+<!-- Status Chips Filter -->
+<div class="filters">
+  <a href="{% url 'staff:orders' %}?date={{ date_filter }}" class="chip {% if status_filter == 'all' %}active{% endif %}">All ({{ total_unfiltered_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=accepted" class="chip {% if status_filter == 'accepted' %}active{% endif %}">In Kitchen ({{ accepted_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=preparing" class="chip {% if status_filter == 'preparing' %}active{% endif %}">Preparing ({{ preparing_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=ready" class="chip {% if status_filter == 'ready' %}active{% endif %}">Ready to Serve ({{ ready_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=delivered" class="chip {% if status_filter == 'delivered' or status_filter == 'served' %}active{% endif %}">Served ({{ delivered_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=pending" class="chip {% if status_filter == 'pending' %}active{% endif %}">Pending ({{ pending_count }})</a>
+  <a href="{% url 'staff:orders' %}?priority=rush" class="chip {% if priority_filter == 'rush' %}active{% endif %}" style="color:#E5484D;"><i class="fa-solid fa-bolt"></i> RUSH ({{ rush_count }})</a>
+  <a href="{% url 'staff:orders' %}?status=cancelled" class="chip {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+<!-- Advanced Search & Filter Box -->
+<div class="card mb-4">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Search, Filter &amp; Sort Orders</h5>
+    <span class="sub">{{ total_filtered_count }} matching order{{ total_filtered_count|pluralize }}</span>
+  </div>
+  <div class="card-body">
+    <form method="GET" action="{% url 'staff:orders' %}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div>
+        <label class="f-label">Order ID</label>
+        <input type="text" name="order_id" value="{{ order_id_search }}" placeholder="e.g. #101" class="f-input">
+      </div>
+      <div>
+        <label class="f-label">Customer Search</label>
+        <input type="text" name="customer" value="{{ customer_filter }}" placeholder="Name, phone, or email..." class="f-input">
+      </div>
+      <div>
+        <label class="f-label">Order Status</label>
+        <select name="status" class="f-input">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="accepted" {% if status_filter == 'accepted' %}selected{% endif %}>In Kitchen (Accepted)</option>
+          <option value="preparing" {% if status_filter == 'preparing' %}selected{% endif %}>Preparing</option>
+          <option value="ready" {% if status_filter == 'ready' %}selected{% endif %}>Ready</option>
+          <option value="delivered" {% if status_filter == 'delivered' or status_filter == 'served' %}selected{% endif %}>Served / Delivered</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+          <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Date Filter</label>
+        <select name="date" class="f-input" onchange="toggleCustomDate(this.value)">
+          <option value="all" {% if date_filter == 'all' %}selected{% endif %}>All Time</option>
+          <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Today</option>
+          <option value="yesterday" {% if date_filter == 'yesterday' %}selected{% endif %}>Yesterday</option>
+          <option value="this_week" {% if date_filter == 'this_week' %}selected{% endif %}>This Week</option>
+          <option value="this_month" {% if date_filter == 'this_month' %}selected{% endif %}>This Month</option>
+          <option value="custom" {% if date_filter == 'custom' or start_date %}selected{% endif %}>Custom Date Range</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Start Date</label>
+        <input type="date" name="start_date" value="{{ start_date }}" class="f-input">
+      </div>
+      <div>
+        <label class="f-label">End Date</label>
+        <input type="date" name="end_date" value="{{ end_date }}" class="f-input">
+      </div>
+      <div>
+        <label class="f-label">Order Type / Table</label>
+        <select name="order_type" class="f-input">
+          <option value="all" {% if order_type_filter == 'all' %}selected{% endif %}>All Types</option>
+          <option value="dinein" {% if order_type_filter == 'dinein' %}selected{% endif %}>Dine-in (Restaurant)</option>
+          <option value="takeaway" {% if order_type_filter == 'takeaway' %}selected{% endif %}>Takeaway</option>
+          <option value="delivery" {% if order_type_filter == 'delivery' %}selected{% endif %}>Delivery</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">RUSH Priority</label>
+        <select name="priority" class="f-input">
+          <option value="all" {% if priority_filter == 'all' %}selected{% endif %}>All Priorities</option>
+          <option value="rush" {% if priority_filter == 'rush' %}selected{% endif %}>⚡ RUSH Priority Only</option>
+          <option value="normal" {% if priority_filter == 'normal' %}selected{% endif %}>Normal</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Payment Status</label>
+        <select name="payment" class="f-input">
+          <option value="all" {% if payment_filter == 'all' %}selected{% endif %}>All Payments</option>
+          <option value="paid" {% if payment_filter == 'paid' %}selected{% endif %}>Prepaid / Paid</option>
+          <option value="pending" {% if payment_filter == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="refunded" {% if payment_filter == 'refunded' %}selected{% endif %}>Refunded</option>
+          <option value="upi" {% if payment_filter == 'upi' %}selected{% endif %}>UPI</option>
+          <option value="card" {% if payment_filter == 'card' %}selected{% endif %}>Card</option>
+          <option value="cash" {% if payment_filter == 'cash' %}selected{% endif %}>Cash</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Sort By</label>
+        <select name="sort" class="f-input">
+          <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+          <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+          <option value="status" {% if sort_by == 'status' %}selected{% endif %}>By Status</option>
+          <option value="priority" {% if sort_by == 'priority' %}selected{% endif %}>By RUSH Priority</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:.5rem;grid-column:1/-1;margin-top:.5rem;">
+        <button type="submit" class="btn-p"><i class="fa-solid fa-magnifying-glass"></i> Filter Orders</button>
+        <a href="{% url 'staff:orders' %}" class="btn-s"><i class="fa-solid fa-rotate-left"></i> Reset Filters</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Summary Stat Cards -->
+<div class="stat-row">
+  <div class="stat">
+    <div class="stat-ic y"><i class="fa-solid fa-kitchen-set"></i></div>
+    <div class="stat-info"><div class="num">{{ accepted_count }}</div><div class="lbl">In Kitchen</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic b"><i class="fa-solid fa-fire-burner"></i></div>
+    <div class="stat-info"><div class="num">{{ preparing_count }}</div><div class="lbl">Preparing</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-bell-concierge"></i></div>
+    <div class="stat-info"><div class="num">{{ ready_count }}</div><div class="lbl">Ready to Serve</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="stat-info"><div class="num">{{ delivered_count }}</div><div class="lbl">Served Orders</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-bolt"></i></div>
+    <div class="stat-info"><div class="num">{{ rush_count }}</div><div class="lbl">RUSH Priority</div></div>
+  </div>
+</div>
+
+<!-- Orders Table -->
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-table-list me-2" style="color:var(--orange);"></i>Order Tracking &amp; History</h5>
+    <span class="sub">Page {{ orders.number }} of {{ orders.paginator.num_pages }} ({{ total_filtered_count }} total)</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data tracking-tbl">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>Customer</th>
+          <th>Type / Table</th>
+          <th>Food Items</th>
+          <th>Timestamps &amp; Duration</th>
+          <th>Staff Handler</th>
+          <th>Payment</th>
+          <th>Status &amp; Timeline</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for o in orders %}
+        <tr>
+          <!-- 1. Order ID & Priority -->
+          <td>
+            <div style="font-weight:800;font-size:1rem;color:var(--ink);">#{{ o.id }}</div>
+            {% if o.rush_flag or o.priority == 'high' %}
+              <span class="badge-status bs-red" style="font-size:.68rem;margin-top:.2rem;display:inline-flex;align-items:center;gap:.2rem;">
+                <i class="fa-solid fa-bolt"></i> RUSH
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- 2. Customer -->
+          <td>
+            <div style="font-weight:700;color:var(--ink);">{{ o.user.get_full_name|default:o.user.username }}</div>
+            <small style="color:var(--muted);display:block;">{{ o.phone|default:o.user.email|default:"—" }}</small>
+          </td>
+
+          <!-- 3. Table / Order Type -->
+          <td>
+            {% if o.is_pre_order and o.table %}
+              <span class="badge-status bs-blue" style="font-size:.72rem;"><i class="fa-solid fa-calendar-check me-1"></i>Pre-Order T{{ o.table.number }}</span>
+            {% elif o.table %}
+              <span class="badge-status bs-orange" style="font-size:.72rem;"><i class="fa-solid fa-chair me-1"></i>Table {{ o.table.number }}</span>
+            {% elif o.order_type == 'takeaway' %}
+              <span class="badge-status bs-purple" style="font-size:.72rem;"><i class="fa-solid fa-bag-shopping me-1"></i>Takeaway</span>
+            {% elif o.order_type == 'delivery' or o.address %}
+              <span class="badge-status bs-blue" style="font-size:.72rem;"><i class="fa-solid fa-motorcycle me-1"></i>Delivery</span>
+            {% else %}
+              <span class="badge-status bs-orange" style="font-size:.72rem;">Dine-in</span>
+            {% endif %}
+          </td>
+
+          <!-- 4. Items & Special Instructions -->
+          <td style="max-width:260px;">
+            <div style="font-size:.82rem;">
+              {% for item in o.items.all %}
+                <div><b>{{ item.quantity }}x</b> {{ item.menu_item.name }}</div>
+                {% if item.customization_details %}
+                  <div style="font-size:.72rem;color:#B45309;margin-bottom:.2rem;">• {{ item.customization_details }}</div>
+                {% endif %}
+              {% empty %}
+                <span style="color:var(--muted);">—</span>
+              {% endfor %}
+            </div>
+            {% if o.kitchen_notes %}
+              <div style="font-size:.73rem;color:#B45309;background:#FEF3C7;padding:.2rem .4rem;border-radius:4px;margin-top:.3rem;">
+                <i class="fa-solid fa-note-sticky me-1"></i>{{ o.kitchen_notes }}
+              </div>
+            {% endif %}
+          </td>
+
+          <!-- 5. Timestamps & Total Prep Duration -->
+          <td style="font-size:.78rem;color:var(--muted);white-space:nowrap;">
+            <div><i class="fa-regular fa-clock me-1"></i>Ordered: <b>{{ o.created_at|date:"h:i A" }}</b></div>
+            {% if o.prep_started_at %}
+              <div><i class="fa-solid fa-fire me-1" style="color:#0284C7;"></i>Started: <b>{{ o.prep_started_at|date:"h:i A" }}</b></div>
+            {% endif %}
+            {% if o.ready_at %}
+              <div><i class="fa-solid fa-bell me-1" style="color:#16A34A;"></i>Ready: <b>{{ o.ready_at|date:"h:i A" }}</b></div>
+            {% endif %}
+            {% if o.served_at %}
+              <div><i class="fa-solid fa-utensils me-1" style="color:#2FAE60;"></i>Served: <b>{{ o.served_at|date:"h:i A" }}</b></div>
+            {% endif %}
+            <div style="margin-top:.25rem;padding-top:.25rem;border-top:1px dashed var(--border);">
+              Prep Duration: <b style="color:var(--ink);">{{ o.prep_duration }}</b>
+            </div>
+          </td>
+
+          <!-- 6. Staff Info -->
+          <td style="font-size:.76rem;white-space:nowrap;">
+            {% if o.order_handler %}
+              <div>Handler: <b>{{ o.order_handler.get_full_name|default:o.order_handler.username }}</b></div>
+            {% endif %}
+            {% if o.chef %}
+              <div>Chef: <b>{{ o.chef.get_full_name|default:o.chef.username }}</b></div>
+            {% endif %}
+            {% if o.assigned_waiter %}
+              <div>Waiter: <b>{{ o.assigned_waiter.get_full_name|default:o.assigned_waiter.username }}</b></div>
+            {% endif %}
+            {% if not o.order_handler and not o.chef and not o.assigned_waiter %}
+              <span style="color:var(--muted);">—</span>
+            {% endif %}
+          </td>
+
+          <!-- 7. Payment -->
+          <td style="white-space:nowrap;">
+            <div style="font-weight:800;color:var(--ink);font-size:.9rem;">₹{{ o.total }}</div>
+            {% if o.payment_status == 'paid' or o.payment_status == 'success' %}
+              <span class="badge-status bs-green" style="font-size:.7rem;"><i class="fa-solid fa-check me-1"></i>Paid ({{ o.payment_method }})</span>
+            {% elif o.payment_status == 'refunded' %}
+              <span class="badge-status bs-purple" style="font-size:.7rem;">Refunded</span>
+            {% else %}
+              <span class="badge-status bs-yellow" style="font-size:.7rem;">{{ o.payment_status|title }}</span>
+            {% endif %}
+          </td>
+
+          <!-- 8. Status & Timeline Accordion -->
+          <td>
+            <div>
+              {% if o.status == 'delivered' or o.status == 'served' %}
+                <span class="badge-status bs-green"><i class="fa-solid fa-circle-check me-1"></i>Served</span>
+              {% elif o.status == 'ready' or o.status == 'out_for_delivery' %}
+                <span class="badge-status bs-orange"><i class="fa-solid fa-bell me-1"></i>Ready</span>
+              {% elif o.status == 'preparing' %}
+                <span class="badge-status bs-blue"><i class="fa-solid fa-fire-burner me-1"></i>Preparing</span>
+              {% elif o.status == 'accepted' %}
+                <span class="badge-status bs-yellow"><i class="fa-solid fa-kitchen-set me-1"></i>In Kitchen</span>
+              {% elif o.status == 'cancelled' %}
+                <span class="badge-status bs-red"><i class="fa-solid fa-ban me-1"></i>Cancelled</span>
+              {% elif o.status == 'completed' %}
+                <span class="badge-status bs-green"><i class="fa-solid fa-flag-checkered me-1"></i>Completed</span>
+              {% else %}
+                <span class="badge-status bs-yellow"><i class="fa-solid fa-clock me-1"></i>Pending</span>
+              {% endif %}
+            </div>
+
+            <!-- View Lifecycle Toggle Button -->
+            <button type="button" class="btn-s mt-1" style="padding:.2rem .5rem;font-size:.72rem;" onclick="toggleTimeline('tl-{{ o.id }}')">
+              <i class="fa-solid fa-timeline me-1"></i> Lifecycle
+            </button>
+          </td>
+
+          <!-- 9. Actions by Role -->
+          <td style="white-space:nowrap;">
+            {% if is_waiter %}
+              {% if o.status == 'ready' or o.status == 'out_for_delivery' %}
+                <form method="post" style="display:inline;margin:0;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="serve">
+                  <input type="hidden" name="order_id" value="{{ o.id }}">
+                  <button type="submit" class="btn-p" style="padding:.35rem .75rem;font-size:.75rem;">
+                    <i class="fa-solid fa-utensils me-1"></i> Mark Served
+                  </button>
+                </form>
+              {% elif o.status == 'delivered' or o.status == 'served' %}
+                <span style="font-size:.75rem;color:#16A34A;font-weight:700;"><i class="fa-solid fa-check"></i> Served</span>
+              {% else %}
+                <span style="font-size:.75rem;color:var(--muted);">—</span>
+              {% endif %}
+
+            {% elif is_chef %}
+              {% if o.status == 'accepted' %}
+                <form method="post" style="display:inline;margin:0;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="start_preparing">
+                  <input type="hidden" name="order_id" value="{{ o.id }}">
+                  <button type="submit" class="btn-p" style="padding:.35rem .75rem;font-size:.75rem;background:#0284C7;">
+                    <i class="fa-solid fa-fire me-1"></i> Start Prep
+                  </button>
+                </form>
+              {% elif o.status == 'preparing' %}
+                <form method="post" style="display:inline;margin:0;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="mark_ready">
+                  <input type="hidden" name="order_id" value="{{ o.id }}">
+                  <button type="submit" class="btn-p" style="padding:.35rem .75rem;font-size:.75rem;background:#16A34A;">
+                    <i class="fa-solid fa-circle-check me-1"></i> Mark Ready
+                  </button>
+                </form>
+              {% elif o.status == 'ready' %}
+                <span style="font-size:.75rem;color:#16A34A;font-weight:700;"><i class="fa-solid fa-bell-concierge"></i> Ready</span>
+              {% else %}
+                <span style="font-size:.75rem;color:var(--muted);">—</span>
+              {% endif %}
+
+            {% elif is_handler %}
+              {% if o.status == 'pending' %}
+                <form method="post" style="display:inline;margin:0;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="send_to_kitchen">
+                  <input type="hidden" name="order_id" value="{{ o.id }}">
+                  <button type="submit" class="btn-p" style="padding:.35rem .75rem;font-size:.75rem;">
+                    <i class="fa-solid fa-paper-plane me-1"></i> To Kitchen
+                  </button>
+                </form>
+                <form method="post" style="display:inline;margin:0;" onsubmit="return confirm('Cancel this order?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="cancel">
+                  <input type="hidden" name="order_id" value="{{ o.id }}">
+                  <button type="submit" class="btn-s" style="padding:.35rem .55rem;font-size:.75rem;color:#DC2626;">
+                    <i class="fa-solid fa-ban"></i>
+                  </button>
+                </form>
+              {% else %}
+                <span style="font-size:.75rem;color:var(--muted);">{{ o.get_status_display }}</span>
+              {% endif %}
+
+            {% else %}
+              {# Manager / Superuser #}
+              <form method="post" style="display:inline;margin:0;">
+                {% csrf_token %}
+                <input type="hidden" name="order_id" value="{{ o.id }}">
+                <select name="status" onchange="this.form.submit()" class="f-input" style="padding:.35rem .6rem;font-size:.75rem;width:auto;">
+                  <option value="pending" {% if o.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="accepted" {% if o.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                  <option value="preparing" {% if o.status == 'preparing' %}selected{% endif %}>Preparing</option>
+                  <option value="ready" {% if o.status == 'ready' or o.status == 'out_for_delivery' %}selected{% endif %}>Ready</option>
+                  <option value="delivered" {% if o.status == 'delivered' or o.status == 'served' %}selected{% endif %}>Served</option>
+                  <option value="completed" {% if o.status == 'completed' %}selected{% endif %}>Completed</option>
+                  <option value="cancelled" {% if o.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+
+        <!-- Expandable Lifecycle Timeline Row -->
+        <tr id="tl-{{ o.id }}" style="display:none;background:#FAFAFC;">
+          <td colspan="9" style="padding:1rem 1.25rem;border-bottom:2px solid var(--border);">
+            <div style="font-weight:700;font-size:.85rem;color:var(--ink);margin-bottom:.4rem;">
+              <i class="fa-solid fa-timeline me-2" style="color:var(--orange);"></i>Order #{{ o.id }} Lifecycle Timeline
+            </div>
+
+            {% if o.status == 'cancelled' %}
+              <div style="background:#FEF2F2;border:1px solid #FCA5A5;color:#991B1B;padding:.6rem .8rem;border-radius:8px;font-size:.8rem;margin-bottom:.5rem;">
+                <i class="fa-solid fa-circle-xmark me-1"></i> <b>Order Cancelled:</b> This order was cancelled on {{ o.cancelled_at|date:"d M Y, h:i A"|default:"—" }}.
+              </div>
+            {% endif %}
+
+            <!-- Horizontal Step Indicator -->
+            <div class="timeline-strip">
+              {% for step in o.timeline_steps %}
+                <div class="tl-step {% if step.status_state == 'completed' %}done{% elif step.status_state == 'active' %}active{% endif %}">
+                  {% if step.status_state == 'completed' %}
+                    <i class="fa-solid fa-check"></i>
+                  {% elif step.status_state == 'active' %}
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                  {% else %}
+                    <i class="fa-regular fa-circle"></i>
+                  {% endif %}
+                  {{ step.label }}
+                </div>
+                {% if not forloop.last %}
+                  <span class="tl-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <!-- Detailed Timestamp & Milestone Grid -->
+            <div class="tl-detail-grid">
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-regular fa-clock me-1"></i>1. Customer Placed</span>
+                <span class="val">{{ o.created_at|date:"d M, h:i A" }}</span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-receipt me-1"></i>2. Payment Done</span>
+                <span class="val">
+                  {% if o.payment_obj %}
+                    {{ o.payment_obj.created_at|date:"d M, h:i A" }} ({{ o.payment_method }})
+                  {% elif o.payment_status == 'paid' %}
+                    {{ o.created_at|date:"d M, h:i A" }} (Prepaid)
+                  {% else %}
+                    —
+                  {% endif %}
+                </span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-kitchen-set me-1"></i>3. Sent to Kitchen</span>
+                <span class="val">{{ o.sent_to_kitchen_at|date:"d M, h:i A"|default:"—" }}</span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-fire me-1"></i>4. Prep Started</span>
+                <span class="val">{{ o.prep_started_at|date:"d M, h:i A"|default:"—" }}</span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-bell me-1"></i>5. Ready Time</span>
+                <span class="val">{{ o.ready_at|date:"d M, h:i A"|default:"—" }}</span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-utensils me-1"></i>6. Served Time</span>
+                <span class="val">{{ o.served_at|date:"d M, h:i A"|default:"—" }}</span>
+              </div>
+              <div class="tl-detail-item">
+                <span class="lbl"><i class="fa-solid fa-stopwatch me-1"></i>Total Prep Duration</span>
+                <span class="val" style="color:var(--orange);">{{ o.prep_duration }}</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        {% empty %}
+        <tr>
+          <td colspan="9">
+            <div class="empty" style="padding:4rem 1rem;">
+              <i class="fa-solid fa-inbox" style="font-size:2.5rem;color:var(--muted);margin-bottom:.5rem;"></i>
+              <b style="font-size:1.1rem;">No orders found</b>
+              <small>No records matched your search and filter criteria. Try resetting filters.</small>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls -->
+  {% if orders.has_other_pages %}
+  <div class="pagination-bar">
+    <div style="font-size:.82rem;color:var(--muted);">
+      Showing <b>{{ orders.start_index }}</b> to <b>{{ orders.end_index }}</b> of <b>{{ total_filtered_count }}</b> orders
+    </div>
+    <div class="page-links">
+      {% if orders.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" class="page-link-btn" title="First Page">
+          <i class="fa-solid fa-angles-left"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ orders.previous_page_number }}" class="page-link-btn" title="Previous Page">
+          <i class="fa-solid fa-chevron-left"></i>
+        </a>
+      {% else %}
+        <span class="page-link-btn disabled"><i class="fa-solid fa-angles-left"></i></span>
+        <span class="page-link-btn disabled"><i class="fa-solid fa-chevron-left"></i></span>
+      {% endif %}
+
+      <span class="page-link-btn active">{{ orders.number }}</span>
+
+      {% if orders.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ orders.next_page_number }}" class="page-link-btn" title="Next Page">
+          <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ orders.paginator.num_pages }}" class="page-link-btn" title="Last Page">
+          <i class="fa-solid fa-angles-right"></i>
+        </a>
+      {% else %}
+        <span class="page-link-btn disabled"><i class="fa-solid fa-chevron-right"></i></span>
+        <span class="page-link-btn disabled"><i class="fa-solid fa-angles-right"></i></span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function toggleTimeline(rowId) {
+  var row = document.getElementById(rowId);
+  if (row) {
+    if (row.style.display === 'none' || row.style.display === '') {
+      row.style.display = 'table-row';
+    } else {
+      row.style.display = 'none';
+    }
+  }
+}
+function toggleCustomDate(val) {
+  // If user picks custom, focus on start_date
+  if (val === 'custom') {
+    var s = document.querySelector('input[name="start_date"]');
+    if (s) s.focus();
+  }
+}
+</script>
+
+{% endblock %}

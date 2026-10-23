@@ -1,0 +1,140 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Events — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Event Themes &amp; Reservations</h1>
+    <p>Manage event themes and incoming reservations.</p>
+  </div>
+  <button class="btn-p" onclick="openModal('addThemeModal')"><i class="fa-solid fa-plus"></i> Add Theme</button>
+</div>
+
+<div class="card" style="margin-bottom:2rem;">
+  <div class="card-head"><h5><i class="fa-solid fa-palette me-2" style="color:var(--orange);"></i>Event Themes</h5></div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>ID</th><th>Theme Name</th><th>Image</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for theme in themes %}
+        <tr>
+          <td><b>{{ theme.id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ theme.name|first|upper }}</div>
+              {{ theme.name }}
+            </div>
+          </td>
+          <td>
+            {% if theme.image %}
+              <img src="{{ theme.image.url }}" alt="{{ theme.name }}" style="width:52px;height:52px;border-radius:12px;object-fit:cover;border:1px solid var(--line);">
+            {% else %}
+              <div style="width:52px;height:52px;border-radius:12px;background:var(--cream);display:grid;place-items:center;color:var(--muted);font-size:.7rem;">No image</div>
+            {% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete theme {{ theme.name }}?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete_theme">
+                <input type="hidden" name="theme_id" value="{{ theme.id }}">
+                <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4"><div class="empty"><i class="fa-solid fa-palette"></i><b>No themes added yet</b><small>Click "Add Theme" to create your first theme.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="pg-head" style="margin-bottom:1rem;">
+  <div><h1 style="font-size:1.2rem;margin:0;"><i class="fa-solid fa-calendar me-2" style="color:var(--orange);"></i>Event Reservations</h1></div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-clock"></i></div><div class="stat-info"><div class="num">{{ pending_count }}</div><div class="lbl">Pending</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-circle-check"></i></div><div class="stat-info"><div class="num">{{ confirmed_count }}</div><div class="lbl">Confirmed</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-xmark"></i></div><div class="stat-info"><div class="num">{{ cancelled_count }}</div><div class="lbl">Cancelled</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-calendar"></i></div><div class="stat-info"><div class="num">{{ total_count }}</div><div class="lbl">Total</div></div></div>
+</div>
+
+<div class="filters">
+  <a href="?status=all" class="chip {% if active_filter == 'all' %}active{% endif %}">All</a>
+  <a href="?status=pending" class="chip {% if active_filter == 'pending' %}active{% endif %}">Pending</a>
+  <a href="?status=confirmed" class="chip {% if active_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+  <a href="?status=cancelled" class="chip {% if active_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>Host</th><th>Event Type</th><th>Date &amp; Time</th><th>Guests</th><th>Status</th><th style="text-align:right;">Actions</th></tr></thead>
+      <tbody>
+        {% for ev in events %}
+        <tr>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ ev.name|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ ev.name }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">{{ ev.phone }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ ev.get_event_type_display }}</td>
+          <td>{{ ev.event_date|date:"d M Y" }} · {{ ev.event_time|time:"g:i A" }}</td>
+          <td>{{ ev.guests }} guest{{ ev.guests|pluralize }}</td>
+          <td>
+            <span class="badge-status {% if ev.status == 'confirmed' %}bs-green{% elif ev.status == 'pending' %}bs-yellow{% else %}bs-red{% endif %}">
+              {{ ev.get_status_display }}
+            </span>
+          </td>
+          <td style="text-align:right;">
+            {% if ev.status == 'pending' %}
+            <div class="act" style="justify-content:flex-end;">
+              <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="event_id" value="{{ ev.id }}"><input type="hidden" name="action" value="confirm"><button type="submit" class="act-btn success" title="Confirm"><i class="fa-solid fa-check"></i></button></form>
+              <form method="post" style="display:inline;">{% csrf_token %}<input type="hidden" name="event_id" value="{{ ev.id }}"><input type="hidden" name="action" value="cancel"><button type="submit" class="act-btn danger" title="Cancel"><i class="fa-solid fa-xmark"></i></button></form>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6"><div class="empty"><i class="fa-solid fa-calendar-xmark"></i><b>No events yet</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-c" id="addThemeModal">
+  <div class="modal-b" style="max-width:480px;">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_theme">
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-palette me-2" style="color:var(--orange);"></i>Add Event Theme</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addThemeModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;">
+          <label class="f-label">Theme Name *</label>
+          <input type="text" name="theme_name" class="f-input" placeholder="e.g. Birthday, Anniversary" required>
+        </div>
+        <div>
+          <label class="f-label">Theme Image</label>
+          <input type="file" name="theme_image" accept="image/*" class="f-input" style="padding:.55rem;">
+          <small style="color:var(--muted);font-size:.75rem;display:block;margin-top:.4rem;"><i class="fa-solid fa-info-circle me-1"></i>Recommended size: 400×400px</small>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addThemeModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Add Theme</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "restaurant/staff/staff_base.html" %}
+{% block title %}Billing{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Billing</h1>
+    <p>View and manage customer bills and payments.</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Filters</h5></div>
+  <div class="card-body">
+    <form method="get" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div><label class="f-label">Customer Name</label><input type="text" name="customer_name" value="{{ customer_name }}" class="f-input"></div>
+      <div><label class="f-label">Date</label><input type="date" name="date" value="{{ date_filter }}" class="f-input"></div>
+      <div>
+        <label class="f-label">Payment Method</label>
+        <select name="payment_method" class="f-input">
+          <option value="all" {% if payment_method == 'all' %}selected{% endif %}>All</option>
+          <option value="Cash" {% if payment_method == 'Cash' %}selected{% endif %}>Cash</option>
+          <option value="UPI" {% if payment_method == 'UPI' %}selected{% endif %}>UPI</option>
+          <option value="Card" {% if payment_method == 'Card' %}selected{% endif %}>Card</option>
+          <option value="Net Banking" {% if payment_method == 'Net Banking' %}selected{% endif %}>Net Banking</option>
+        </select>
+      </div>
+      <div><button type="submit" class="btn-p"><i class="fa-solid fa-magnifying-glass"></i> Search</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic b"><i class="fa-regular fa-file-lines"></i></div><div class="stat-info"><div class="num">{{ total_bills }}</div><div class="lbl">Total Bills</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="stat-info"><div class="num">₹{{ total_sales|floatformat:2 }}</div><div class="lbl">Total Sales</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-regular fa-credit-card"></i></div><div class="stat-info"><div class="num">₹{{ cash_sales|floatformat:2 }}</div><div class="lbl">Cash Payments</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-mobile-screen-button"></i></div><div class="stat-info"><div class="num">₹{{ upi_sales|floatformat:2 }}</div><div class="lbl">UPI Payments</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5>Recent Bills</h5>
+    <form method="get" style="display:flex;align-items:center;gap:.5rem;background:#fff;border:1.5px solid var(--line);border-radius:50px;padding:.35rem 1rem;min-width:260px;">
+      <i class="fa-solid fa-magnifying-glass" style="color:var(--muted);font-size:.85rem;"></i>
+      <input type="text" name="search" value="{{ search_query }}" placeholder="Bill no. / customer" onchange="this.form.submit()"
+             style="border:none;outline:none;background:transparent;font-family:inherit;font-size:.85rem;width:100%;">
+    </form>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Bill No.</th><th>Customer</th><th>Date</th><th>Amount</th><th>Method</th><th>Status</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for b in bills %}
+        <tr>
+          <td><b>{{ b.bill_no }}</b></td>
+          <td>{{ b.customer_display }}</td>
+          <td>{{ b.created_at|date:"d-m-Y H:i" }}</td>
+          <td><b>₹{{ b.total|floatformat:2 }}</b></td>
+          <td>
+            <span class="badge-status {% if b.method_display == 'Cash' %}bs-green{% elif b.method_display == 'UPI' %}bs-blue{% else %}bs-purple{% endif %}">
+              {{ b.method_display }}
+            </span>
+          </td>
+          <td>
+            {% if b.payment_status == 'paid' or b.payment_status == 'success' %}
+              <span class="badge-status bs-green"><i class="fa-solid fa-check me-1"></i>Paid</span>
+            {% else %}
+              <span class="badge-status bs-orange"><i class="fa-solid fa-clock me-1"></i>Pending</span>
+            {% endif %}
+          </td>
+          <td>
+            <div class="act" style="justify-content:flex-end;gap:.4rem;">
+              {% if b.payment_status != 'paid' and b.payment_status != 'success' %}
+                <form method="post" style="display:inline;" onsubmit="return confirm('Mark payment for Order #{{ b.id }} as Paid?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="mark_paid">
+                  <input type="hidden" name="order_id" value="{{ b.id }}">
+                  <button type="submit" class="act-btn" style="width:auto;padding:0 .6rem;background:var(--green);color:#fff;border:none;font-weight:600;font-size:.78rem;" title="Mark as Paid">
+                    <i class="fa-solid fa-check-circle me-1"></i>Mark Paid
+                  </button>
+                </form>
+              {% endif %}
+              <button type="button" class="act-btn" title="View" onclick="openBillModal('{{ b.bill_no }}','{{ b.customer_display|escapejs }}','{{ b.created_at|date:"d-m-Y H:i" }}','{{ b.total|floatformat:2 }}','{{ b.method_display }}')"><i class="fa-solid fa-eye"></i></button>
+              <button type="button" class="act-btn" title="Print" onclick="printBill('{{ b.bill_no }}','{{ b.customer_display|escapejs }}','{{ b.created_at|date:"d-m-Y H:i" }}','{{ b.total|floatformat:2 }}','{{ b.method_display }}')"><i class="fa-solid fa-print"></i></button>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty"><i class="fa-regular fa-folder-open"></i><b>No bills found</b><small>Try adjusting your filters.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal-c" id="viewBillModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-receipt me-2" style="color:var(--orange);"></i>Bill Receipt</h5><button type="button" class="act-btn" onclick="closeModal('viewBillModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div class="receipt-box" id="receiptPrintArea" style="border:1px dashed var(--line);border-radius:14px;padding:1.25rem;background:var(--cream);font-family:'Courier New',monospace;">
+        <div style="text-align:center;border-bottom:1px dashed var(--muted);padding-bottom:.75rem;margin-bottom:.75rem;">
+          <h4 style="margin:0;font-family:'Fredoka',sans-serif;font-size:1.15rem;">RESTAURANT INVOICE</h4>
+          <p style="margin:.25rem 0 0;font-size:.78rem;">Main Branch | +91 98765 43210</p>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem;"><span>Bill No:</span><b id="m_bill_no">-</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem;"><span>Customer:</span><b id="m_cust_name">-</b></div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.35rem;"><span>Date &amp; Time:</span><span id="m_date">-</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:.85rem;"><span>Payment:</span><span id="m_method">-</span></div>
+        <div style="border-top:1px dashed var(--muted);padding-top:.5rem;margin-top:.5rem;display:flex;justify-content:space-between;font-weight:800;font-size:.95rem;">
+          <span>Total Amount:</span><span id="m_total">₹0.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn-p" onclick="window.print()"><i class="fa-solid fa-print"></i> Print Receipt</button>
+      <button type="button" class="btn-s" onclick="closeModal('viewBillModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function openBillModal(billNo,cust,date,total,method){
+  document.getElementById('m_bill_no').innerText=billNo;
+  document.getElementById('m_cust_name').innerText=cust;
+  document.getElementById('m_date').innerText=date;
+  document.getElementById('m_method').innerText=method;
+  document.getElementById('m_total').innerText='₹ '+total;
+  openModal('viewBillModal');
+}
+function printBill(billNo,cust,date,total,method){
+  openBillModal(billNo,cust,date,total,method);
+  setTimeout(()=>window.print(),300);
+}
+</script>
+{% endblock %}

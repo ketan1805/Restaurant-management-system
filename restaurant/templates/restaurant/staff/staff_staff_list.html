@@ -1,0 +1,225 @@
+{% extends 'restaurant/staff/staff_base.html' %}
+{% block title %}Staff Management — Manager Panel{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Staff Management</h1>
+    <p>Create and manage staff accounts and their roles.</p>
+  </div>
+  <button type="button" class="btn-p" onclick="openModal('addStaffModal')"><i class="fa-solid fa-plus"></i> Add Staff</button>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-users"></i></div><div class="stat-info"><div class="num">{{ total_staff }}</div><div class="lbl">Total Staff</div></div></div>
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-user-gear"></i></div><div class="stat-info"><div class="num">{{ managers_count }}</div><div class="lbl">Managers</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-utensils"></i></div><div class="stat-info"><div class="num">{{ kitchen_count }}</div><div class="lbl">Kitchen</div></div></div>
+  <div class="stat"><div class="stat-ic y"><i class="fa-solid fa-user-tie"></i></div><div class="stat-info"><div class="num">{{ waiters_count }}</div><div class="lbl">Waiters</div></div></div>
+  <div class="stat"><div class="stat-ic r"><i class="fa-solid fa-clipboard-list"></i></div><div class="stat-info"><div class="num">{{ handlers_count }}</div><div class="lbl">Order Handlers</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-head"><h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Filters</h5></div>
+  <div class="card-body">
+    <form method="get" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div><label class="f-label">Search</label><input type="text" name="search" value="{{ search_query }}" placeholder="Name / email / phone" class="f-input"></div>
+      <div>
+        <label class="f-label">Role</label>
+        <select name="role" class="f-input">
+          <option value="all" {% if active_role == 'all' %}selected{% endif %}>All Roles</option>
+          <option value="Manager" {% if active_role == 'Manager' %}selected{% endif %}>Manager</option>
+          <option value="Chef" {% if active_role == 'Chef' %}selected{% endif %}>Chef</option>
+          <option value="Kitchen Staff" {% if active_role == 'Kitchen Staff' %}selected{% endif %}>Kitchen Staff</option>
+          <option value="Waiter" {% if active_role == 'Waiter' %}selected{% endif %}>Waiter</option>
+          <option value="OrderHandler" {% if active_role == 'OrderHandler' or active_role == 'Order Handler' %}selected{% endif %}>Order Handler</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Status</label>
+        <select name="status" class="f-input">
+          <option value="all" {% if active_status == 'all' %}selected{% endif %}>All</option>
+          <option value="active" {% if active_status == 'active' %}selected{% endif %}>Active</option>
+          <option value="inactive" {% if active_status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+      </div>
+      <div><button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Apply</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-users me-2" style="color:var(--orange);"></i>Staff List</h5>
+    <span class="sub">{{ total_staff }} total</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th style="text-align:right;">Actions</th></tr>
+      </thead>
+      <tbody>
+        {% for s in staff_list %}
+        <tr>
+          <td><b>{{ s.custom_id }}</b></td>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar" style="background:{{ s.avatar_color }};">{{ s.initials }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ s.get_full_name|default:s.username }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">@{{ s.username }}</small>
+              </div>
+            </div>
+          </td>
+          <td>{{ s.email|default:"—" }}</td>
+          <td>{{ s.profile.mobile_no|default:"—" }}</td>
+          <td><span class="badge-status bs-orange">{{ s.role_name }}</span></td>
+          <td>{% if s.is_active %}<span class="badge-status bs-green">Active</span>{% else %}<span class="badge-status bs-red">Inactive</span>{% endif %}</td>
+          <td>{{ s.date_joined|date:"d M Y" }}</td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <button type="button" class="act-btn" title="View" onclick="openViewStaffModal('{{ s.custom_id }}','{{ s.get_full_name|escapejs }}','{{ s.username|escapejs }}','{{ s.email|escapejs }}','{{ s.profile.mobile_no|escapejs }}','{{ s.role_name }}','{{ s.is_active|yesno:"Active,Inactive" }}','{{ s.date_joined|date:"d M Y" }}')"><i class="fa-solid fa-eye"></i></button>
+              <button type="button" class="act-btn" title="Edit" onclick="openEditStaffModal('{{ s.id }}','{{ s.first_name|escapejs }}','{{ s.last_name|escapejs }}','{{ s.email|escapejs }}','{{ s.profile.mobile_no|escapejs }}','{{ s.role_name }}')"><i class="fa-solid fa-pen-to-square"></i></button>
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete staff member {{ s.username }}?');">
+                {% csrf_token %}<input type="hidden" name="action" value="delete"><input type="hidden" name="user_id" value="{{ s.id }}">
+                <button type="submit" class="act-btn danger"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-solid fa-users"></i><b>No staff members found</b><small>Try adjusting your filters.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj %}
+  <div style="padding:1rem 1.4rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;font-size:.85rem;color:var(--muted);">
+    <span>Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ total_staff }}</span>
+    <div style="display:flex;gap:.35rem;">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&role={{ active_role }}&status={{ active_status }}" class="act-btn"><i class="fa-solid fa-chevron-left"></i></a>{% endif %}
+      {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="badge-status bs-orange">{{ num }}</span>{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a href="?page={{ num }}&search={{ search_query }}&role={{ active_role }}&status={{ active_status }}" class="act-btn">{{ num }}</a>{% endif %}{% endfor %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&role={{ active_role }}&status={{ active_status }}" class="act-btn"><i class="fa-solid fa-chevron-right"></i></a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Add Staff -->
+<div class="modal-c" id="addStaffModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="add_staff">
+      <div class="modal-head"><h5><i class="fa-solid fa-plus me-2" style="color:var(--orange);"></i>Add New Staff Member</h5><button type="button" class="act-btn" onclick="closeModal('addStaffModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name *</label><input type="text" name="first_name" class="f-input" required></div>
+          <div><label class="f-label">Last Name *</label><input type="text" name="last_name" class="f-input" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Username *</label><input type="text" name="username" class="f-input" required></div>
+          <div><label class="f-label">Email *</label><input type="email" name="email" class="f-input" required></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Phone</label><input type="text" name="phone" class="f-input"></div>
+          <div>
+            <label class="f-label">Role *</label>
+            <select name="sub_role" class="f-input" required>
+              <option value="Manager">Manager</option>
+              <option value="Chef">Chef</option>
+              <option value="Kitchen Staff">Kitchen Staff</option>
+              <option value="Waiter">Waiter</option>
+              <option value="OrderHandler">Order Handler</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="f-label">Password * (min 8)</label><input type="password" name="password" class="f-input" required minlength="8"></div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addStaffModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Create Staff</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Staff -->
+<div class="modal-c" id="editStaffModal">
+  <div class="modal-b">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="edit_staff">
+      <input type="hidden" name="user_id" id="edit_user_id">
+      <div class="modal-head"><h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Staff Details</h5><button type="button" class="act-btn" onclick="closeModal('editStaffModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">First Name</label><input type="text" name="first_name" id="edit_first_name" class="f-input"></div>
+          <div><label class="f-label">Last Name</label><input type="text" name="last_name" id="edit_last_name" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Email</label><input type="email" name="email" id="edit_email" class="f-input"></div>
+          <div><label class="f-label">Phone</label><input type="text" name="phone" id="edit_phone" class="f-input"></div>
+        </div>
+        <div>
+          <label class="f-label">Assign Role</label>
+          <select name="sub_role" id="edit_sub_role" class="f-input">
+            <option value="Manager">Manager</option>
+            <option value="Chef">Chef</option>
+            <option value="Kitchen Staff">Kitchen Staff</option>
+            <option value="Waiter">Waiter</option>
+            <option value="OrderHandler">Order Handler</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editStaffModal')">Cancel</button>
+        <button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Staff -->
+<div class="modal-c" id="viewStaffModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-eye me-2" style="color:var(--orange);"></i>Staff Profile</h5><button type="button" class="act-btn" onclick="closeModal('viewStaffModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div style="background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.85rem;">
+        <div><span class="f-label" style="margin:0;">Staff ID</span><b id="view_staff_id"></b></div>
+        <div><span class="f-label" style="margin:0;">Full Name</span><b id="view_staff_name"></b></div>
+        <div><span class="f-label" style="margin:0;">Username</span><b id="view_staff_username"></b></div>
+        <div><span class="f-label" style="margin:0;">Email</span><b id="view_staff_email"></b></div>
+        <div><span class="f-label" style="margin:0;">Phone</span><b id="view_staff_phone"></b></div>
+        <div><span class="f-label" style="margin:0;">Role</span><b id="view_staff_role"></b></div>
+        <div><span class="f-label" style="margin:0;">Status</span><b id="view_staff_status"></b></div>
+        <div><span class="f-label" style="margin:0;">Join Date</span><b id="view_staff_date"></b></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn-s" onclick="closeModal('viewStaffModal')">Close</button></div>
+  </div>
+</div>
+
+<script>
+function openEditStaffModal(id,fn,ln,email,phone,role){
+  document.getElementById('edit_user_id').value=id;
+  document.getElementById('edit_first_name').value=fn;
+  document.getElementById('edit_last_name').value=ln;
+  document.getElementById('edit_email').value=email;
+  document.getElementById('edit_phone').value=phone;
+  const sel=document.getElementById('edit_sub_role');
+  if(sel){ if(role==='Order Handler') role='OrderHandler'; sel.value=role||'Waiter'; }
+  openModal('editStaffModal');
+}
+function openViewStaffModal(id,name,username,email,phone,role,status,date){
+  document.getElementById('view_staff_id').innerText=id;
+  document.getElementById('view_staff_name').innerText=name;
+  document.getElementById('view_staff_username').innerText=username;
+  document.getElementById('view_staff_email').innerText=email;
+  document.getElementById('view_staff_phone').innerText=phone;
+  document.getElementById('view_staff_role').innerText=role;
+  document.getElementById('view_staff_status').innerText=status;
+  document.getElementById('view_staff_date').innerText=date;
+  openModal('viewStaffModal');
+}
+</script>
+{% endblock %}

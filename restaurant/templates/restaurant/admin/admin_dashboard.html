@@ -1,0 +1,61 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Dashboard — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p>Real-time overview of TableServe.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-receipt"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ total_orders }}</div>
+      <div class="lbl">Total Orders</div>
+      <div class="trend up"><i class="fa-solid fa-arrow-up"></i> All time</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic g"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+    <div class="stat-info">
+      <div class="num">₹{{ total_revenue|floatformat:0 }}</div>
+      <div class="lbl">Total Revenue</div>
+      <div class="trend up"><i class="fa-solid fa-arrow-up"></i> Paid orders</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic b"><i class="fa-solid fa-users"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ total_customers }}</div>
+      <div class="lbl">Total Customers</div>
+      <div class="trend up"><i class="fa-solid fa-arrow-up"></i> Registered</div>
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic p"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="stat-info">
+      <div class="num">{{ total_reservations }}</div>
+      <div class="lbl">Pending Reservations</div>
+      <div class="trend down"><i class="fa-solid fa-clock"></i> Awaiting approval</div>
+    </div>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat">
+    <div class="stat-ic y"><i class="fa-solid fa-clock"></i></div>
+    <div class="stat-info"><div class="num">{{ pending_orders }}</div><div class="lbl">Pending Orders</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic o"><i class="fa-solid fa-chair"></i></div>
+    <div class="stat-info"><div class="num">{{ total_tables }}</div><div class="lbl">Total Tables</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic r"><i class="fa-solid fa-tags"></i></div>
+    <div class="stat-info"><div class="num">{{ active_offers }}</div><div class="lbl">Active Offers</div></div>
+  </div>
+</div>
+{% endblock %}

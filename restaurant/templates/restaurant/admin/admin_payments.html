@@ -1,0 +1,45 @@
+{% extends 'restaurant/admin/admin_base.html' %}
+{% block title %}Payments — Admin{% endblock %}
+
+{% block content %}
+<div class="pg-head">
+  <div>
+    <h1>Payments</h1>
+    <p>Track all payment transactions and revenue.</p>
+  </div>
+</div>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-ic g"><i class="fa-solid fa-indian-rupee-sign"></i></div><div class="stat-info"><div class="num">₹{{ total_revenue|floatformat:0 }}</div><div class="lbl">Total Revenue</div></div></div>
+  <div class="stat"><div class="stat-ic o"><i class="fa-solid fa-hourglass"></i></div><div class="stat-info"><div class="num">₹{{ pending_amount|floatformat:0 }}</div><div class="lbl">Pending</div></div></div>
+  <div class="stat"><div class="stat-ic b"><i class="fa-solid fa-rotate-left"></i></div><div class="stat-info"><div class="num">₹{{ refunded_amount|floatformat:0 }}</div><div class="lbl">Refunded</div></div></div>
+  <div class="stat"><div class="stat-ic p"><i class="fa-solid fa-credit-card"></i></div><div class="stat-info"><div class="num">{{ total_transactions }}</div><div class="lbl">Transactions</div></div></div>
+</div>
+
+<div class="card">
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead><tr><th>Transaction ID</th><th>Order</th><th>Customer</th><th>Amount</th><th>Method</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for p in payments %}
+        <tr>
+          <td><b>{{ p.transaction_id }}</b></td>
+          <td><a href="{% url 'admin_order_details' p.order.id %}" style="color:var(--orange);font-weight:700;">#TS{{ p.order.id }}</a></td>
+          <td>{{ p.order.user.get_full_name|default:p.order.user.username }}</td>
+          <td><b style="color:var(--orange);">₹{{ p.amount|floatformat:0 }}</b></td>
+          <td>{{ p.get_method_display }}</td>
+          <td>
+            <span class="badge-status {% if p.status == 'success' %}bs-green{% elif p.status == 'pending' %}bs-yellow{% elif p.status == 'refunded' %}bs-purple{% else %}bs-red{% endif %}">
+              {{ p.get_status_display }}
+            </span>
+          </td>
+          <td>{{ p.created_at|date:"d M, H:i" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="empty"><i class="fa-solid fa-credit-card"></i><b>No payments yet</b><small>Payment transactions will appear here.</small></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

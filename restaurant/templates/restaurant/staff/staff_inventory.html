@@ -1,0 +1,435 @@
+{% extends 'restaurant/staff/staff_base.html' %}
+{% block title %}Inventory Management — Manager Panel{% endblock %}
+{% block content %}
+
+<div class="pg-head">
+  <div>
+    <h1>Inventory Management</h1>
+    <p>Track stock levels, low-stock alerts and total inventory value.
+      {% if low_stock_count > 0 %}
+        <span class="badge-status bs-yellow" style="margin-left:0.5rem;font-size:0.8rem;vertical-align:middle;">
+          <i class="fa-solid fa-triangle-exclamation me-1"></i>Low Stock: {{ low_stock_count }} Item{{ low_stock_count|pluralize }}
+        </span>
+      {% endif %}
+    </p>
+  </div>
+  <button type="button" class="btn-p" onclick="openModal('addItemModal')"><i class="fa-solid fa-plus"></i> Add Item</button>
+</div>
+
+<div class="stat-row" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+  <a href="?category=all&status=all" class="stat" style="text-decoration:none;"><div class="stat-ic g"><i class="fa-solid fa-boxes-stacked"></i></div><div class="stat-info"><div class="num">{{ total_items }}</div><div class="lbl">Total Items</div></div></a>
+  <a href="?status=in_stock" class="stat" style="text-decoration:none;"><div class="stat-ic b"><i class="fa-solid fa-rotate"></i></div><div class="stat-info"><div class="num">{{ in_stock_count }}</div><div class="lbl">In Stock</div><div class="trend up">{{ in_stock_pct }}%</div></div></a>
+  <a href="?status=low_stock" class="stat" style="text-decoration:none;"><div class="stat-ic y"><i class="fa-solid fa-triangle-exclamation"></i></div><div class="stat-info"><div class="num">{{ low_stock_count }}</div><div class="lbl">Low Stock</div><div class="trend down">{{ low_stock_pct }}%</div></div></a>
+  <a href="?status=out_of_stock" class="stat" style="text-decoration:none;"><div class="stat-ic r"><i class="fa-solid fa-circle-exclamation"></i></div><div class="stat-info"><div class="num">{{ out_of_stock_count }}</div><div class="lbl">Out of Stock</div><div class="trend down">{{ out_of_stock_pct }}%</div></div></a>
+  <a href="?status=expiring_soon" class="stat" style="text-decoration:none;"><div class="stat-ic p"><i class="fa-regular fa-calendar-xmark"></i></div><div class="stat-info"><div class="num">{{ expiring_soon_count }}</div><div class="lbl">Expiring Soon</div><div class="trend down">&lt; 7 days</div></div></a>
+</div>
+
+<div class="card">
+  <div class="card-head"><h5><i class="fa-solid fa-filter me-2" style="color:var(--orange);"></i>Filters</h5></div>
+  <div class="card-body">
+    <form method="get" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;align-items:end;">
+      <div><label class="f-label">Search</label><input type="text" name="search" value="{{ search_query }}" placeholder="Item, category, supplier..." class="f-input"></div>
+      <div>
+        <label class="f-label">Category</label>
+        <select name="category" class="f-input">
+          <option value="all" {% if active_category == 'all' %}selected{% endif %}>All</option>
+          <option value="vegetables" {% if active_category == 'vegetables' %}selected{% endif %}>Vegetables</option>
+          <option value="fruits" {% if active_category == 'fruits' %}selected{% endif %}>Fruits</option>
+          <option value="dairy" {% if active_category == 'dairy' %}selected{% endif %}>Dairy</option>
+          <option value="grains" {% if active_category == 'grains' %}selected{% endif %}>Grains</option>
+          <option value="spices" {% if active_category == 'spices' %}selected{% endif %}>Spices</option>
+          <option value="beverages" {% if active_category == 'beverages' %}selected{% endif %}>Beverages</option>
+          <option value="other" {% if active_category == 'other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Status</label>
+        <select name="status" class="f-input">
+          <option value="all" {% if active_status == 'all' %}selected{% endif %}>All</option>
+          <option value="in_stock" {% if active_status == 'in_stock' %}selected{% endif %}>In Stock</option>
+          <option value="low_stock" {% if active_status == 'low_stock' %}selected{% endif %}>Low Stock</option>
+          <option value="out_of_stock" {% if active_status == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+          <option value="expiring_soon" {% if active_status == 'expiring_soon' %}selected{% endif %}>Expiring Soon</option>
+        </select>
+      </div>
+      <div>
+        <label class="f-label">Supplier</label>
+        <select name="supplier" class="f-input">
+          <option value="all" {% if active_supplier == 'all' %}selected{% endif %}>All</option>
+          {% for supp in suppliers_list %}<option value="{{ supp }}" {% if active_supplier == supp %}selected{% endif %}>{{ supp }}</option>{% endfor %}
+        </select>
+      </div>
+      <div><button type="submit" class="btn-p"><i class="fa-solid fa-check"></i> Apply</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-head">
+    <h5><i class="fa-solid fa-boxes-stacked me-2" style="color:var(--orange);"></i>Inventory List</h5>
+    <span class="sub">{{ items|length }} item{{ items|length|pluralize }}</span>
+  </div>
+  <div class="tbl-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Item</th><th>Category</th><th>Stock</th><th>Unit Price</th><th>Total Value</th><th>Status</th><th>Expiry</th><th style="text-align:right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+        <tr>
+          <td>
+            <div class="td-name">
+              <div class="td-avatar">{{ item.name|first|upper }}</div>
+              <div>
+                <div style="font-weight:700;color:var(--ink);">{{ item.name }}</div>
+                <small style="color:var(--muted);font-size:.75rem;">{{ item.supplier|default:"General Supplier" }}</small>
+              </div>
+            </div>
+          </td>
+          <td><span class="badge-status bs-orange">{{ item.get_category_display }}</span></td>
+          <td>
+            <b style="{% if item.quantity <= 0 %}color:var(--red);{% elif item.is_low_stock %}color:var(--yellow);{% else %}color:var(--green);{% endif %}">
+              {{ item.quantity|floatformat:2 }} {{ item.unit }}
+            </b>
+            <div style="margin-top:.3rem;width:100px;height:6px;background:var(--cream);border-radius:10px;overflow:hidden;">
+              <div style="height:100%;width:{{ item.stock_percentage }}%;background:{% if item.quantity <= 0 %}var(--red){% elif item.is_low_stock %}var(--yellow){% else %}var(--green){% endif %};"></div>
+            </div>
+            <small style="color:var(--muted);font-size:.7rem;">Min: {{ item.min_stock|floatformat:1 }} {{ item.unit }} ({{ item.stock_percentage }}%)</small>
+          </td>
+          <td>₹{{ item.price_per_unit|floatformat:2 }}</td>
+          <td><b>₹{{ item.total_value|floatformat:2 }}</b></td>
+          <td>
+            {% if item.is_expired %}<span class="badge-status bs-red">Expired</span>
+            {% elif item.quantity <= 0 %}<span class="badge-status bs-red">Out of Stock</span>
+            {% elif item.is_low_stock %}<span class="badge-status bs-yellow">LOW STOCK</span>
+            {% elif item.is_expiring_soon %}<span class="badge-status bs-orange">Expiring Soon</span>
+            {% else %}<span class="badge-status bs-green">IN STOCK</span>{% endif %}
+          </td>
+          <td>{% if item.expiry_date %}{{ item.expiry_date|date:"d M Y" }}{% else %}<span style="color:var(--muted);">—</span>{% endif %}</td>
+          <td>
+            <div class="act" style="justify-content:flex-end;">
+              <!-- Add Stock Action -->
+              <button type="button" class="act-btn {% if item.is_low_stock or item.quantity <= 0 %}btn-add-stock-highlight{% endif %}"
+                      title="Add Stock"
+                      style="{% if item.is_low_stock or item.quantity <= 0 %}background:var(--green);color:#ffffff;padding:0.35rem 0.65rem;border-radius:8px;font-size:0.8rem;font-weight:700;display:inline-flex;align-items:center;gap:0.3rem;{% endif %}"
+                      onclick="openAddStockModal('{{ item.id }}', '{{ item.name|escapejs }}', '{{ item.quantity }}', '{{ item.min_stock }}', '{{ item.unit }}', '{{ item.price_per_unit }}', '{{ item.supplier|escapejs }}', '{{ item.expiry_date|date:"Y-m-d" }}')">
+                <i class="fa-solid fa-plus"></i>{% if item.is_low_stock or item.quantity <= 0 %} Add Stock{% endif %}
+              </button>
+
+              <!-- Edit Action -->
+              <button type="button" class="act-btn" title="Edit" onclick="openEditItemModal('{{ item.id }}','{{ item.name|escapejs }}','{{ item.category }}','{{ item.unit }}','{{ item.min_stock }}','{{ item.price_per_unit }}','{{ item.supplier|escapejs }}','{{ item.expiry_date|date:"Y-m-d" }}')"><i class="fa-solid fa-pen-to-square"></i></button>
+
+              <!-- View Action -->
+              <button type="button" class="act-btn" title="View" onclick="openViewItemModal('{{ item.name|escapejs }}','{{ item.get_category_display }}','{{ item.quantity }}','{{ item.unit }}','{{ item.min_stock }}','{{ item.price_per_unit }}','{{ item.total_value }}','{{ item.supplier|escapejs }}','{{ item.expiry_date|date:"d M Y"|default:"-" }}','{% if item.quantity <= 0 %}Out of Stock{% elif item.is_low_stock %}LOW STOCK{% else %}IN STOCK{% endif %}')"><i class="fa-solid fa-eye"></i></button>
+
+              <!-- Delete Action -->
+              <form method="post" style="display:inline;" onsubmit="return confirm('Delete item {{ item.name }}?');">
+                {% csrf_token %}<input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" name="delete_item" class="act-btn danger" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="8"><div class="empty"><i class="fa-solid fa-boxes-stacked"></i><b>No inventory items found</b></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page_obj %}
+  <div style="padding:1rem 1.4rem;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem;font-size:.85rem;color:var(--muted);">
+    <span>Showing {{ page_obj.object_list|length }} of {{ all_items_count }}</span>
+    <div style="display:flex;gap:.35rem;">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}&search={{ search_query }}&category={{ active_category }}&status={{ active_status }}&supplier={{ active_supplier }}" class="act-btn"><i class="fa-solid fa-chevron-left"></i></a>{% endif %}
+      {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<span class="badge-status bs-orange">{{ num }}</span>{% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a href="?page={{ num }}&search={{ search_query }}&category={{ active_category }}&status={{ active_status }}&supplier={{ active_supplier }}" class="act-btn">{{ num }}</a>{% endif %}{% endfor %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}&search={{ search_query }}&category={{ active_category }}&status={{ active_status }}&supplier={{ active_supplier }}" class="act-btn"><i class="fa-solid fa-chevron-right"></i></a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ========================================== -->
+<!-- MODAL: ADD STOCK (POPUP)                   -->
+<!-- ========================================== -->
+<div class="modal-c" id="addStockModal">
+  <div class="modal-b" style="max-width:540px;">
+    <form method="post" onsubmit="return validateAddStockForm();">
+      {% csrf_token %}
+      <input type="hidden" name="add_stock" value="1">
+      <input type="hidden" name="item_id" id="add_stock_item_id">
+      <input type="hidden" id="add_stock_curr_val" value="0">
+      <input type="hidden" id="add_stock_min_val" value="0">
+      <input type="hidden" id="add_stock_unit_val" value="">
+
+      <div class="modal-head">
+        <h5><i class="fa-solid fa-plus-circle me-2" style="color:var(--green);"></i>Add Stock (Stock In)</h5>
+        <button type="button" class="act-btn" onclick="closeModal('addStockModal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Error Alert box in JS -->
+        <div id="add_stock_alert" style="display:none;background:#fee2e2;color:#b91c1c;padding:0.75rem 1rem;border-radius:10px;font-size:0.85rem;font-weight:700;margin-bottom:1rem;"></div>
+
+        <!-- Item Overview Header -->
+        <div style="background:var(--cream);border:1px solid var(--line);border-radius:12px;padding:1rem;margin-bottom:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;font-size:0.85rem;">
+          <div>
+            <span class="f-label" style="margin:0 0 0.2rem 0;color:var(--muted);">Item Name</span>
+            <strong id="add_stock_item_name" style="font-size:1rem;color:var(--ink);">Milk</strong>
+          </div>
+          <div>
+            <span class="f-label" style="margin:0 0 0.2rem 0;color:var(--muted);">Minimum Threshold</span>
+            <strong id="add_stock_min_disp" style="font-size:1rem;color:var(--orange);">15 Liter</strong>
+          </div>
+          <div>
+            <span class="f-label" style="margin:0 0 0.2rem 0;color:var(--muted);">Current Stock</span>
+            <strong id="add_stock_curr_disp" style="font-size:1rem;color:var(--red);">10 Liter</strong>
+          </div>
+          <div>
+            <span class="f-label" style="margin:0 0 0.2rem 0;color:var(--muted);">Calculated New Stock</span>
+            <strong id="add_stock_new_calc" style="font-size:1.1rem;color:var(--green);">10 Liter</strong>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Add Quantity *</label>
+            <input type="number" name="add_qty" id="add_stock_qty" step="0.01" min="0.01" placeholder="e.g. 20" class="f-input" required oninput="updateNewStockCalc()">
+          </div>
+          <div>
+            <label class="f-label">Purchase Price / Unit (₹)</label>
+            <input type="number" name="price_per_unit" id="add_stock_price" step="0.01" min="0" placeholder="e.g. 45.00" class="f-input">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Supplier</label>
+            <input type="text" name="supplier" id="add_stock_supplier" placeholder="Supplier name" class="f-input">
+          </div>
+          <div>
+            <label class="f-label">Expiry Date</label>
+            <input type="date" name="expiry_date" id="add_stock_expiry" class="f-input">
+          </div>
+        </div>
+
+        <div>
+          <label class="f-label">Notes / Batch Info (Optional)</label>
+          <input type="text" name="notes" id="add_stock_notes" placeholder="e.g. Fresh batch purchase" class="f-input">
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addStockModal')">Cancel</button>
+        <button type="submit" class="btn-p" style="background:var(--green);border-color:var(--green);"><i class="fa-solid fa-plus me-1"></i> Add Stock</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<!-- Add Item -->
+<div class="modal-c" id="addItemModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post">
+      {% csrf_token %}
+      <div class="modal-head"><h5><i class="fa-solid fa-plus me-2" style="color:var(--orange);"></i>Add Inventory Item</h5><button type="button" class="act-btn" onclick="closeModal('addItemModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">Item Name *</label><input type="text" name="name" class="f-input" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Category</label>
+            <select name="category" class="f-input">
+              <option value="beverages">Beverages</option>
+              <option value="vegetables">Vegetables</option>
+              <option value="fruits">Fruits</option>
+              <option value="dairy">Dairy</option>
+              <option value="grains">Grains</option>
+              <option value="spices">Spices</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Unit</label>
+            <select name="unit" class="f-input">
+              <option value="kg">kg</option><option value="liter">liter</option><option value="can">can</option>
+              <option value="bottle">bottle</option><option value="pcs">pcs</option><option value="pack">pack</option>
+              <option value="box">box</option><option value="gram">gram</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:1rem;">
+          <div><label class="f-label">Qty</label><input type="number" name="quantity" step="0.01" value="0" class="f-input" required></div>
+          <div><label class="f-label">Min Threshold</label><input type="number" name="min_stock" step="0.01" value="5" class="f-input"></div>
+          <div><label class="f-label">Price (₹)</label><input type="number" name="price_per_unit" step="0.01" value="0" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Supplier</label><input type="text" name="supplier" class="f-input"></div>
+          <div><label class="f-label">Expiry Date</label><input type="date" name="expiry_date" class="f-input"></div>
+        </div>
+        <div>
+          <label class="f-label">Status</label>
+          <select name="status" class="f-input">
+            <option value="active">Active</option><option value="inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('addItemModal')">Cancel</button>
+        <button type="submit" name="add_item" class="btn-p"><i class="fa-solid fa-check"></i> Add Item</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Item -->
+<div class="modal-c" id="editItemModal">
+  <div class="modal-b" style="max-width:600px;">
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="item_id" id="edit_item_id">
+      <div class="modal-head"><h5><i class="fa-solid fa-pen-to-square me-2" style="color:var(--orange);"></i>Edit Item</h5><button type="button" class="act-btn" onclick="closeModal('editItemModal')"><i class="fa-solid fa-xmark"></i></button></div>
+      <div class="modal-body">
+        <div style="margin-bottom:1rem;"><label class="f-label">Item Name *</label><input type="text" name="name" id="edit_item_name" class="f-input" required></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div>
+            <label class="f-label">Category</label>
+            <select name="category" id="edit_item_category" class="f-input">
+              <option value="beverages">Beverages</option><option value="vegetables">Vegetables</option>
+              <option value="fruits">Fruits</option><option value="dairy">Dairy</option>
+              <option value="grains">Grains</option><option value="spices">Spices</option><option value="other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="f-label">Unit</label>
+            <select name="unit" id="edit_item_unit" class="f-input">
+              <option value="kg">kg</option><option value="liter">liter</option><option value="can">can</option>
+              <option value="bottle">bottle</option><option value="pcs">pcs</option><option value="pack">pack</option>
+              <option value="box">box</option><option value="gram">gram</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;margin-bottom:1rem;">
+          <div><label class="f-label">Min Threshold</label><input type="number" name="min_stock" id="edit_item_min_stock" step="0.01" class="f-input"></div>
+          <div><label class="f-label">Unit Price</label><input type="number" name="price_per_unit" id="edit_item_price" step="0.01" class="f-input"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.85rem;">
+          <div><label class="f-label">Supplier</label><input type="text" name="supplier" id="edit_item_supplier" class="f-input"></div>
+          <div><label class="f-label">Expiry</label><input type="date" name="expiry_date" id="edit_item_expiry" class="f-input"></div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn-s" onclick="closeModal('editItemModal')">Cancel</button>
+        <button type="submit" name="edit_item" class="btn-p"><i class="fa-solid fa-check"></i> Save</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View -->
+<div class="modal-c" id="viewItemModal">
+  <div class="modal-b">
+    <div class="modal-head"><h5><i class="fa-solid fa-eye me-2" style="color:var(--orange);"></i>Item Details</h5><button type="button" class="act-btn" onclick="closeModal('viewItemModal')"><i class="fa-solid fa-xmark"></i></button></div>
+    <div class="modal-body">
+      <div style="background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:1rem;display:grid;grid-template-columns:1fr 1fr;gap:.75rem;font-size:.85rem;">
+        <div><span class="f-label" style="margin:0;">Item</span><b id="view_item_name"></b></div>
+        <div><span class="f-label" style="margin:0;">Category</span><b id="view_item_category"></b></div>
+        <div><span class="f-label" style="margin:0;">Quantity</span><b id="view_item_qty"></b></div>
+        <div><span class="f-label" style="margin:0;">Min Threshold</span><b id="view_item_min"></b></div>
+        <div><span class="f-label" style="margin:0;">Unit Price</span>₹<b id="view_item_price"></b></div>
+        <div><span class="f-label" style="margin:0;">Total Value</span>₹<b id="view_item_value"></b></div>
+        <div><span class="f-label" style="margin:0;">Supplier</span><b id="view_item_supplier"></b></div>
+        <div><span class="f-label" style="margin:0;">Expiry</span><b id="view_item_expiry"></b></div>
+        <div style="grid-column:1/-1;"><span class="f-label" style="margin:0;">Status</span><b id="view_item_status"></b></div>
+      </div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn-s" onclick="closeModal('viewItemModal')">Close</button></div>
+  </div>
+</div>
+
+<script>
+function openAddStockModal(id, name, currentQty, minStock, unit, price, supplier, expiry) {
+  document.getElementById('add_stock_item_id').value = id;
+  document.getElementById('add_stock_item_name').innerText = name;
+  document.getElementById('add_stock_curr_val').value = currentQty;
+  document.getElementById('add_stock_min_val').value = minStock;
+  document.getElementById('add_stock_unit_val').value = unit;
+  
+  document.getElementById('add_stock_curr_disp').innerText = parseFloat(currentQty).toFixed(2) + ' ' + unit;
+  document.getElementById('add_stock_min_disp').innerText = parseFloat(minStock).toFixed(2) + ' ' + unit;
+  
+  document.getElementById('add_stock_qty').value = '';
+  document.getElementById('add_stock_price').value = price || '0.00';
+  document.getElementById('add_stock_supplier').value = supplier || '';
+  document.getElementById('add_stock_expiry').value = expiry || '';
+  document.getElementById('add_stock_notes').value = '';
+  
+  document.getElementById('add_stock_alert').style.display = 'none';
+  document.getElementById('add_stock_alert').innerText = '';
+  
+  updateNewStockCalc();
+  openModal('addStockModal');
+}
+
+function updateNewStockCalc() {
+  const current = parseFloat(document.getElementById('add_stock_curr_val').value) || 0;
+  const addQty = parseFloat(document.getElementById('add_stock_qty').value) || 0;
+  const unit = document.getElementById('add_stock_unit_val').value || '';
+  const newStock = current + addQty;
+  document.getElementById('add_stock_new_calc').innerText = newStock.toFixed(2) + ' ' + unit;
+}
+
+function validateAddStockForm() {
+  const addQtyVal = document.getElementById('add_stock_qty').value.trim();
+  const alertBox = document.getElementById('add_stock_alert');
+  
+  if (!addQtyVal) {
+    alertBox.innerText = 'Please enter Add Quantity.';
+    alertBox.style.display = 'block';
+    return false;
+  }
+  
+  const addQty = parseFloat(addQtyVal);
+  if (isNaN(addQty) || addQty <= 0) {
+    alertBox.innerText = 'Add Quantity must be greater than 0.';
+    alertBox.style.display = 'block';
+    return false;
+  }
+  
+  const priceVal = parseFloat(document.getElementById('add_stock_price').value);
+  if (!isNaN(priceVal) && priceVal < 0) {
+    alertBox.innerText = 'Purchase Price must not be negative.';
+    alertBox.style.display = 'block';
+    return false;
+  }
+  
+  alertBox.style.display = 'none';
+  return true;
+}
+
+function openEditItemModal(id,name,cat,unit,minS,price,supp,exp){
+  document.getElementById('edit_item_id').value=id;
+  document.getElementById('edit_item_name').value=name;
+  document.getElementById('edit_item_category').value=cat;
+  document.getElementById('edit_item_unit').value=unit||'kg';
+  document.getElementById('edit_item_min_stock').value=minS;
+  document.getElementById('edit_item_price').value=price;
+  document.getElementById('edit_item_supplier').value=supp;
+  document.getElementById('edit_item_expiry').value=exp;
+  openModal('editItemModal');
+}
+function openViewItemModal(name,cat,qty,unit,minS,price,total,supp,exp,status){
+  document.getElementById('view_item_name').innerText=name;
+  document.getElementById('view_item_category').innerText=cat;
+  document.getElementById('view_item_qty').innerText=qty+' '+unit;
+  document.getElementById('view_item_min').innerText=minS+' '+unit;
+  document.getElementById('view_item_price').innerText=price;
+  document.getElementById('view_item_value').innerText=total;
+  document.getElementById('view_item_supplier').innerText=supp;
+  document.getElementById('view_item_expiry').innerText=exp;
+  document.getElementById('view_item_status').innerText=status;
+  openModal('viewItemModal');
+}
+</script>
+{% endblock %}
