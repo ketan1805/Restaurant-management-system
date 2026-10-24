@@ -36,8 +36,6 @@ python manage.py runserver
 
 ### 1. Admin Portal
 - **URL**: `http://127.0.0.1:8000/admin-login/`
-- **Username / Email**: `admin` or `240130510034.cs@gujaratvidyapith.org`
-- **Password**: `admin@1817`
 - *Access*: Full restaurant administrative dashboard, financial reports, user management, NGO food donation tracking, etc.
 
 ### 2. Staff Portals (Manager / Waiter / Kitchen / Order Handler)
