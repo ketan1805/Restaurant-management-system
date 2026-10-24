@@ -35,7 +35,7 @@ python manage.py runserver
 > During local development, the 6-digit OTP is automatically printed in your terminal console AND displayed in the top green notification toast on screen.
 
 ### 1. Admin Portal
--URL: http://127.0.0.1:8000/admin-login/
+- **Local URL**: `http://127.0.0.1:8000/admin-login/`
 -Login Credentials: For demo access, please contact the project author.
 -Access: Restaurant administrative dashboard, financial reports, user management, NGO food donation tracking, and other     administrative features.
 
